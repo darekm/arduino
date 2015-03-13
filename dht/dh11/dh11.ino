@@ -48,6 +48,8 @@ void sleepTenMinutes()
 }
 
 
+
+
 void setup(){
    pinMode(ledPin, OUTPUT);
 
@@ -60,7 +62,7 @@ void setup(){
 
 void loop(){
   //This is the "heart" of the program.
-  DHT.read11(dht_dpin);
+ // DHT.read11(dht_dpin);
     Serial.print("Battery:");
     Serial.print( vccVoltage(), DEC );
     Serial.print("V  temp:");

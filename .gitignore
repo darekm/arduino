@@ -42,6 +42,13 @@ Network Trash Folder
 Temporary Items
 .apdisk
 *.bak
+
+#c
+*.o
+#  pascal
 metium.lpi
 *.lpr
 metium.lps
+*.tpu
+*.ppu
+

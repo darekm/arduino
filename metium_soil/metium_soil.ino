@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2015 Dariusz Mazur, Jr. <darekm@emadar.com>
+ Copyright (C) 2015 Dariusz Mazur, <darekm@emadar.com>
 
  */
 
@@ -10,17 +10,17 @@
  * Every 2 seconds, send a payload to the receiver node.
  */
 
-#include <RF24Network.h>
+//#include <RF24Network.h>
 #include <RF24.h>
 #include <SPI.h>
-#include "printf.h"
+//#include "printf.h"
 #include "LowPower.h"
 #include "me_frame.h"
 #include "me_soil.h"
 
 RF24 radio(9,10);                    // nRF24L01(+) radio attached using Getting Started board 
 
-RF24Network network(radio);          // Network uses that radio
+//RF24Network network(radio);          // Network uses that radio
 
 const uint16_t this_node = 01;        // Address of our node in Octal format
 const uint16_t other_node = 00;       // Address of the other node in Octal format
@@ -34,8 +34,8 @@ unsigned long last_sent;             // When did we last send?
 unsigned long packets_sent;          // How many have we sent already
 int ledPin = 13;      // select the pin for the LED
 int sensorValue = 0;  // variable to store the value coming from the sensor
-int moistValue =0;
-int moistPin = 3;
+
+
 
 
 
@@ -78,12 +78,14 @@ void setup(void)
 {
   Serial.begin(57600);
   Serial.println("Metium/ moisore sensor");
-  printf_begin();
+//  printf_begin();
   SPI.begin();
   radio.begin();
-  network.begin(/*channel*/ 90, /*node address*/ this_node);
+//  network.begin(/*channel*/ 90, /*node address*/ this_node);
  radio.setAutoAck(true);
+ #ifndef   _ME_Mega_
   radio.printDetails();
+ #endif
   pinMode(ledPin, OUTPUT);
   pinMode(moistOut,INPUT);  
 
@@ -91,7 +93,7 @@ void setup(void)
 
 void loop() {
   
-  network.update();                          // Check the network regularly
+//  network.update();                          // Check the network regularly
 
   
   unsigned long now = millis();              // If it's time to send a message, send it!
@@ -104,8 +106,9 @@ void loop() {
     payload.value[0]=moistValue();
     payload.value[1]=internalVcc();
     payload.value[2]=internalTemp();
-    RF24NetworkHeader header(/*to node*/ other_node);
-    bool ok = network.write(header,&payload,sizeof(payload));
+    bool ok;
+//    RF24NetworkHeader header(/*to node*/ other_node);
+//    bool ok = network.write(header,&payload,sizeof(payload));
     Serial.print(" ms:");
     Serial.print(payload.ms);
     Serial.print(" sent:");

@@ -75,8 +75,8 @@ void loop(){
     Serial.print(DHT.temperature); 
     Serial.println("C  ");
      digitalWrite(ledPin, HIGH);   // turn the LED on (HIGH is the voltage level)
- // delay(1000);              // wait for a second
-  LowPower.powerDown(SLEEP_500MS,ADC_OFF,BOD_OFF);
+  delay(100);              // wait for a second
+  LowPower.powerDown(SLEEP_250MS,ADC_OFF,BOD_OFF);
   digitalWrite(ledPin, LOW);    // turn the LED off by making the voltage LOW
 
  LowPower.idle(SLEEP_1S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 

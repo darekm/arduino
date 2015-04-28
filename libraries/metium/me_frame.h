@@ -13,14 +13,16 @@
 #define __MEFRAME_H__
 
 
-struct me_payload_t {                  // Structure of our payload
+struct MemsValue_t {                  // Structure of our payload
+   byte action;
+   byte address;
+   word time;
+   word value[3] ;
+
   unsigned long ms;
-  unsigned long counter;
-  unsigned long from;
-  unsigned long value[3];
 };
 
-String ToString( me_payload_t * t){
+String ToString( MemsValue_t * t){
  String m="values::" ;
    for(int i=0;i<3;i++){
       m +="   v:";

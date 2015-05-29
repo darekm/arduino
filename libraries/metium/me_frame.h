@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2015 J. Coliz <maniacbug@ymail.com>
+ Copyright (C) 2015 Dariusz Mazur <darekm@emadar.com>
 
  */
  

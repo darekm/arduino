@@ -65,19 +65,23 @@ public:
     header_t * pHeader;
 
     transfer_t RX_buffer ;
-    int rssi;
-    unsigned short rCount;
+    transfer_t TX_buffer ;
+    float rssi;
+    unsigned short rSize;
     unsigned short crc;
     void Init(CC1101 & cc);
     void StartReceive();
     bool Valid();
     int GetData();
     int crcCheck();
-    int Rssi();
-    unsigned char Transmit(transfer_t &Buf);
+    float Rssi();
+    unsigned short CRC(packet_t & p);
+    unsigned short GetLen(packet_t & p);
+    
+    void PrepareTransmit(uint8_t src,uint8_t dst);
+    unsigned char Transmit();
 
 private:
-	uint8_t bits[5];  // buffer to receive data
 	int read(uint8_t pin);
 };
 #endif

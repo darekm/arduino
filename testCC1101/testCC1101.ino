@@ -131,7 +131,7 @@
 #define INDEX_HOPC 5  //Hopcount
 #define INDEX_SIZE 6  //Size of Packet
 #define INDEX_CRC  7  //CRC
-#define HEADERSIZE 8
+
 // CONTENT
 
 
@@ -140,7 +140,8 @@
 
 /****************** Vars *******************************/
 
-packet_t TX_packet = {0,};
+//packet_t TX_packet = {0,};
+//transfer_t TX_packet = {0,};
 
 char uartBuf[UART_BUFFSIZE] = {0,};
 unsigned short uartBufLen = 0;
@@ -231,9 +232,9 @@ void loop()
   if (trx.GetData())
     {
       DBGINFO("Receive(");
-      DBGINFO(trx.rCount);
+      DBGINFO(trx.rSize);
       DBGINFO("): ");
-      for (i=0;i<trx.rCount ;i++)
+      for (i=0;i<trx.rSize ;i++)
       {
         DBGINFO2(((uint8_t*)&trx.RX_buffer)[i],HEX);
         DBGWRITE(' ');
@@ -251,6 +252,8 @@ void loop()
         if((trx.pHeader->nwid==NWID) && (trx.pHeader->dest==MID))
         {
           //Todo actually implement crc check
+            DBGINFO(trx.pHeader->crc);
+            DBGINFO(" :: ");
 //          cnt = pHeader->crc;
 //          pHeader->crc = 0;
 //          crc=42;
@@ -258,6 +261,7 @@ void loop()
           
           //valid packet crc
 //          if (crc==cnt)
+          trx.Rssi();
           if (trx.crcCheck()==0)
           {
             resend_to = millis()+PACKET_GAP;  //short delay on answers
@@ -275,6 +279,8 @@ void loop()
             DBGINFO(" RSSI: ");
             DBGINFO(trx.rssi);
             DBGINFO("dBm");
+            DBGINFO(" CRC: ");
+            DBGINFO(trx.crc);
             
             //did they alter their sequence number? implies they got an ack
             if (partnerseqnr!=lastpartnerseqnr)
@@ -331,11 +337,11 @@ void loop()
     DBGINFO2(millis()&0xFF,HEX);
     DBGINFO(" ");
     //Init packet
-    txPacket = &TX_packet;
+    txPacket = &trx.TX_buffer.packet;
     txHeader = &txPacket->header;
     txHeader->nwid = NWID;
-    txHeader->src = MID;
-    txHeader->dest = TID;
+//    txHeader->src = MID;
+//    txHeader->dest = TID;
     txHeader->pseq = partnerseqnr;
     txHeader->hopc = HOPS;
     
@@ -373,7 +379,7 @@ void loop()
       txHeader->len = uartBufLen<MAXDATALEN ? uartBufLen : MAXDATALEN;  //length
       for ( i=0 ; i<txHeader->len ; i++ )
       {
-        pPacket->data[i] = uartBuf[i];
+        txPacket->data[i] = uartBuf[i];
         uartBuf[i] = uartBuf[txHeader->len+i];
       }
       //shift buffer
@@ -391,7 +397,7 @@ void loop()
     else if (seqnr==lastseqnr)
     {
       lastpartnerseqnr = partnerseqnr;
-      pHeader->len = 0;
+      txHeader->len = 0;
       DBGINFO("SendAck (");
     }
     
@@ -404,15 +410,17 @@ void loop()
     }
     
     //TODO calculate real crc
-    txHeader->crc=0;
-    crc=42;
-    for( i=0 ; i<(sizeof(header_t)+txHeader->len) ; i++)
-    {
-      crc+=((uint8_t*)&TX_packet)[i];
-    }
-    txHeader->crc=crc;
     
-    DBGINFO(i);
+//    txHeader->crc=0;
+//    crc=42;
+//    for( i=0 ; i<(sizeof(header_t)+txHeader->len) ; i++)
+//    {
+//      crc+=((uint8_t*)&TX_packet)[i];
+//    }
+//    txHeader->crc
+    trx.PrepareTransmit(MID,TID);
+    
+    DBGINFO(trx.TX_buffer.len);
     DBGINFO(",");
     DBGINFO(txHeader->len);
     DBGINFO(")\r\n");
@@ -423,14 +431,14 @@ void loop()
          ERRLEDON();
          delay(100);
          ERRLEDOFF();
-      if (trx.cc1101.Transmit((uint8_t*)&TX_packet,i))
+//      if (trx.cc1101.Transmit((uint8_t*)&TX_packet,i))
+      if (trx.Transmit())
       {
-        resend_to = millis()+RESEND_TIMEOUT;
 
       } else {
         //Todo? Transmit error... ignore -> counts as failed retry
-        resend_to = millis()+RESEND_TIMEOUT;
       }
+      resend_to = millis()+RESEND_TIMEOUT;
     }
     else
     {

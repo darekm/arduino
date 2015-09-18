@@ -21,7 +21,9 @@
 
 //#include <SoftwareSerial.h>
 //#include <avr/wdt.h>
-#include "CC1101_lib.h"
+#include "transceiver.h"
+
+
 
 /******************************** Configuration *************************************/
 
@@ -30,7 +32,6 @@
 #define TID  0x00  //Default target ID
 #define HOPS 0x01  //Max hops - currently unused
 
-#define RECEIVE_TO 1000  //Wait at max this long in ms for packet arrival
 
 #define DINRAILADAPTER 0  //Is a DinRailAdapter (Bridge SoftwareSerial on pins 10,11,12)
 #define RADINOSPIDER   1  //Is a radino Spider (Bridge Serial1)
@@ -120,17 +121,7 @@
 
 /****************** Packet structures *******************/
 //Header for our data packets
-typedef struct
-{
-  uint8_t nwid;
-  uint8_t src;
-  uint8_t dest;
-  uint8_t seq;
-  uint8_t pseq;
-  uint8_t hopc;
-  uint8_t len;
-  uint8_t crc;
-} header_t;
+
 
 #define INDEX_NWID 0  //Network ID
 #define INDEX_SRC  1  //Source ID
@@ -143,27 +134,12 @@ typedef struct
 #define HEADERSIZE 8
 // CONTENT
 
-//Buff for radio packet handling
-#define PAKETSIZE 61  //CC1101 adds LEN, LQI, RSSI -- stay under fifo size of 64 byte (CC1101 buggy)
-#define MAXDATALEN PAKETSIZE-HEADERSIZE
 
 //Structure of our data packets
-typedef struct
-{
-  header_t header;
-  uint8_t data[MAXDATALEN];
-} packet_t;
 
-//Packet format delivered by the CC1101 RX
-typedef struct
-{
-  uint8_t len;
-  packet_t packet;
-  uint16_t appended;
-} transfer_t;
 
 /****************** Vars *******************************/
-transfer_t RX_buffer = {0,};
+
 packet_t TX_packet = {0,};
 
 char uartBuf[UART_BUFFSIZE] = {0,};
@@ -177,7 +153,8 @@ unsigned long radioOut_delay = 0;
 
 unsigned long resend_to = 0;
 
-CC1101 cc1101;  //The CC1101 device
+Transceiver trx;
+    CC1101 cc1101;  //The CC1101 device
 
 /************************* Functions **********************/
 
@@ -193,9 +170,7 @@ void setup()
 //  TXEN_INIT();
   
   ERRLEDINIT(); ERRLEDOFF();
-  
-  cc1101.Init();
-  cc1101.StartReceive(RECEIVE_TO);
+  trx.Init(cc1101);
 }
 
 //Main loop is called over and over again
@@ -208,15 +183,18 @@ void loop()
 #define lastpartnerseqnr lastseqnrs[TID]
   static uint8_t retrycnt=0;  //counter for retries
   
-  unsigned char crc, cnt;
+//  unsigned char crc;
   unsigned short i;
-  float rssi;
-  packet_t * pPacket;
-  header_t * pHeader;
+//  float rssi;
+
+
+  packet_t * txPacket;
+  header_t * txHeader;
   
   //Check for freezes
 //  wdt_reset();  //At least arduino is running
-  cc1101.StartReceive(RECEIVE_TO);
+  trx.StartReceive();
+//  cc1101.StartReceive(RECEIVE_TO);
 //  Serial.print(uartBufLen);
 //  Serial.println(" loopA");
 
@@ -246,67 +224,68 @@ void loop()
   delay(500);
   
   //CC1101 finished reception of a packet
-  if (cc1101.GetState() == CCGOTPACKET)
-  {
+/*  if (cc1101.GetState() == CCGOTPACKET)
+    {
     cnt=cc1101.GetData((uint8_t*)&RX_buffer);  //read the RX FiFo (returns number of read chars)
-    
-    if(cnt>0)
+*/
+  if (trx.GetData())
     {
       DBGINFO("Receive(");
-      DBGINFO(cnt);
+      DBGINFO(trx.rCount);
       DBGINFO("): ");
-      for (i=0;i<cnt ;i++)
+      for (i=0;i<trx.rCount ;i++)
       {
-        DBGINFO2(((uint8_t*)&RX_buffer)[i],HEX);
+        DBGINFO2(((uint8_t*)&trx.RX_buffer)[i],HEX);
         DBGWRITE(' ');
       }
       DBGINFO("-> ");
       
       
       //Is the packet length valid?
-      if((RX_buffer.len>=sizeof(header_t)) && (RX_buffer.len<=sizeof(packet_t)))
+      if( trx.Valid())
       {
-        pPacket = &RX_buffer.packet;
-        pHeader = &pPacket->header;
+//        pPacket = &trx.RX_buffer.packet;
+//        pHeader = &pPacket->header;
         
         //our network? our ID addressed?
-        if((pHeader->nwid==NWID) && (pHeader->dest==MID))
+        if((trx.pHeader->nwid==NWID) && (trx.pHeader->dest==MID))
         {
           //Todo actually implement crc check
-          cnt = pHeader->crc;
-          pHeader->crc = 0;
-          crc=42;
-          for(i=0 ; i<RX_buffer.len ; i++) crc+=((uint8_t*)pPacket)[i];
+//          cnt = pHeader->crc;
+//          pHeader->crc = 0;
+//          crc=42;
+//          for(i=0 ; i<RX_buffer.len ; i++) crc+=((uint8_t*)pPacket)[i];
           
           //valid packet crc
-          if (crc==cnt)
+//          if (crc==cnt)
+          if (trx.crcCheck()==0)
           {
             resend_to = millis()+PACKET_GAP;  //short delay on answers
-            partnerseqnr = pHeader->seq;  //remember their sequence number
+            partnerseqnr = trx.pHeader->seq;  //remember their sequence number
 //            if (lastseqnr+1 == pHeader->pseq) ERRLEDOFF();  //got ack for our last data
-            lastseqnr = pHeader->pseq;  //remember last acked sequence number
+            lastseqnr = trx.pHeader->pseq;  //remember last acked sequence number
             
             //Calculate RSSI
-            crc = pPacket->data[pHeader->len];
+/*            crc = pPacket->data[pHeader->len];
             rssi = crc;
             if (crc&0x80) rssi -= 256;
             rssi /= 2;
-            rssi -= 74;
+            rssi -= 74;*/
             
             DBGINFO(" RSSI: ");
-            DBGINFO(rssi);
+            DBGINFO(trx.rssi);
             DBGINFO("dBm");
             
             //did they alter their sequence number? implies they got an ack
             if (partnerseqnr!=lastpartnerseqnr)
             {
-              for(i=0; i<pHeader->len && radioBufLen<RADIO_BUFFSIZE ;i++)  //fill uart buffer
+              for(i=0; i<trx.pHeader->len && radioBufLen<RADIO_BUFFSIZE ;i++)  //fill uart buffer
               {
-                radioBuf[radioBufLen++] = pPacket->data[i];
+                radioBuf[radioBufLen++] = trx.pPacket->data[i];
                 if (radio_writeout == 0xFFFF) radio_writeout = 0;  //signal the uart handler to start writing out
               }
             }
-            else if (pHeader->len && partnerseqnr==lastpartnerseqnr)  //retransmission -> retransmit ack
+            else if (trx.pHeader->len && partnerseqnr==lastpartnerseqnr)  //retransmission -> retransmit ack
             {
               lastpartnerseqnr--;
             }
@@ -321,7 +300,7 @@ void loop()
       } else { //end if size valid
         DBGERR("!SIZE\r\n");
       }
-    }
+    
   }
  
 /************** UART to radio ************************/
@@ -352,13 +331,13 @@ void loop()
     DBGINFO2(millis()&0xFF,HEX);
     DBGINFO(" ");
     //Init packet
-    pPacket = &TX_packet;
-    pHeader = &pPacket->header;
-    pHeader->nwid = NWID;
-    pHeader->src = MID;
-    pHeader->dest = TID;
-    pHeader->pseq = partnerseqnr;
-    pHeader->hopc = HOPS;
+    txPacket = &TX_packet;
+    txHeader = &txPacket->header;
+    txHeader->nwid = NWID;
+    txHeader->src = MID;
+    txHeader->dest = TID;
+    txHeader->pseq = partnerseqnr;
+    txHeader->hopc = HOPS;
     
     //Still no ack for last sent sequence number -> resend
     if (seqnr!=lastseqnr)
@@ -368,11 +347,11 @@ void loop()
       {
 //        ERRLEDON();
         lastseqnr = seqnr;  //start next transmission with a different sequence number
-        pHeader->seq = seqnr;
+        txHeader->seq = seqnr;
         retrycnt = 0;  //reset retries
         uartBufLen = 0;  //kill buffer
         DBGERR("reached max Retries\r\n");
-        cc1101.StartReceive(RECEIVE_TO);
+        trx.StartReceive();
         return;
       } else {
 //        ERRLEDON();
@@ -390,18 +369,18 @@ void loop()
       
       //Refill packet buffer with new data
       seqnr++;  //new data -> increase sequence number
-      pHeader->seq = seqnr;
-      pHeader->len = uartBufLen<MAXDATALEN ? uartBufLen : MAXDATALEN;  //length
-      for ( i=0 ; i<pHeader->len ; i++ )
+      txHeader->seq = seqnr;
+      txHeader->len = uartBufLen<MAXDATALEN ? uartBufLen : MAXDATALEN;  //length
+      for ( i=0 ; i<txHeader->len ; i++ )
       {
         pPacket->data[i] = uartBuf[i];
-        uartBuf[i] = uartBuf[pHeader->len+i];
+        uartBuf[i] = uartBuf[txHeader->len+i];
       }
       //shift buffer
       uartBufLen -= i;
       for ( ; i<uartBufLen ; i++ )
       {
-        uartBuf[i] = uartBuf[pHeader->len+i];
+        uartBuf[i] = uartBuf[txHeader->len+i];
       }
       
       DBGINFO("Sending (");
@@ -420,22 +399,22 @@ void loop()
     else
     {
       DBGERR("unexpected send\r\n");
-      cc1101.StartReceive(RECEIVE_TO);
+      trx.StartReceive();
       return;
     }
     
     //TODO calculate real crc
-    pHeader->crc=0;
+    txHeader->crc=0;
     crc=42;
-    for( i=0 ; i<(sizeof(header_t)+pHeader->len) ; i++)
+    for( i=0 ; i<(sizeof(header_t)+txHeader->len) ; i++)
     {
       crc+=((uint8_t*)&TX_packet)[i];
     }
-    pHeader->crc=crc;
+    txHeader->crc=crc;
     
     DBGINFO(i);
     DBGINFO(",");
-    DBGINFO(pHeader->len);
+    DBGINFO(txHeader->len);
     DBGINFO(")\r\n");
     
     //Leave receive mode
@@ -444,7 +423,7 @@ void loop()
          ERRLEDON();
          delay(100);
          ERRLEDOFF();
-      if (cc1101.Transmit((uint8_t*)&TX_packet,i))
+      if (trx.cc1101.Transmit((uint8_t*)&TX_packet,i))
       {
         resend_to = millis()+RESEND_TIMEOUT;
 

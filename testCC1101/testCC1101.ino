@@ -55,7 +55,7 @@
 //0:none
 //1:Errors
 //2:Information
-#define DBGLVL 0
+#define DBGLVL 2
 
 /***************************** Debug messages ***********************/
 
@@ -238,7 +238,7 @@ void loop()
       DBGINFO("Receive(");
       DBGINFO(trx.rSize);
       DBGINFO("): ");
-      for (int i=0;i<trx.rSize ;i++)
+      for (unsigned short i=0;i<trx.rSize ;i++)
       {
         DBGINFO2(((uint8_t*)&trx.RX_buffer)[i],HEX);
         DBGWRITE(' ');
@@ -256,6 +256,13 @@ void loop()
           //valid packet crc
 //          if (crc==cnt)
           trx.Rssi();
+            DBGINFO(" RSSI: ");           DBGINFO(trx.rssi);            DBGINFO("dBm");
+            DBGINFO(" CRC: ");            DBGINFO(trx.crc);             DBGINFO(" rr: ");
+            int y=trx.CRC(trx.RX_buffer.packet);
+            y-=trx.pHeader->crc;
+            y-=trx.pHeader->crc;
+            DBGINFO2(y,HEX);
+            
           if (trx.crcCheck()==0)
           {
             resend_to = millis()+PACKET_GAP;  //short delay on answers
@@ -266,9 +273,6 @@ void loop()
             ack.Accept(trx.pHeader->pseq);
             
 
-            DBGINFO(" RSSI: ");           DBGINFO(trx.rssi);            DBGINFO("dBm");
-            DBGINFO(" CRC: ");            DBGINFO(trx.crc);             DBGINFO(" rr: ");
-            DBGINFO(radioBufLen);
             
               radioBufLen+=trx.Get((uint8_t*)&(radioBuf[radioBufLen]));
 //              for(i=0; i<trx.pHeader->len && radioBufLen<RADIO_BUFFSIZE ;i++)  //fill uart buffer
@@ -350,7 +354,7 @@ void loop()
       //Refill packet buffer with new data
       seqnr++;  //new data -> increase sequence number
       trx.txHeader->seq = seqnr;
-      ACK.Send(TID,seqnr);
+      ack.Send(TID,seqnr);
       int x=trx.Put((uint8_t *)uartBuf,uartBufLen);
 
 //      txHeader->len = uartBufLen<MAXDATALEN ? uartBufLen : MAXDATALEN;  //length
@@ -374,11 +378,13 @@ void loop()
     }
     
     trx.PrepareTransmit(seqnr,TID);
-    trx.txHeader->pseq = ACK.answer(TID);
+    trx.txHeader->pseq = ack.Answer(TID);
 
     DBGINFO(trx.TX_buffer.len);
     DBGINFO(",");
     DBGINFO(trx.txHeader->len);
+    DBGINFO(",");
+    DBGINFO(trx.txHeader->crc);
     DBGINFO(")\r\n");
     
     //Leave receive mode

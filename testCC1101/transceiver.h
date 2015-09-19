@@ -102,11 +102,12 @@ class TableACK
   public:
 
   uint8_t addr[MAXTableACK];
+  uint8_t seq[MAXTableACK];
   int Send(uint8_t Addr, uint8_t Seq);
   int Recive(uint8_t Addr, uint8_t Seq);
   
   uint8_t Answer(uint8_t Addr);
-  void Accept(uint8_t Addr, uint8_t Seq);
+  void Accept( uint8_t Seq);
   bool noack(uint8_t Addr);
 };
 

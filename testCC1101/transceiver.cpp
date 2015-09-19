@@ -112,6 +112,7 @@ void Transceiver::PrepareTransmit(uint8_t src,uint8_t dst)
    TX_buffer.packet.header.src=myID;
    TX_buffer.packet.header.dest=dst;
 //   sizeof(header_t)+txHeader->len;
+   TX_buffer.packet.header.crc=0;
    TX_buffer.packet.header.crc=CRC(TX_buffer.packet);
 }   
 
@@ -145,11 +146,11 @@ int Transceiver::Put(uint8_t* buf,uint8_t len)
 }
 
 
-int TableACK::Send(uint8_t Addr, uint8_t Seq);
+int TableACK::Send(uint8_t Addr, uint8_t Seq)
 {
    lastsentseq=Seq;
    for(int i =0 ;i<MAXTableACK;i++)
-     if (addr[i]==){
+     if (addr[i]==0){
        addr[i]=Addr;
        seq[i]=Seq;
        return i;
@@ -157,23 +158,24 @@ int TableACK::Send(uint8_t Addr, uint8_t Seq);
    return -1;
 
 }
-void TableACK::Accept(uint8_t Addr, uint8_t Seq){
-   lastsentack=0;
+void TableACK::Accept( uint8_t Seq)
+{
+   lastsentseq=0;
 }
 
 
-int TableACK::Recive(uint8_t Addr, uint8_t Seq);
+int TableACK::Recive(uint8_t Addr, uint8_t Seq)
 {
   partnerseqnr=Seq;
   return 0;
 }
 uint8_t TableACK::Answer(uint8_t Addr)
 {
-  return parterseqnr;
+  return partnerseqnr;
 }
 bool TableACK::noack(uint8_t Addr)
 {
-  return lastsentack;
+  return lastsentseq;
 
 }
 

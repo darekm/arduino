@@ -60,9 +60,11 @@ class Transceiver
 private:
     CC1101 * cc1101;  //The CC1101 device
     packet_t * pPacket;
+    packet_t * txPacket;
 
 public:
     header_t * pHeader;
+    header_t * txHeader;
 
     transfer_t RX_buffer ;
     transfer_t TX_buffer ;
@@ -79,15 +81,35 @@ public:
 
     float Rssi();
     uint8_t CRC(packet_t & p);
-    unsigned short GetLen(packet_t & p);
+    uint8_t GetLen(packet_t & p);
     
     void PrepareTransmit(uint8_t src,uint8_t dst);
     unsigned char Transmit();
     int Get(uint8_t* buf);
+    int Put(uint8_t*buf,uint8_t len);
 
 private:
 	int read(uint8_t pin);
 };
+
+#define MAXTableACK 16
+class TableACK
+{
+  private:
+  int count;
+  uint8_t lastsentseq;
+  uint8_t partnerseqnr;
+  public:
+
+  uint8_t addr[MAXTableACK];
+  int Send(uint8_t Addr, uint8_t Seq);
+  int Recive(uint8_t Addr, uint8_t Seq);
+  
+  uint8_t Answer(uint8_t Addr);
+  void Accept(uint8_t Addr, uint8_t Seq);
+  bool noack(uint8_t Addr);
+};
+
 #endif
 //
 // END OF FILE

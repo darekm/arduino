@@ -24,6 +24,10 @@ void Transceiver::Init(CC1101 & cc)
   cc1101=&cc;
   cc1101->Init();
   cc1101->StartReceive(RECEIVE_TO);
+        pPacket = &RX_buffer.packet;
+        pHeader = &pPacket->header;
+        txPacket = &TX_buffer.packet;
+        txHeader = &txPacket->header;
 
 }
 
@@ -32,7 +36,7 @@ void Transceiver::StartReceive()
   cc1101->StartReceive(RECEIVE_TO);
 }
 
-int Transceiver::GetData()
+uint8_t Transceiver::GetData()
 {
   if (cc1101->GetState() == CCGOTPACKET)
   {
@@ -104,7 +108,8 @@ void Transceiver::PrepareTransmit(uint8_t src,uint8_t dst)
    
 //       txHeader->src = MID;
 //    txHeader->dest = TID;
-   TX_buffer.packet.header.src=src;
+   TX_buffer.packet.header.nwid=netID;
+   TX_buffer.packet.header.src=myID;
    TX_buffer.packet.header.dest=dst;
 //   sizeof(header_t)+txHeader->len;
    TX_buffer.packet.header.crc=CRC(TX_buffer.packet);
@@ -117,9 +122,9 @@ unsigned char Transceiver::Transmit()
    return cc1101->Transmit((uint8_t*)&(TX_buffer.packet),TX_buffer.len); 
 }
 
-uint8_t Transceiver::Get()
+int Transceiver::Get(uint8_t* buf)
 {
-              unsigned short i;
+              int i;
               for(i=0; i<pHeader->len  ;i++)  //fill uart buffer
               {
                 buf[i] = pPacket->data[i];
@@ -127,6 +132,53 @@ uint8_t Transceiver::Get()
               return i;
 
 }
+int Transceiver::Put(uint8_t* buf,uint8_t len)
+{
+              int i;
+              txHeader->len = len<MAXDATALEN ? len : MAXDATALEN;  //length
+              for ( i=0 ; i<txHeader->len ; i++ )
+              {
+                    txPacket->data[i] = buf[i];
+              }
+              return i;      
+
+}
+
+
+int TableACK::Send(uint8_t Addr, uint8_t Seq);
+{
+   lastsentseq=Seq;
+   for(int i =0 ;i<MAXTableACK;i++)
+     if (addr[i]==){
+       addr[i]=Addr;
+       seq[i]=Seq;
+       return i;
+     };
+   return -1;
+
+}
+void TableACK::Accept(uint8_t Addr, uint8_t Seq){
+   lastsentack=0;
+}
+
+
+int TableACK::Recive(uint8_t Addr, uint8_t Seq);
+{
+  partnerseqnr=Seq;
+  return 0;
+}
+uint8_t TableACK::Answer(uint8_t Addr)
+{
+  return parterseqnr;
+}
+bool TableACK::noack(uint8_t Addr)
+{
+  return lastsentack;
+
+}
+
+
+
 
 //
 // END OF FILE

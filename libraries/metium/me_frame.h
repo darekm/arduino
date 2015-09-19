@@ -17,7 +17,7 @@ typedef struct  {                  // Structure of our payload
    byte action;
    byte address;
    word time;
-   word value[3] ;
+   word value[4] ;
 
   unsigned long ms;
 }MemsValue_t;

@@ -172,6 +172,8 @@ void setup()
   
   ERRLEDINIT(); ERRLEDOFF();
   trx.Init(cc1101);
+  trx.netID=NWID;
+  trx.myID= MID;
 }
 
 //Main loop is called over and over again
@@ -201,27 +203,29 @@ void loop()
 
   
 /************** radio to UART ************************/
-/*  
+
   //No chars received since UARTTIMEOUT ms AND have chars in outputbuffer
   //writes bridgeBurst chars every bridgeDelay ms (Let the hardware serial write out async)
   if (uart_timeout<millis() && radio_writeout<radioBufLen && radioOut_delay<millis())
   {
-    TXEN_ON();
+//    TXEN_ON();
     radioOut_delay = millis()+bridgeDelay;
+    Serial.print("UART");
     for ( i=0 ; i<bridgeBurst && radio_writeout<(radioBufLen-1) ; radio_writeout++, i++ )
     {
-      bridge.write(radioBuf[radio_writeout]);
+      Serial.write(radioBuf[radio_writeout]);
     }
     if (radio_writeout==(radioBufLen-1))  //This is the last char
     {
-      bridge.write(radioBuf[radioBufLen-1]);
+      Serial.write(radioBuf[radioBufLen-1]);
       radio_writeout = 0xFFFF;  //signal write complete to radio reception
       radioBufLen = 0;
-      bridge.flush();
-      TXEN_OFF();
+//      bridge.flush();
+//      TXEN_OFF();
     }
+    Serial.println(";");
   }
-  */
+
   delay(500);
   
   //CC1101 finished reception of a packet
@@ -249,11 +253,9 @@ void loop()
 //        pHeader = &pPacket->header;
         
         //our network? our ID addressed?
-        if((trx.pHeader->nwid==NWID) && (trx.pHeader->dest==MID))
-        {
+//        if((trx.pHeader->nwid==NWID) && (trx.pHeader->dest==MID))
+//        {
           //Todo actually implement crc check
-            DBGINFO(trx.pHeader->crc);
-            DBGINFO(" :: ");
 //          cnt = pHeader->crc;
 //          pHeader->crc = 0;
 //          crc=42;
@@ -285,11 +287,12 @@ void loop()
             //did they alter their sequence number? implies they got an ack
             if (partnerseqnr!=lastpartnerseqnr)
             {
-              for(i=0; i<trx.pHeader->len && radioBufLen<RADIO_BUFFSIZE ;i++)  //fill uart buffer
-              {
-                radioBuf[radioBufLen++] = trx.pPacket->data[i];
-                if (radio_writeout == 0xFFFF) radio_writeout = 0;  //signal the uart handler to start writing out
-              }
+              radioBufLen+=trx.get(&radioBuf[radioBufLen]);
+//              for(i=0; i<trx.pHeader->len && radioBufLen<RADIO_BUFFSIZE ;i++)  //fill uart buffer
+//              {
+//                radioBuf[radioBufLen++] = trx.pPacket->data[i];
+//              }
+              if (radio_writeout == 0xFFFF) radio_writeout = 0;  //signal the uart handler to start writing out
             }
             else if (trx.pHeader->len && partnerseqnr==lastpartnerseqnr)  //retransmission -> retransmit ack
             {
@@ -300,9 +303,9 @@ void loop()
           } else { //end if CRC ok
             DBGERR("!CRC\r\n");
           }
-        } else { //end if NWID && TID ok
-          DBGERR("!DEST-ID\r\n");
-        }
+//        } else { //end if NWID && TID ok
+//          DBGERR("!DEST-ID\r\n");
+//        }
       } else { //end if size valid
         DBGERR("!SIZE\r\n");
       }

@@ -50,11 +50,14 @@ bool Transceiver::Valid()
         pPacket = &RX_buffer.packet;
         pHeader = &pPacket->header;
 
-      return ((RX_buffer.len>=sizeof(header_t)) && (RX_buffer.len<=sizeof(packet_t)));
+      bool io= ((RX_buffer.len>=sizeof(header_t)) && (RX_buffer.len<=sizeof(packet_t)));
+      if (io)
+        io =((pHeader->nwid==netID) && (pHeader->dest==myID));
+      return io;
 }
 
 
-int Transceiver::crcCheck()
+unsigned short Transceiver::crcCheck()
 {
           unsigned short cnt = pHeader->crc;
           pHeader->crc = 0;
@@ -66,12 +69,12 @@ int Transceiver::crcCheck()
 
 }
 
-unsigned short Transceiver::GetLen(packet_t & p)
+uint8_t Transceiver::GetLen(packet_t & p)
 {
   return (sizeof(header_t)+p.header.len);
 }
 
-unsigned short Transceiver::CRC(packet_t & p)
+uint8_t Transceiver::CRC(packet_t & p)
 {
     unsigned short c=42;
     for(unsigned short i=0 ; i<(sizeof(header_t)+p.header.len) ; i++)
@@ -112,6 +115,17 @@ void Transceiver::PrepareTransmit(uint8_t src,uint8_t dst)
 unsigned char Transceiver::Transmit()
 {
    return cc1101->Transmit((uint8_t*)&(TX_buffer.packet),TX_buffer.len); 
+}
+
+uint8_t Transceiver::Get()
+{
+              unsigned short i;
+              for(i=0; i<pHeader->len  ;i++)  //fill uart buffer
+              {
+                buf[i] = pPacket->data[i];
+              }
+              return i;
+
 }
 
 //

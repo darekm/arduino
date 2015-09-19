@@ -59,27 +59,31 @@ class Transceiver
 {
 private:
     CC1101 * cc1101;  //The CC1101 device
+    packet_t * pPacket;
 
 public:
-    packet_t * pPacket;
     header_t * pHeader;
 
     transfer_t RX_buffer ;
     transfer_t TX_buffer ;
+    unsigned short netID;
+    unsigned short myID;
     float rssi;
     unsigned short rSize;
     unsigned short crc;
     void Init(CC1101 & cc);
     void StartReceive();
     bool Valid();
-    int GetData();
-    int crcCheck();
+    uint8_t GetData();
+    unsigned short crcCheck();
+
     float Rssi();
-    unsigned short CRC(packet_t & p);
+    uint8_t CRC(packet_t & p);
     unsigned short GetLen(packet_t & p);
     
     void PrepareTransmit(uint8_t src,uint8_t dst);
     unsigned char Transmit();
+    int Get(uint8_t* buf);
 
 private:
 	int read(uint8_t pin);

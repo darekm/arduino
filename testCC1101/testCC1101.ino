@@ -22,29 +22,29 @@
 //#include <SoftwareSerial.h>
 //#include <avr/wdt.h>
 #include "transceiver.h"
+#include "imqueue.h"
+// #.include "imack.h"
+#include "uart.h"
 
 
 
 /******************************** Configuration *************************************/
 
-#define NWID 0x01  //My networks ID
+// #define NWID 0x01  //My networks ID
 #define MID  0x00  //My ID
 #define TID  0x00  //Default target ID
-#define HOPS 0x01  //Max hops - currently unused
+// #define HOPS 0x01  //Max hops - currently unused
 
 
 #define DINRAILADAPTER 0  //Is a DinRailAdapter (Bridge SoftwareSerial on pins 10,11,12)
 #define RADINOSPIDER   1  //Is a radino Spider (Bridge Serial1)
 
-#define UART_BUFFSIZE 725  //Buffer for UART
-#define UART_SENDTHRES 710  //Start sending when this full
 #define RADIO_BUFFSIZE 725  //Buffer for radio
 #define RADIO_SENDTHRES 710  //Start writing when this full
 
 #define UART_TIMEOUT 10  //UART is considered empty after this time in ms
 #define RESEND_TIMEOUT 75  //Wait this time in ms for an radio ack
 #define PACKET_GAP 10 //Delay between receive and outgoing ack
-#define MAXRETRIES 2  //Try so much retransmissions
 
 //Used for error signaling (ON when restransmitting, OFF on receive success)
 #define ERRLEDON() digitalWrite(13,HIGH)
@@ -88,17 +88,7 @@
   #define dbgSerial Serial
   #define dbgSerialSpeed 57600
 
-#if DINRAILADAPTER  //DinRailAdapter
-  
-  #define RX_PIN 10
-  #define TX_PIN 11
-  SoftwareSerial bridge = SoftwareSerial(RX_PIN,TX_PIN);
-  #define bridgeSpeed 9600
-  #define bridgeBurst 10  //Chars written out per call
-  #define bridgeDelay 0 //SofwareSerial writes blocking - no wait necessary
-//  #define TXEN_PIN 12  //Which pin to use for RS485 functionality - comment to disable
-  
-#elif RADINOSPIDER  //radino Spider
+
   
   #define bridge Serial1
   #define bridgeSpeed 9600
@@ -107,21 +97,8 @@
 //  #define bridgeDelay ((bridgeBurst*1000)/(bridgeSpeed/8))  //Time between calls - Let hardware serial write out async
 //  #define TXEN_PIN 2  //Which pin to use for RS485 functionality - comment to disable
   
-#endif  //Module selection
 
-//Utilize RS485 functionality?
-#ifdef TXEN_PIN
-  #define TXEN_ON() digitalWrite(TXEN_PIN, HIGH)
-  #define TXEN_OFF() digitalWrite(TXEN_PIN, LOW)
-  #define TXEN_INIT() pinMode(TXEN_PIN, OUTPUT)
-#else
-  #define TXEN_ON() do{}while(0)
-  #define TXEN_OFF() do{}while(0)
-  #define TXEN_INIT() do{}while(0)
-#endif
 
-/****************** Packet structures *******************/
-//Header for our data packets
 
 
 #define INDEX_NWID 0  //Network ID
@@ -133,19 +110,11 @@
 #define INDEX_SIZE 6  //Size of Packet
 #define INDEX_CRC  7  //CRC
 
-// CONTENT
-
-
-//Structure of our data packets
 
 
 /****************** Vars *******************************/
 
-//packet_t TX_packet = {0,};
-//transfer_t TX_packet = {0,};
 
-char uartBuf[UART_BUFFSIZE] = {0,};
-unsigned short uartBufLen = 0;
 uint32_t uart_timeout = 0;
 
 char radioBuf[RADIO_BUFFSIZE] = {0,};
@@ -157,7 +126,9 @@ unsigned long resend_to = 0;
 
 Transceiver trx;
     CC1101 cc1101;  //The CC1101 device
-    TableACK ack;
+    IMQueue queue;
+   IMFrame fr1;
+   IMFrame fr2;
 
 /************************* Functions **********************/
 
@@ -165,21 +136,45 @@ Transceiver trx;
 void printRadio()
 {
     Serial.print("UART");
-    for (int i=0 ; i<bridgeBurst && radio_writeout<(radioBufLen) ; radio_writeout++, i++ )
+    Serial.print(radioBufLen);
+    for (int i=0 ; i<bridgeBurst && (radio_writeout<radioBufLen) ; radio_writeout++, i++ )
     {
       Serial.write(radioBuf[radio_writeout]);
     }
     Serial.println(";");
 
 }
-void shiftUartBuffer(unsigned short x)
+void printReceive()
 {
-      uartBufLen -= x;
-      for (unsigned short i=0 ; i<uartBufLen ; i++ )
+       DBGINFO("Receive(");
+      DBGINFO(trx.rSize);
+      DBGINFO("): ");
+      for (unsigned short i=0;i<trx.rSize ;i++)
       {
-        uartBuf[i] = uartBuf[x+i];
+        DBGINFO2(((uint8_t*)&trx.RX_buffer)[i],HEX);
+        DBGWRITE(' ');
       }
-}
+      DBGINFO("-> ");
+} 
+
+
+
+void testQueue()
+{
+  fr1.Header.Function=resend_to;
+  queue.push(fr1);
+  Serial.print(resend_to);
+  Serial.print("::");
+  Serial.print(queue.temp);
+  Serial.print("=");
+//  Serial.print(queue.tab[1].Header.Function);
+//  Serial.print(queue.tab[(queue.temp-1) & _QueueMask);
+
+  Serial.print("Queue");
+  Serial.print(queue.pop(fr2) );
+  Serial.print("=");
+  Serial.print(fr2.Header.Function );
+}  
 
 //Initialize the system
 void setup()
@@ -194,26 +189,24 @@ void setup()
   
   ERRLEDINIT(); ERRLEDOFF();
   trx.Init(cc1101);
-  trx.netID=NWID;
   trx.myID= MID;
+
 }
 
 //Main loop is called over and over again
 void loop()
 {
-  static uint8_t seqnr=0;  //next seqnr
-//  static uint8_t lastseqnr=0;  //last sent seqnr
-//  static uint8_t partnerseqnr=0;  //received seqnr
-  static uint8_t retrycnt=0;  //counter for retries
-  static uint8_t lasthop=0;//counter for retries
-  
-//  unsigned short i;
+         ERRLEDON();
+         delay(50);
+         ERRLEDOFF();
+ 
+  static IMFrame frame;
 
 
-//  packet_t * txPacket;
-//  header_t * txHeader;
+  testQueue();
   
-  //Check for freezes
+
+   //Check for freezes
 //  wdt_reset();  //At least arduino is running
   trx.StartReceive();
 
@@ -232,67 +225,34 @@ void loop()
 
   delay(500);
   
-  //CC1101 finished reception of a packet
-  if (trx.GetData())
+  
+  
+  if (trx.GetData()  )
     {
-      DBGINFO("Receive(");
-      DBGINFO(trx.rSize);
-      DBGINFO("): ");
-      for (unsigned short i=0;i<trx.rSize ;i++)
-      {
-        DBGINFO2(((uint8_t*)&trx.RX_buffer)[i],HEX);
-        DBGWRITE(' ');
-      }
-      DBGINFO("-> ");
+      printReceive();      
       
       
-      //Is the packet length valid?
       if( trx.Valid())
       {
-//        pPacket = &trx.RX_buffer.packet;
-//        pHeader = &pPacket->header;
-        
-
-          //valid packet crc
-//          if (crc==cnt)
           trx.Rssi();
-            DBGINFO(" RSSI: ");           DBGINFO(trx.rssi);            DBGINFO("dBm");
-            DBGINFO(" CRC: ");            DBGINFO(trx.crc);             DBGINFO(" rr: ");
-            int y=trx.CRC(trx.RX_buffer.packet);
-            y-=trx.pHeader->crc;
-            y-=trx.pHeader->crc;
-            DBGINFO2(y,HEX);
-            
+          DBGINFO(" RSSI: ");           DBGINFO(trx.rssi);            DBGINFO("dBm");
+          DBGINFO(" CRC: ");            DBGINFO(trx.crc);             DBGINFO(" rr: ");
+
           if (trx.crcCheck()==0)
           {
             resend_to = millis()+PACKET_GAP;  //short delay on answers
-            ack.Recive(trx.pHeader->src,  trx.pHeader->seq);
-//            partnerseqnr = trx.pHeader->seq;  //remember their sequence number
-//            if (lastseqnr+1 == pHeader->pseq) ERRLEDOFF();  //got ack for our last data
-//            lastseqnr = trx.pHeader->pseq;  //remember last acked sequence number
-            ack.Accept(trx.pHeader->pseq);
-            
-
-            
-              radioBufLen+=trx.Get((uint8_t*)&(radioBuf[radioBufLen]));
-//              for(i=0; i<trx.pHeader->len && radioBufLen<RADIO_BUFFSIZE ;i++)  //fill uart buffer
-//              {
-//                radioBuf[radioBufLen++] = trx.pPacket->data[i];
-//              }
-              if (radio_writeout == 0xFFFF) radio_writeout = 0;  //signal the uart handler to start writing out
-
+            radioBufLen+=trx.Get((uint8_t*)&(radioBuf[radioBufLen]));
+            if (radio_writeout == 0xFFFF) radio_writeout = 0;  //signal the uart handler to start writing out
           } else { //end if CRC ok
             DBGERR("!CRC");
           }
-//        } else { //end if NWID && TID ok
-//          DBGERR("!DEST-ID\r\n");
-//        }
       } else { //end if size valid
         DBGERR("!SIZE");
       }
       DBGINFO("\r\n");
 
   }
+  
  
 /************** UART to radio ************************/
 /*  
@@ -311,38 +271,31 @@ void loop()
     if (!crc) crc = bridge.available();
   }
   */
-     uartBuf[uartBufLen++] = 'A';
-      uartBuf[uartBufLen++] = 'B';
-      uartBuf[uartBufLen++] = 'C';
-   if (uartBufLen>40) uartBufLen=1;   
+
+  generatorUart();    Serial.println(" R  ");
+   
   
   //Buffer has content AND since timeout no chars || Buffer over filllevel || lastseqnr waiting ack || partner send new seqnr
-  if (resend_to<millis() && ((uartBufLen>0 && uart_timeout<millis()) || uartBufLen>=UART_SENDTHRES ))
+  if (resend_to<millis() && ((uartBufLen>0 && uart_timeout<millis()) || uartBufLen>=UART_SENDTHRES )  )
   {
-    DBGINFO2(millis()&0xFF,HEX);    DBGINFO(" ");
-    //Init packet
-    trx.txHeader->hopc = lasthop++;
-    
+    DBGINFO(millis());    DBGINFO(" ");
+    DBGINFO(resend_to);    DBGINFO(" ");
+    DBGINFO(uart_timeout);    DBGINFO(" ");
+    DBGINFO(uartBufLen);    DBGINFO(" ");
+
     //Still no ack for last sent sequence number -> resend
-    if (ack.noack(TID))
+    if (trx.ack.noack(TID))
     {
       //retried too often
-      if (retrycnt>=MAXRETRIES)
+      if (trx.ack.retry())
       {
 //        ERRLEDON();
-//        lastseqnr = seqnr;  //start next transmission with a different sequence number
-//        trx.txHeader->seq = seqnr;
-        retrycnt = 0;  //reset retries
-        uartBufLen = 0;  //kill buffer
         DBGERR("reached max Retries\r\n");
         trx.StartReceive();
+        Serial.flush();
         return;
       } else {
-//        ERRLEDON();
-//        lastpartnerseqnr = partnerseqnr;  //update ack signal
-        DBGINFO("Retry #");
-        DBGINFO(retrycnt++);
-        DBGINFO(" (");
+        DBGINFO("Retry (");
       }
     }
     
@@ -350,55 +303,37 @@ void loop()
     else if ( ((uartBufLen>0 && uart_timeout<millis()) || uartBufLen>UART_SENDTHRES))
     {
 //      lastpartnerseqnr = partnerseqnr;  //update ack signal
-      
-      //Refill packet buffer with new data
-      seqnr++;  //new data -> increase sequence number
-      trx.txHeader->seq = seqnr;
-      ack.Send(TID,seqnr);
-      int x=trx.Put((uint8_t *)uartBuf,uartBufLen);
-
-//      txHeader->len = uartBufLen<MAXDATALEN ? uartBufLen : MAXDATALEN;  //length
-//      for ( i=0 ; i<txHeader->len ; i++ )
-//      {
-//        txPacket->data[i] = uartBuf[i];
-//        uartBuf[i] = uartBuf[txHeader->len+i];
-//      }
-      //shift buffer
-      shiftUartBuffer(x);
-
+            //Refill packet buffer with new data
+      UartPrepareData(frame);
       DBGINFO("Sending (");
-      retrycnt = 0;
     }
     
     //Last packet was acked and no new data to send -> send only ack
     else     {
-//      lastpartnerseqnr = partnerseqnr;
-      trx.txHeader->len = 0;
+      trx.txHeader->Len = 0;
       DBGINFO("SendAck (");
     }
+      DBGINFO("return");
+    return;
     
-    trx.PrepareTransmit(seqnr,TID);
-    trx.txHeader->pseq = ack.Answer(TID);
+    trx.PrepareTransmit(TID);
+//    trx.txHeader->pseq = ack.Answer(TID);
 
     DBGINFO(trx.TX_buffer.len);
     DBGINFO(",");
-    DBGINFO(trx.txHeader->len);
+    DBGINFO(trx.txHeader->Len);
     DBGINFO(",");
     DBGINFO(trx.txHeader->crc);
-    DBGINFO(")\r\n");
     
-    //Leave receive mode
     if (cc1101.StopReceive())
     {
-         ERRLEDON();
-         delay(100);
-         ERRLEDOFF();
-//      if (trx.cc1101.Transmit((uint8_t*)&TX_packet,i))
+//         ERRLEDON();
+//         delay(100);
+//         ERRLEDOFF();
+         DBGINFO("transmit");
       if (trx.Transmit())
       {
-
       } else {
-        //Todo? Transmit error... ignore -> counts as failed retry
       }
       resend_to = millis()+RESEND_TIMEOUT;
     }
@@ -406,7 +341,10 @@ void loop()
     {
       DBGERR("ERROR Stop Receive\r\n");
     }
+    DBGINFO(")\r\n");
   }
+  */
+  Serial.flush();
  delay(500);
  /*
  ERRLEDON();

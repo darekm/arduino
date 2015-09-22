@@ -58,6 +58,25 @@ void UartPrepareData(IMFrame &frame)
 
 }
 
+/************** UART to radio ************************/
+
+/*
+  //read incoming chars from UART
+  crc = bridge.available();
+  while(uartBufLen<UART_BUFFSIZE && crc)  //still have bufferspace and remaining chars on uart
+  {
+    cnt = bridge.read();
+    crc--;
+    //last char within timeout OR fresh block
+    if (uart_timeout>millis() || uartBufLen==0)
+    {
+      uartBuf[uartBufLen++] = cnt;
+      uart_timeout = millis()+UART_TIMEOUT;
+    }
+    if (!crc) crc = bridge.available();
+  }
+  */
+
 
 
 #endif

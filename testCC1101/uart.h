@@ -14,8 +14,8 @@
 #include "imframe.h"
 
 
-#define UART_BUFFSIZE 725  //Buffer for UART
-#define UART_SENDTHRES 710  //Start sending when this full
+#define UART_BUFFSIZE 125  //Buffer for UART
+#define UART_SENDTHRES 110  //Start sending when this full
 
 char uartBuf[UART_BUFFSIZE] = {0,};
 unsigned short uartBufLen = 0;
@@ -43,7 +43,7 @@ void generatorUart()
     uartBuf[uartBufLen++] = 'A';
     uartBuf[uartBufLen++] = 'B';
     uartBuf[uartBufLen++] = 'C';
-   uartBuf[uartBufLen++] = lasthop++;
+    uartBuf[uartBufLen++] = lasthop++;
    if (uartBufLen>40) uartBufLen=1;
 
 }

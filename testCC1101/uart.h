@@ -29,7 +29,7 @@ void shiftUartBuffer(unsigned short x)
     DBGINFO("ShiftUart");
     DBGINFO(uartBufLen);
     DBGINFO(" ");
-    DBGINFO(x);
+//    DBGINFO(x);
 
      uartBufLen -= x;
       for (unsigned short i=0 ; i<uartBufLen ; i++ )

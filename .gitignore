@@ -52,3 +52,6 @@ metium.lps
 *.tpu
 *.ppu
 *.exe
+backup/
+tmp/
+build/

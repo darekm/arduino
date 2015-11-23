@@ -25,10 +25,12 @@
 /******************************** Configuration *************************************/
 
 #define MMAC 0x102050  // My MAC
+#define ServerMAC 0xA000  // Server  MAC
+#define MDEVICE 6     //Type of device
 
 #define RadioDelay 2900  //Time between calls - Let hardware serial write out async
 #define BroadcastDelay 200
-#define BroadcastDuration 400
+#define BroadcastDuration 600
 #define BroadcastCallibrate 300
 
 
@@ -95,17 +97,7 @@ void SendData()
 
       DBGINFO("SendData ");
       trx.SendData(frame);
-      if (trx.Retry())
-      {
-         DBGINFO("Retry");
-      }
-      if (trx.Transmit())
-      {
-         DBGINFO("transmit:");  DBGINFO(millis());    DBGINFO(" ");
-         DBGINFO(trx.TX_buffer.len);    DBGINFO(",");
-      }
-      DBGINFO("\r\n");
-      trx.ListenData();
+      trx.Transmit();
 
    } else {
      trx.ListenBroadcast();
@@ -124,36 +116,7 @@ void ReceiveData()
       if (trx.GetFrame(rxFrame))
       {
         DBGINFO(" RSSI: ");           DBGINFO(trx.Rssi());            DBGINFO("dBm  ");
-        if (rxFrame.Knock())
-        {
-           DBGINFO("\r\n receiveKnock ");
-           if (trx.ReceiveKnock(rxFrame))
-           {
-              DBGINFO(" sendHello ");
-           }
-           DBGINFO(" \r\n");
-        }
-        else if (rxFrame.Hello())
-        {
-           if (trx.ForwardHello(rxFrame))
-              DBGINFO(" FORWARDHello ");
-        }
-        else if (rxFrame.Welcome())
-        {
-           if (trx.ReceiveWelcome(rxFrame))
-              DBGINFO(" Welcome ");
-
-        }
-        else if (trx.Onward(rxFrame))
-        {
-              DBGINFO(" Onward ");
-        }
-        else if (rxFrame.ACK())
-        {
-              trx.ReceiveACK(rxFrame);
-              DBGINFO(" ACK ");
-        }
-        else
+        if (!trx.ParseFrame(rxFrame))
         {
           if (rxFrame.NeedACK())
              trx.SendACK(rxFrame);
@@ -203,6 +166,7 @@ void setup()
   interrupts ();
   trx.Init(cc1101);
   trx.myMAC=MMAC;
+  trx.myDevice=MDEVICE;
   trx.onEvent=OnRead;
   trx.timer.onStage=stageloop;
   pciSetup(9);

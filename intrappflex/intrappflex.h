@@ -35,7 +35,7 @@ void SetupIntrappFlex()
 
 void DataIntrappFlex(IMFrame &frame)
 {
-   IMFrameData *data;
+   IMFrameData *data =frame.Data();
 
 	uint16_t temperature = imSht2x.GetTemperatureBin();
 	uint16_t humidity = imSht2x.GetHumidityBin();
@@ -43,8 +43,8 @@ void DataIntrappFlex(IMFrame &frame)
 	DBGINFO(temperature);
 	DBGINFO(" hum: ");
 	DBGINFO(humidity);
-       data->w[1]=temperature;
-       data->w[2]=humidity;
+       data->w[0]=temperature;
+       data->w[1]=humidity;
 
 
 }

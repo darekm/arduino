@@ -10,7 +10,7 @@
 #ifndef imUart_h
 #define imUart_h
 
- #include "Arduino.h"
+#include "Arduino.h"
 #include "imframe.h"
 #include "imdebug.h"
 
@@ -20,15 +20,14 @@
 
 char uartBuf[UART_BUFFSIZE] = {0,};
 unsigned short uartBufLen = 0;
-unsigned short seqnr = 0;
 static uint8_t lasthop=0;//counter for retries
 
 
 void shiftUartBuffer(unsigned short x)
 {
-    DBGINFO("ShiftUart");
-    DBGINFO(uartBufLen);
-    DBGINFO(" ");
+//    DBGINFO("ShiftUart");
+//    DBGINFO(uartBufLen);
+//    DBGINFO(" ");
 //    DBGINFO(x);
 
      uartBufLen -= x;
@@ -51,9 +50,6 @@ void generatorUart()
 
 void UartPrepareData(IMFrame &frame)
 {
-      seqnr++;  //new data -> increase sequence number
-      frame.Header.Sequence = seqnr;
-      frame.Header.Function = IMF_DATA;
       byte x=frame.Put((uint8_t *)uartBuf,uartBufLen);
 
       shiftUartBuffer(x);

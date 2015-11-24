@@ -39,10 +39,12 @@ void DataIntrappFlex(IMFrame &frame)
 
 	uint16_t temperature = imSht2x.GetTemperatureBin();
 	uint16_t humidity = imSht2x.GetHumidityBin();
+	float Temperature = imSht2x.GetTemperature();
+	float Humidity = imSht2x.GetHumidity();
       	DBGINFO("temp: ");
-	DBGINFO(temperature);
+	DBGINFO(Temperature);
 	DBGINFO(" hum: ");
-	DBGINFO(humidity);
+	DBGINFO(Humidity);
        data->w[0]=temperature;
        data->w[1]=humidity;
 

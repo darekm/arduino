@@ -82,19 +82,20 @@ void UartPrepareData(IMFrame &frame)
   DBGINFO(millis());
   dt->w[0]=millis();
   dt->w[1]=millis()>>16;
-  long x =internalVcc();
+//  long x =internalVcc();
+  long x=500;
   DBGINFO("vcc:");
   DBGINFO(x);
   dt->w[2]=x;
   dt->w[3]=x >>16;
-  x =internalTemp();
+//  x =internalTemp();
   dt->w[4]=x;
   dt->w[5]=x >>16;
   DBGINFO("tmo:");
   DBGINFO(x);
   DBGINFO("\r\n");
 
-//      shiftUartBuffer(x);
+ //   shiftUartBuffer(x);
 
 }
 

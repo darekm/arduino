@@ -37,6 +37,8 @@
 #define DataDelay 1000
 #define DataDuration 300
 #define CycleDuration 3000
+#define TimerDataCycle 1
+#define TimerKnockCycle TimerDataCycle*3
 
 
 /************************* Module specyfic functions **********************/

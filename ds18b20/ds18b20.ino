@@ -33,11 +33,13 @@
 #define BroadcastCallibrate 300
 
 
-#define DataDelay 1000
+
+#define DataDelay 1200
 #define DataDuration 300
 #define CycleDuration 3000
 
-
+#define TimerDataCycle 10
+#define TimerKnockCycle TimerDataCycle*3
 /************************* Module specyfic functions **********************/
 
 
@@ -89,13 +91,16 @@ void SendData()
 {
    if (trx.Connected())
    {
-      static IMFrame frame;
-      frame.Reset();
-      DataDS18B20(frame);
+      if ((trx.timer.Cycle()%TimerDataCycle)==0){
+        static IMFrame frame;
+        frame.Reset();
+        DataDS18B20(frame);
 
-      DBGINFO("SendData ");
-      trx.SendData(frame);
-      trx.Transmit();
+        DBGINFO("SendData ");
+        trx.SendData(frame);
+        trx.Transmit();
+        ERRFLASH();
+      } 
 
    } else {
      trx.ListenBroadcast();
@@ -176,11 +181,10 @@ void setup()
 
 void loop()
 {
-      static IMFrame frame;
-      frame.Reset();
-      DataDS18B20(frame);
+//      static IMFrame frame;
+//      frame.Reset();
+//      DataDS18B20(frame);
 
-  ERRFLASH();
   byte xstage;
   do{
 

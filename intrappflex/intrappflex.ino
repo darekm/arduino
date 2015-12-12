@@ -4,12 +4,6 @@
 #include <imsht.h>
 #include <imcharger.h>
 
-#define PinAkku A2
-#define EnableI2C A3
-#define EnableSHT A0
-#define EnableExtPower 6
-#define EnableAkku A1
-#define EnableRS485 5
 
 
 
@@ -47,7 +41,6 @@
 #include "imtrans.h"
 #include "imtimer.h"
 
-IMCharger	imCharger;
 
 IMCC1101  cc1101;
 Transceiver trx;
@@ -112,25 +105,14 @@ void SendData()
 void ReceiveData()
 {
   static IMFrame rxFrame;
-  if (trx.GetData()  )
-  {
-//    trx.printReceive();
       if (trx.GetFrame(rxFrame))
       {
-        DBGINFO(" RSSI: ");           DBGINFO(trx.Rssi());            DBGINFO("dBm  ");
         if (!trx.ParseFrame(rxFrame))
         {
-          if (rxFrame.NeedACK())
-             trx.SendACK(rxFrame);
           DBGINFO(" rxGET ");
         }
       }
-      else
-      {
-        DBGERR("!VALID");
-      }
       DBGINFO("\r\n");
-  }
 
 }
 
@@ -163,8 +145,6 @@ void setup()
   INITDBG();
   ERRLEDINIT(); ERRLEDOFF();
   SetupIntrappFlex();
-
-  imCharger.Init();
   interrupts ();
   trx.Init(cc1101);
   trx.myMAC=MMAC;

@@ -113,25 +113,15 @@ void SendData()
 void ReceiveData()
 {
   static IMFrame rxFrame;
-  if (trx.GetData()  )
-  {
-//    trx.printReceive();
       if (trx.GetFrame(rxFrame))
       {
-        DBGINFO(" RSSI: ");           DBGINFO(trx.Rssi());            DBGINFO("dBm  ");
         if (!trx.ParseFrame(rxFrame))
         {
-          if (rxFrame.NeedACK())
-             trx.SendACK(rxFrame);
           DBGINFO(" rxGET ");
         }
       }
-      else
-      {
-        DBGERR("!VALID");
-      }
       DBGINFO("\r\n");
-  }
+
 
 }
 
@@ -164,6 +154,7 @@ void setup()
   INITDBG();
   ERRLEDINIT(); ERRLEDOFF();
   SetupDS18B20();
+
   interrupts ();
   trx.Init(cc1101);
   trx.myMAC=MMAC;
@@ -181,10 +172,8 @@ void setup()
 
 void loop()
 {
-//      static IMFrame frame;
-//      frame.Reset();
-//      DataDS18B20(frame);
 
+  ERRFLASH();
   byte xstage;
   do{
 

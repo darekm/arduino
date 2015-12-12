@@ -13,9 +13,20 @@
 #include "Arduino.h"
 #include "imframe.h"
 #include "imdebug.h"
+#include <imsht.h>
+#include <imcharger.h>
+
+
+#define PinAkku A2
+#define EnableI2C A3
+#define EnableSHT A0
+#define EnableExtPower 6
+#define EnableAkku A1
+#define EnableRS485 5
 
 
 IMSht2x		imSht2x;
+IMCharger	imCharger;
 
 
 
@@ -28,6 +39,8 @@ void SetupIntrappFlex()
 	digitalWrite(EnableSHT, HIGH);
 	digitalWrite(EnableI2C, HIGH);
 	//digitalWrite(EnableRS485, LOW);
+       imCharger.Init();
+
 }
 
 

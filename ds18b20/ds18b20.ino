@@ -34,8 +34,8 @@
 
 
 
-#define DataDelay 1200
-#define DataDuration 300
+#define DataDelay 1500
+#define DataDuration 600
 #define CycleDuration 3000
 
 #define TimerDataCycle 10

@@ -28,8 +28,8 @@
 #define BroadcastCallibrate 300
 
 
-#define DataDelay 1000
-#define DataDuration 300
+#define DataDelay 1500
+#define DataDuration 600
 #define CycleDuration 3000
 #define TimerDataCycle 1
 #define TimerKnockCycle TimerDataCycle*3

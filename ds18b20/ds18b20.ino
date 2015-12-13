@@ -40,6 +40,8 @@
 
 #define TimerDataCycle 10
 #define TimerKnockCycle TimerDataCycle*3
+#define TimerHelloCycle 30
+
 /************************* Module specyfic functions **********************/
 
 
@@ -173,7 +175,7 @@ void setup()
 void loop()
 {
 
-  ERRFLASH();
+//  ERRFLASH();
   byte xstage;
   do{
 

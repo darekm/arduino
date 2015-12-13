@@ -33,7 +33,7 @@
 #define CycleDuration 3000
 #define TimerDataCycle 1
 #define TimerKnockCycle TimerDataCycle*3
-
+#define TimerHelloCycle 30
 
 /************************* Module specyfic functions **********************/
 

@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <avr/power.h>
 #include <imframe.h>
+#include <me_atmega.h>   
 #include <imsht.h>
 #include <imcharger.h>
 
@@ -31,7 +32,7 @@
 #define DataDelay 1500
 #define DataDuration 600
 #define CycleDuration 3000
-#define TimerDataCycle 1
+#define TimerDataCycle 10
 #define TimerKnockCycle TimerDataCycle*3
 #define TimerHelloCycle 30
 
@@ -90,9 +91,9 @@ void SendData()
       frame.Reset();
       DataIntrappFlex(frame);
 
-      DBGINFO("SendData ");
       trx.SendData(frame);
       trx.Transmit();
+      ERRFLASH();
 
    } else {
      trx.ListenBroadcast();
@@ -163,7 +164,6 @@ void setup()
 void loop()
 {
 
-  ERRFLASH();
   byte xstage;
   do{
 

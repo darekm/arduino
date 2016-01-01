@@ -49,12 +49,6 @@
 IMCC1101  cc1101;
 Transceiver trx;
 
-int freeRam ()
-{
-      extern int __heap_start, *__brkval;
-      int v;
-      return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
-}
 
 
 
@@ -129,6 +123,14 @@ void ReceiveData()
 }
 
 
+void PrintStatus()
+{
+      DBGINFO("\r\n");
+          DBGINFO(" Status ");
+          trx.printStatus();
+      DBGINFO("\r\n");
+
+}
 
 void stageloop(byte stage)
 {
@@ -142,6 +144,8 @@ void stageloop(byte stage)
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
+    case IMTimer::PERIOD : PrintStatus();break;
+    case CRONHOUR : PrintStatus();break;
 
     default:
     break;
@@ -166,7 +170,7 @@ void setup()
   trx.timer.onStage=stageloop;
   pciSetup(9);
 //   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
-    trx.timer.Setup(trx.timer.PERIOD,CycleDuration);
+    trx.timer.Setup(IMTimer::PERIOD,CycleDuration);
     trx.timer.Setup(STARTDATA,DataDelay);
     trx.timer.Setup(STOPDATA,DataDelay+DataDuration);
     trx.timer.Setup(STARTBROADCAST,BroadcastDelay);

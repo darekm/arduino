@@ -38,7 +38,7 @@
 #define DataDuration 600
 #define CycleDuration 3000
 
-#define TimerDataCycle 10
+#define TimerDataCycle 1
 #define TimerKnockCycle TimerDataCycle*3
 #define TimerHelloCycle 30
 

@@ -57,9 +57,9 @@ Transceiver trx;
 
 void pciSetup(byte pin)
 {
-    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
-    PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
-    PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
+  *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
+  PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
+  PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
 }
 
 
@@ -82,26 +82,27 @@ void OnRead(byte state)
 
 void SendData()
 {
-   if (trx.Connected())
-   {
-//      DBGINFO("CYCLE<");     
-      if ((trx.timer.Cycle()%TimerDataCycle)==0){
-//        DBGINFO(millis());     
-//        DBGINFO(">");     
-        static IMFrame frame;
-        frame.Reset();
-        if (DataSOIL(frame)){
+  if (trx.Connected())
+  {
+    //      DBGINFO("CYCLE<");     
+    if ((trx.timer.Cycle()%TimerDataCycle)==0){
+      //        DBGINFO(millis());     
+      //        DBGINFO(">");     
+      static IMFrame frame;
+      frame.Reset();
+      if (DataSOIL(frame)){
 
-//          DBGINFO("SendData ");
-          trx.SendData(frame);
-          trx.Transmit();
-          ERRFLASH();
-        } 
+        //          DBGINFO("SendData ");
+        trx.SendData(frame);
+        trx.Transmit();
+        //          ERRFLASH();
       } 
+    } 
 
-   } else {
-     trx.ListenBroadcast();
-   }
+  } 
+  else {
+    trx.ListenBroadcast();
+  }
 
 }
 
@@ -110,14 +111,14 @@ void SendData()
 void ReceiveData()
 {
   static IMFrame rxFrame;
-      if (trx.GetFrame(rxFrame))
-      {
-        if (!trx.ParseFrame(rxFrame))
-        {
-          DBGINFO(" rxGET ");
-        }
-      }
-      DBGINFO("\r\n");
+  if (trx.GetFrame(rxFrame))
+  {
+    if (!trx.ParseFrame(rxFrame))
+    {
+      DBGINFO(" rxGET ");
+    }
+  }
+  DBGINFO("\r\n");
 
 
 }
@@ -125,29 +126,45 @@ void ReceiveData()
 
 void PrintStatus()
 {
-      DBGINFO("\r\n");
-          DBGINFO(" Status ");
-          trx.printStatus();
-      DBGINFO("\r\n");
+  DBGINFO("\r\n");
+  DBGINFO(" Status ");
+  trx.printStatus();
+  DBGINFO("\r\n");
 
 }
 
 void stageloop(byte stage)
 {
-  //DBGINFO("stageloop=");  DBGINFO(millis());
-//  DBGINFO(":");  DBGINFO(stage);
+  //  DBGINFO("stage=");  DBGINFO(millis());
+  //  DBGINFO(":");  DBGINFO(stage);
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();      break;
-    case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: SendData();break;
-    case STOPDATA:   trx.StopListen();      break;
-    case LISTENDATA : ReceiveData();break;
-    case LISTENBROADCAST : ReceiveData();break;
-    case IMTimer::PERIOD : PrintStatus();break;
-    case CRONHOUR : PrintStatus();break;
+  case STARTBROADCAST:  
+    trx.ListenBroadcast();      
+    break;
+  case STOPBROADCAST:  
+    trx.Knock();      
+    break;
+  case STARTDATA: 
+    SendData();
+    break;
+  case STOPDATA:   
+    trx.StopListen();      
+    break;
+  case LISTENDATA : 
+    ReceiveData();
+    break;
+  case LISTENBROADCAST : 
+    ReceiveData();
+    break;
+    case IMTimer::PERIOD : 
+    PrintStatus();
+    break;
+  case CRONHOUR : 
+    PrintStatus();
+    break;
 
-    default:
+  default:
     break;
   }
 }
@@ -159,7 +176,8 @@ void stageloop(byte stage)
 void setup()
 {
   INITDBG();
-  ERRLEDINIT(); ERRLEDOFF();
+  ERRLEDINIT(); 
+  ERRLEDOFF();
   SetupSOIL();
 
   interrupts ();
@@ -169,24 +187,25 @@ void setup()
   trx.onEvent=OnRead;
   trx.timer.onStage=stageloop;
   pciSetup(9);
-//   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
-    trx.timer.Setup(IMTimer::PERIOD,CycleDuration);
-    trx.timer.Setup(STARTDATA,DataDelay);
-    trx.timer.Setup(STOPDATA,DataDelay+DataDuration);
-    trx.timer.Setup(STARTBROADCAST,BroadcastDelay);
-    trx.timer.Setup(STOPBROADCAST,BroadcastDelay+BroadcastDuration);
+  //   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
+  trx.timer.Setup(IMTimer::PERIOD,CycleDuration);
+  trx.timer.Setup(STARTDATA,DataDelay);
+  trx.timer.Setup(STOPDATA,DataDelay+DataDuration);
+  trx.timer.Setup(STARTBROADCAST,BroadcastDelay);
+  trx.timer.Setup(STOPBROADCAST,BroadcastDelay+BroadcastDuration);
 }
 
 void loop()
 {
-
   ERRFLASH();
+
   byte xstage;
   do{
 
-     xstage=trx.timer.WaitStage();
-     stageloop(xstage);
-  }while( xstage==trx.timer.PERIOD);
-
+    xstage=trx.timer.WaitStage();
+    stageloop(xstage);
+  }
+  while( xstage!=IMTimer::PERIOD);
 
 }
+

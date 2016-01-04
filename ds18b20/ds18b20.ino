@@ -38,8 +38,6 @@
 #define DataDuration 600
 #define CycleDuration 3000
 
-#define TimerDataCycle 1
-#define TimerKnockCycle TimerDataCycle*3
 #define TimerHelloCycle 30
 
 /************************* Module specyfic functions **********************/
@@ -93,7 +91,8 @@ void SendData()
 {
    if (trx.Connected())
    {
-      if ((trx.timer.Cycle()%TimerDataCycle)==0){
+      if (trx.CycleData())
+      {
         static IMFrame frame;
         frame.Reset();
         DataDS18B20(frame);
@@ -165,7 +164,7 @@ void setup()
   trx.timer.onStage=stageloop;
   pciSetup(9);
 //   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
-    trx.timer.Setup(trx.timer.PERIOD,CycleDuration);
+    trx.timer.Setup(IMTimer::PERIOD,CycleDuration);
     trx.timer.Setup(STARTDATA,DataDelay);
     trx.timer.Setup(STOPDATA,DataDelay+DataDuration);
     trx.timer.Setup(STARTBROADCAST,BroadcastDelay);
@@ -181,7 +180,7 @@ void loop()
 
      xstage=trx.timer.WaitStage();
      stageloop(xstage);
-  }while( xstage==trx.timer.PERIOD);
+  }while( xstage!=IMTimer::PERIOD);
 
 
 }

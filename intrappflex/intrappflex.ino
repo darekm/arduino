@@ -154,7 +154,7 @@ void setup()
   trx.timer.onStage=stageloop;
   pciSetup(9);
 //   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
-    trx.timer.Setup(trx.timer.PERIOD,CycleDuration);
+    trx.timer.Setup(IMTimer::PERIOD,CycleDuration);
     trx.timer.Setup(STARTDATA,DataDelay);
     trx.timer.Setup(STOPDATA,DataDelay+DataDuration);
     trx.timer.Setup(STARTBROADCAST,BroadcastDelay);
@@ -169,7 +169,7 @@ void loop()
 
      xstage=trx.timer.WaitStage();
      stageloop(xstage);
-  }while( xstage==trx.timer.PERIOD);
+  }while( xstage!=IMTimer::PERIOD);
 
 
 }

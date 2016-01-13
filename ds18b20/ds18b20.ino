@@ -23,7 +23,7 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x102060  // My MAC
+#define MMAC 0x102090  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 7     //Type of device
 
@@ -35,7 +35,7 @@
 
 
 #define DataDelay 1500
-#define DataDuration 600
+#define DataDuration 900
 #define CycleDuration 3000
 
 #define TimerHelloCycle 30
@@ -85,7 +85,13 @@ void OnRead(byte state)
 
 
 
-
+void PrepareData()
+{
+   if (trx.Connected())
+   {
+       PrepareDS18B20();
+   }  
+}  
 
 void SendData()
 {
@@ -95,12 +101,16 @@ void SendData()
       {
         static IMFrame frame;
         frame.Reset();
+        long mm=millis();
         DataDS18B20(frame);
+        DBGINFO(" :");
+        DBGINFO(millis()-mm);
+        
 
         DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
-        ERRFLASH();
+//        ERRFLASH();
       } 
 
    } else {
@@ -130,16 +140,24 @@ void ReceiveData()
 
 void stageloop(byte stage)
 {
-//  DBGINFO("stageloop=");  DBGINFO(millis());
-//  DBGINFO(":");  DBGINFO(stage);
+  // if (stage== STARTBROADCAST){
+//    DBGINFO("stageloop=");  DBGINFO(millis());
+//    DBGINFO(":");  DBGINFO(stage);
+//  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();      break;
+    case STARTBROADCAST:  trx.ListenBroadcast();  PrepareData();    break;
     case STOPBROADCAST:  trx.Knock();      break;
     case STARTDATA: SendData();break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
+    case IMTimer::IDDLESTAGE : {
+     DBGINFO("***IDDLE DATA");
+     DBGINFO(millis());
+
+       ReceiveData();break;
+     }
 
     default:
     break;
@@ -174,7 +192,7 @@ void setup()
 void loop()
 {
 
-//  ERRFLASH();
+  ERRFLASH();
   byte xstage;
   do{
 

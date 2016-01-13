@@ -24,7 +24,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 
-
+DeviceAddress  dsAddress;
 
 void SetupDS18B20()
 {
@@ -32,19 +32,30 @@ void SetupDS18B20()
   sensors.begin();
   DBGINFO("devices:");
   DBGINFO(sensors.getDeviceCount());
+  sensors.setWaitForConversion(false);
+//  sensors.getAddress(&dsAddress,1);
+  sensors.getAddress(dsAddress, 0);
+  
+   for(byte i = 0; i < 8; i++)
+    {
+      DBGINFO2( dsAddress[i], HEX );
+    }  
 
 }
 
-
+void PrepareDS18B20()
+{
+   sensors.requestTemperatures();
+  
+}  
 
 
 void DataDS18B20(IMFrame &frame)
 {
    IMFrameData *data =frame.Data();
-   sensors.requestTemperatures();
    DeviceAddress deviceAddress;
-   bool ex=sensors.getAddress(deviceAddress, 0);
-  int16_t hh=sensors.getTempHex((uint8_t*)deviceAddress);
+//   bool ex=sensors.getAddress(deviceAddress, 0);
+  int16_t hh=sensors.getTempHex((uint8_t*)dsAddress);
  
 //  float Temp=sensors.getTempCByIndex(0);
       	DBGINFO("temp: ");

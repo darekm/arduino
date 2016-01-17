@@ -13,6 +13,7 @@
 #include "Arduino.h"
 #include "imframe.h"
 #include "imdebug.h"
+#include <me_atmega.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -26,12 +27,13 @@ DallasTemperature sensors(&oneWire);
 
 DeviceAddress  dsAddress;
 
-void SetupDS18B20()
+IMMAC SetupDS18B20()
 {
   pinMode(ONE_WIRE_BUS,INPUT_PULLUP);
   sensors.begin();
   DBGINFO("devices:");
   DBGINFO(sensors.getDeviceCount());
+   DBGINFO("=");
   sensors.setWaitForConversion(false);
 //  sensors.getAddress(&dsAddress,1);
   sensors.getAddress(dsAddress, 0);
@@ -39,8 +41,14 @@ void SetupDS18B20()
    for(byte i = 0; i < 8; i++)
     {
       DBGINFO2( dsAddress[i], HEX );
+      DBGINFO(" ");
     }  
-
+  IMMAC xx=(dsAddress[6]);
+  
+ // xx=0xDA34;
+  xx=(xx << 8);
+  xx+= dsAddress[7];
+  return xx;
 }
 
 void PrepareDS18B20()
@@ -64,6 +72,9 @@ void DataDS18B20(IMFrame &frame)
         DBGINFO(hh);
 //        DBGINFO(ex);
        data->w[0]=hh;
+   uint16_t Vin=internalVcc();
+   data->w[2]=Vin;
+
 
 
 }

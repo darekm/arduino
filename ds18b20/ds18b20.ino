@@ -1,6 +1,7 @@
 
 #include <imframe.h>
 #define REQUIRESALARMS 0
+#include <me_atmega.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -23,7 +24,7 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x102090  // My MAC
+#define MMAC 0x170000  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 7     //Type of device
 
@@ -172,11 +173,15 @@ void setup()
 {
   INITDBG();
   ERRLEDINIT(); ERRLEDOFF();
-  SetupDS18B20();
+  IMMAC ad=SetupDS18B20();
 
   interrupts ();
   trx.Init(cc1101);
   trx.myMAC=MMAC;
+  trx.myMAC+=ad;
+    DBGINFO(" MMAC ");  DBGINFO2(trx.myMAC,HEX);
+        DBGINFO("  ");
+//     DBGINFO2( trx.myMAC, HEX );
   trx.myDevice=MDEVICE;
   trx.onEvent=OnRead;
   trx.timer.onStage=stageloop;

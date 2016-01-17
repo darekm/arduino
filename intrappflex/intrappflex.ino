@@ -93,7 +93,7 @@ void SendData()
 
       trx.SendData(frame);
       trx.Transmit();
-      ERRFLASH();
+//      ERRFLASH();
 
    } else {
      trx.ListenBroadcast();
@@ -121,7 +121,7 @@ void ReceiveData()
 
 void stageloop(byte stage)
 {
-//  DBGINFO("stageloop=");  DBGINFO(millis());
+ // DBGINFO("stageloop=");  DBGINFO(millis());
 //  DBGINFO(":");  DBGINFO(stage);
   switch (stage)
   {
@@ -163,6 +163,11 @@ void setup()
 
 void loop()
 {
+ //     static IMFrame frame2;
+//      frame2.Reset();
+ // DBGINFO("A=");  DBGINFO(millis());
+ //     DataIntrappFlex(frame2);
+//  DBGINFO("=Z");  DBGINFO(millis());
 
   byte xstage;
   do{

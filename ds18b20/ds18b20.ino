@@ -28,18 +28,10 @@
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 7     //Type of device
 
-#define RadioDelay 2900  //Time between calls - Let hardware serial write out async
-#define BroadcastDelay 200
-#define BroadcastDuration 600
-#define BroadcastCallibrate 300
 
 
 
-#define DataDelay 1500
-#define DataDuration 900
-#define CycleDuration 3000
 
-#define TimerHelloCycle 30
 
 /************************* Module specyfic functions **********************/
 
@@ -141,9 +133,9 @@ void ReceiveData()
 
 void stageloop(byte stage)
 {
-  // if (stage== STARTBROADCAST){
-//    DBGINFO("stageloop=");  DBGINFO(millis());
-//    DBGINFO(":");  DBGINFO(stage);
+//   if (stage== STARTBROADCAST){
+    DBGINFO("stageloop=");  DBGINFO(millis());
+    DBGINFO(":");  DBGINFO(stage);
 //  }
   switch (stage)
   {
@@ -186,12 +178,8 @@ void setup()
   trx.onEvent=OnRead;
   trx.timer.onStage=stageloop;
   pciSetup(9);
+//  trx.TimerSetup();
 //   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
-    trx.timer.Setup(IMTimer::PERIOD,CycleDuration);
-    trx.timer.Setup(STARTDATA,DataDelay);
-    trx.timer.Setup(STOPDATA,DataDelay+DataDuration);
-    trx.timer.Setup(STARTBROADCAST,BroadcastDelay);
-    trx.timer.Setup(STOPBROADCAST,BroadcastDelay+BroadcastDuration);
 }
 
 void loop()

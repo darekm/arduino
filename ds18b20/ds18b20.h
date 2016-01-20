@@ -61,7 +61,7 @@ void PrepareDS18B20()
 void DataDS18B20(IMFrame &frame)
 {
    IMFrameData *data =frame.Data();
-   DeviceAddress deviceAddress;
+//   DeviceAddress deviceAddress;
 //   bool ex=sensors.getAddress(deviceAddress, 0);
   int16_t hh=sensors.getTempHex((uint8_t*)dsAddress);
  

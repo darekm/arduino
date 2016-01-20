@@ -105,4 +105,13 @@ int freeRam ()
 }
 
 #endif
+
+uint16_t internalrandom() {
+  long x= internalVcc();
+  x=x+micros();
+  x=x +(x >>7);
+  return x;
+
+}
+
 #endif // __MEATMEGA_H__

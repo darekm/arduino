@@ -12,6 +12,7 @@
 #ifndef __MEATMEGA_H__
 #define __MEATMEGA_H__
 #include "Arduino.h"
+#include <avr/wdt.h>
 
 
 // http://code.google.com/p/tinkerit/wiki/SecretVoltmeter
@@ -113,5 +114,24 @@ uint16_t internalrandom() {
   return x;
 
 }
+
+void reboot() {
+  wdt_disable();
+  do{
+  wdt_enable(WDTO_15MS);
+  for(;;){};
+//  while (1) {}
+  }while(0);
+}
+
+#define soft_restart()        \
+do                          \
+{                           \
+    wdt_enable(WDTO_15MS);  \
+    for(;;)                 \
+    {                       \
+    }                       \
+} while(0)
+
 
 #endif // __MEATMEGA_H__

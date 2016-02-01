@@ -141,6 +141,13 @@ void stageloop(byte stage)
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
+    case IMTimer::IDDLESTAGE : {
+     DBGINFO("***IDDLE DATA");
+     DBGINFO(millis());
+
+       ReceiveData();break;
+     }
+
 
     default:
     break;
@@ -164,18 +171,11 @@ void setup()
   trx.onEvent=OnRead;
   trx.timer.onStage=stageloop;
   pciSetup(9);
-//   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
-    trx.timer.Setup(IMTimer::PERIOD,CycleDuration);
-    trx.timer.Setup(STARTDATA,DataDelay);
-    trx.timer.Setup(STOPDATA,DataDelay+DataDuration);
-    trx.timer.Setup(STARTBROADCAST,BroadcastDelay);
-    trx.timer.Setup(STOPBROADCAST,BroadcastDelay+BroadcastDuration);
+
 }
 
 void loop()
 {
-
-//  ERRFLASH();
   byte xstage;
   do{
 

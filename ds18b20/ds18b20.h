@@ -33,7 +33,7 @@ IMMAC SetupDS18B20()
   sensors.begin();
   DBGINFO("devices:");
   DBGINFO(sensors.getDeviceCount());
-   DBGINFO("=");
+  DBGINFO("=");
   sensors.setWaitForConversion(false);
 //  sensors.getAddress(&dsAddress,1);
   sensors.getAddress(dsAddress, 0);

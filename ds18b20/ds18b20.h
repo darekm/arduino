@@ -13,7 +13,7 @@
 #include "Arduino.h"
 #include "imframe.h"
 #include "imdebug.h"
-#include <me_atmega.h>
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
 

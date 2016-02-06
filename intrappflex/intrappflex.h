@@ -40,7 +40,7 @@ void SetupIntrappFlex()
 	digitalWrite(EnableI2C, HIGH);
 	//digitalWrite(EnableRS485, LOW);
 	pinMode(EnableAkku, OUTPUT);
-	digitalWrite(EnableAkku, HIGH);
+	digitalWrite(EnableAkku, LOW);
        imCharger.Init();
        pinMode(VCC_PIN,INPUT);
 
@@ -61,8 +61,8 @@ void DataIntrappFlex(IMFrame &frame)
         
 //	float Temperature = imSht2x.GetTemperature();
 //	float Humidity = imSht2x.GetHumidity();
-//      	DBGINFO("temp: ");
-//	DBGINFO(Temperature);
+      	DBGINFO("temp: ");
+	DBGINFO(imSht2x.GetTemperature());
 //	DBGINFO(" hum: ");
 //	DBGINFO(Humidity);
 	DBGINFO(" vin: ");
@@ -73,11 +73,11 @@ void DataIntrappFlex(IMFrame &frame)
 	DBGINFO(vcc);
 	DBGINFO(" \r\n");
          
-//       data->w[0]=temperature;
-//       data->w[1]=humidity;
-       data->w[2]=Vin;
-       data->w[3]=CHR;
-       data->w[3]=vcc;
+       data->w[3]=temperature;
+       data->w[4]=humidity;
+       data->w[5]=Vin;
+       data->w[2]=CHR;
+       data->w[1]=vcc;
 
 
 }

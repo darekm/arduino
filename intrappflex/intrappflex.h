@@ -73,11 +73,11 @@ void DataIntrappFlex(IMFrame &frame)
 	DBGINFO(vcc);
 	DBGINFO(" \r\n");
          
-       data->w[3]=temperature;
-       data->w[4]=humidity;
+       data->w[2]=temperature;
+       data->w[3]=humidity;
        data->w[5]=Vin;
-       data->w[2]=CHR;
-       data->w[1]=vcc;
+       data->w[1]=CHR;
+       data->w[0]=vcc;
 
 
 }

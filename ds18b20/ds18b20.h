@@ -71,9 +71,9 @@ void DataDS18B20(IMFrame &frame)
         DBGINFO(" ");
         DBGINFO(hh);
 //        DBGINFO(ex);
-       data->w[0]=hh;
+       data->w[2]=hh;
    uint16_t Vin=internalVcc();
-   data->w[2]=Vin;
+   data->w[0]=Vin;
 
 
 

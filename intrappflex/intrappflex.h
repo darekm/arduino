@@ -1,6 +1,6 @@
 // 
 //    FILE:
-// VERSION: 0.1.00
+// VERSION: 0.9.00
 // PURPOSE: SHT driver  for imwave
 //
 //

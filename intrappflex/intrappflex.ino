@@ -47,7 +47,18 @@ Transceiver trx;
 
 
 
-
+/*
+void PrepareData()
+{
+   if (trx.Connected())
+   {
+      if (trx.CycleData())
+      {
+       PrepareIntrappFlex();
+       }
+   }
+}
+*/
 
 
 
@@ -56,9 +67,13 @@ Transceiver trx;
 void SendData()
 {
    if (trx.Connected())
-   { 
+   {
+      if (trx.CycleDataPrev()){
+        PrepareIntrappFlex();
+      }
       if (trx.CycleData())
       {
+         trx.printTime();
          static IMFrame frame;
          frame.Reset();
          DataIntrappFlex(frame);
@@ -99,7 +114,7 @@ void stageloop(byte stage)
 //   DBGINFO(":");  DBGINFO(stage);
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();      break;
+    case STARTBROADCAST:  trx.ListenBroadcast();     break;
     case STOPBROADCAST:  trx.Knock();      break;
     case STARTDATA: SendData();break;
     case STOPDATA:   trx.StopListen();      break;

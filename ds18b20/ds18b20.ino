@@ -39,9 +39,11 @@
 
 #include "imtrans.h"
 #include "imtimer.h"
+#include "imbufcc1101.h"
 
 
-IMCC1101  cc1101;
+// IMCC1101  cc1101;
+IMBuffer    buffer;
 Transceiver trx;
 
 
@@ -61,9 +63,33 @@ void PrepareData()
 {
    if (trx.Connected())
    {
+      if (trx.CycleData())
+      {
        PrepareDS18B20();
+       }
    }  
 }  
+
+
+void SendDataFlood()
+{
+  return;
+   if (trx.Connected())
+   {
+     static IMFrame frame;
+     frame.Reset();
+     IMFrameData *data =frame.Data();
+     for(byte i = 0; i < 8; i++){
+        data->w[0]=100;
+        data->w[1]=i;
+
+        trx.SendData(frame);
+        trx.Transmit();
+
+     }
+   }
+}
+
 
 void SendData()
 {
@@ -83,7 +109,11 @@ void SendData()
         trx.SendData(frame);
         trx.Transmit();
         ERRFLASH();
-      } 
+      } else{
+         trx.printCycle();
+
+
+      }
 
    } else {
      trx.ListenBroadcast();
@@ -126,9 +156,9 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();  PrepareData();    break;
+    case STARTBROADCAST:  trx.ListenBroadcast();  PrepareData();   break;
     case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: SendData();break;
+    case STARTDATA: SendData();  SendDataFlood();break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
@@ -165,8 +195,9 @@ void setup()
   randomSeed(analogRead(0)+internalrandom());
   trx.myMAC=MMAC;
   trx.myMAC+=ad;
-  trx.Init(cc1101);
-  
+//  trx.Init(cc1101);
+  trx.Init(buffer);
+
   //  DBGINFO(" MMAC ");  DBGINFO2(trx.myMAC,HEX);
   //      DBGINFO("  ");
   trx.myDevice=MDEVICE;

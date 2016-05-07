@@ -107,6 +107,11 @@ void ReceiveData()
 }
 
 
+//void ISRTrans() // handle pin change interrupt for D8 to D13 here
+ISR(PCINT0_vect) // handle pin change interrupt for D8 to D13 here
+ {
+  trx.Rupture();
+ }
 
 void stageloop(byte stage)
 {

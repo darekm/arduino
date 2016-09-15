@@ -32,9 +32,10 @@
 
 #include "imtrans.h"
 #include "imtimer.h"
+#include "imbufcc1101.h"
 
 
-IMCC1101  cc1101;
+IMBuffer  buffer;
 Transceiver trx;
 
 
@@ -108,15 +109,15 @@ void ReceiveData()
 
 
 //void ISRTrans() // handle pin change interrupt for D8 to D13 here
-ISR(PCINT0_vect) // handle pin change interrupt for D8 to D13 here
- {
-  trx.Rupture();
- }
+//ISR(PCINT0_vect) // handle pin change interrupt for D8 to D13 here
+// {
+//  trx.Rupture();
+// }
 
 void stageloop(byte stage)
 {
-//   DBGINFO("stageloop=");  DBGINFO(millis());
-//   DBGINFO(":");  DBGINFO(stage);
+   DBGINFO("stageloop=");  DBGINFO(millis());
+   DBGINFO(":");  DBGINFO(stage);
   switch (stage)
   {
     case STARTBROADCAST:  trx.ListenBroadcast();     break;
@@ -146,14 +147,14 @@ void setup()
   INITDBG();
   ERRLEDINIT(); ERRLEDOFF();
   SetupIntrappFlex();
-  wdt_enable(WDTO_8S);  
+//  wdt_enable(WDTO_8S);  
   interrupts ();
   randomSeed(analogRead(0)+internalrandom());
   trx.myMAC=MMAC;
   trx.myDevice=MDEVICE;
-  trx.Init(cc1101);
-  trx.timer.onStage=stageloop;
-  pciSetup(9);
+  trx.Init(buffer);
+//  trx.timer.onStage=stageloop;
+//  pciSetup(9);
 //   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
 }
 
@@ -161,10 +162,9 @@ void loop()
 {
  //     static IMFrame frame2;
 //      frame2.Reset();
-  wdt_reset();     
+//  wdt_reset();     
   byte xstage;
   do{
-
      xstage=trx.timer.WaitStage();
      stageloop(xstage);
   }while( xstage!=IMTimer::PERIOD);

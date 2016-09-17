@@ -190,7 +190,7 @@ void setup()
   DBGINFO(F("*****start"));
   ERRLEDINIT();   ERRLEDOFF();
   IMMAC ad=SetupDS18B20();
-//  wdt_enable(WDTO_8S);
+  wdt_enable(WDTO_8S);
 
   interrupts ();
   randomSeed(analogRead(0)+internalrandom());
@@ -228,7 +228,7 @@ void setup()
 
 void loop()
 {
-//  wdt_reset();
+  wdt_reset();
   PrintStatus();  
   byte xstage;
   do{

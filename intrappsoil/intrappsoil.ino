@@ -12,7 +12,7 @@
 //#define DBGLED 0
  //#.define DBGLVL 2
 #include "imdebug.h"
-#include "intrappflex.h"
+#include "intrappsoil.h"
 
 
 
@@ -20,9 +20,9 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x160002  // My MAC
+#define MMAC 0x190003  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 6     //Type of device
+#define MDEVICE 19     //Type of device
 
 
 
@@ -74,7 +74,7 @@ void SendData()
       }
       if (trx.CycleData())
       {
-         trx.printTime();
+   //      trx.printTime();
          static IMFrame frame;
          frame.Reset();
          DataIntrappFlex(frame);
@@ -147,7 +147,7 @@ void setup()
   INITDBG();
   ERRLEDINIT(); ERRLEDOFF();
   SetupIntrappFlex();
-////  wdt_enable(WDTO_8S);  
+  wdt_enable(WDTO_8S);  
   interrupts ();
   randomSeed(analogRead(0)+internalrandom());
   trx.myMAC=MMAC;
@@ -162,6 +162,7 @@ void loop()
 {
  //     static IMFrame frame2;
 //      frame2.Reset();
+//  DataSOIL();
   wdt_reset();     
   byte xstage;
   do{

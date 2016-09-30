@@ -197,14 +197,14 @@ void setup()
   //  wdt_enable(WDTO_8S);
   disableADCB();
   digitalWrite(4,LOW);
-  // interrupts ();
+   interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 
   trx.myMAC=MMAC;
       DBGINFO2(trx.myMAC,HEX);
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
-  trx.timer.onStage=stageloop;
+ // trx.timer.onStage=stageloop;
 //  trx.DisableWatchdog();
   
   long start2=millis();

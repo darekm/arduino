@@ -187,7 +187,7 @@ void setup()
 //  DBGINFO(buf3._IM);
   
   DBGINFO("_");
-  setupTimer2();
+//  setupTimer2();
   digitalWrite(4,HIGH);
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
@@ -195,7 +195,7 @@ void setup()
   ERRLEDINIT();
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
-  disableADCB();
+//  disableADCB();
   digitalWrite(4,LOW);
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
@@ -216,7 +216,7 @@ void setup()
     ERRLEDOFF();
      //  trx.TimerSetup();
     //   DBGINFO("classtest Timer");
-  DBGINFO(IMTimer::ClassTest());
+ // DBGINFO(IMTimer::ClassTest());
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);

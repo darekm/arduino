@@ -20,7 +20,7 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x190003  // My MAC
+#define MMAC 0x190005  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 19     //Type of device
 

@@ -61,6 +61,7 @@ void SendDataFlood()
      frame.Reset();
      COUNTER++;
      IMFrameData *data =frame.Data();
+     frame.Header.Function=32;
      for(byte i = 0; i < 4; i++){
         data->w[0]=100;
         data->w[1]=i;

@@ -1,0 +1,21 @@
+Partlist exported from C:/EAGLE/projects/aaduino/aaduino-v4.sch at 2016-10-12 11:37
+
+Part Value           Device                    Package                              Description                            PROD_ID    VALUE     
+ANT  M01PTH          M01PTH                    1X01                                 Header 1                                                    
+ASP1                 M04PTH                    1X04                                 Header 4                               CONN-09696           
+C1   0.1uF           0.1UF-25V(+80/-20%)(0603) 0603-CAP                             CAP-00810                              CAP-00810  0.1uF     
+C2   0.1uF           0.1UF-25V(+80/-20%)(0603) 0603-CAP                             CAP-00810                              CAP-00810  0.1uF     
+C3   0.1uF           0.1UF-25V(+80/-20%)(0603) 0603-CAP                             CAP-00810                              CAP-00810  0.1uF     
+J1   KEYSTONE-629    KEYSTONE-629              KEYSTONE_AA_AAA_BATTERY_TERMINAL-629 Keystone 629                                                
+J2   KEYSTONE-637    KEYSTONE-637              KEYSTONE_AA_AAA_BATTERY_TERMINAL-637 Keystone 637                                                
+JP1                  M03PTH                    1X03                                 Header 3                                                    
+JP2                  M03PTH                    1X03                                 Header 3                                                    
+JP3                  M03PTH                    1X03                                 Header 3                                                    
+LED1 green           LED0603                   LED-0603                             LEDs                                                        
+R1   10k             RESISTOR0603-RES          0603-RES                             Resistor                                                    
+R2   1k8             RESISTOR0603-RES          0603-RES                             Resistor                                                    
+R3   4k7             RESISTOR0603-RES          0603-RES                             Resistor                                                    
+R4   4k7             RESISTOR0603-RES          0603-RES                             Resistor                                                    
+U$1  RFM69HCW-S2     RFM69HCW-S2               HOPE-RF-16                           HopeRF RFM69HCW ISM Transceiver Module                      
+U1   ATMEGA328P      ATMEGA328_SMT             TQFP32-08                            32-Pin Atmega328 part                  IC-09069   ATMEGA328P
+U3   RESONATOR_16MHZ RESONATOR_16MHZ           RESONATOR_SMD                                                                                    

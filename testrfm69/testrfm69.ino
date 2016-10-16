@@ -176,14 +176,14 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(4,OUTPUT);
-  digitalWrite(4,HIGH);
-  digitalWrite(4,LOW);
+  pinMode(DBGPIN,OUTPUT);
+  digitalWrite(DBGPIN,HIGH);
+  digitalWrite(DBGPIN,LOW);
   wdt_disable();
   INITDBG();
-  digitalWrite(4,HIGH);
+  digitalWrite(DBGPIN,HIGH);
   DBGINFO("SETUP");
-  digitalWrite(4,LOW);
+  digitalWrite(DBGPIN,LOW);
 //  DBGINFO(freeRam());
 //  DBGINFO(buf3._IM);
   
@@ -197,7 +197,7 @@ void setup()
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
 //  disableADCB();
-  digitalWrite(4,LOW);
+  digitalWrite(DBGPIN,LOW);
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 

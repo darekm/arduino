@@ -1,2 +1,2 @@
-avrdude -c usbasp -p m328p  -B10  -v
+avrdude -c usbasp -p m328p   -B10  -v
 

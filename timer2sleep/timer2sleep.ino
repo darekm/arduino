@@ -185,21 +185,21 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(4,OUTPUT);
-  pinMode(4,OUTPUT);
-  digitalWrite(4,HIGH);
-  digitalWrite(4,LOW);
+  pinMode(DBGPIN,OUTPUT);
+  pinMode(5,OUTPUT);
+  digitalWrite(DBGPIN,HIGH);
+  digitalWrite(DBGPIN,LOW);
   wdt_disable();
   INITDBG();
-  digitalWrite(4,HIGH);
+  digitalWrite(DBGPIN,HIGH);
   DBGINFO("SETUP");
-  digitalWrite(4,LOW);
+  digitalWrite(DBGPIN,LOW);
 //  DBGINFO(freeRam());
 //  DBGINFO(buf3._IM);
   
   DBGINFO("_");
   setupTimer2();
-  digitalWrite(4,HIGH);
+  digitalWrite(DBGPIN,HIGH);
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
@@ -207,7 +207,7 @@ void setup()
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
   disableADCB();
-  digitalWrite(4,LOW);
+  digitalWrite(DBGPIN,LOW);
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 

@@ -20,9 +20,9 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x130020  // My MAC
+#define MMAC 0x200001  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 3     //Type of device
+#define MDEVICE 7     //Type of device
 
 
 
@@ -38,8 +38,8 @@
 //#include "imbuftest.h"
 
 
-Transceiver trx;
 IMBuffer    buf3;
+Transceiver trx;
 
 
 
@@ -55,17 +55,23 @@ IMBuffer    buf3;
 int COUNTER=0;
 
 
+void DataFlash()
+{
+  
+      ERRFLASH();
+      delay(50);
+}    
 void SendDataFlood()
 {
      static IMFrame frame;
      frame.Reset();
      COUNTER++;
      IMFrameData *data =frame.Data();
+     frame.Header.Function=32;
      for(byte i = 0; i < 4; i++){
         data->w[0]=100;
+        data->w[1]=i;
         data->w[2]=COUNTER;
-        data->w[3]=i;
-        data->w[4]=COUNTER;
 
         trx.SendData(frame);
 //        trx.Transmit();
@@ -79,28 +85,22 @@ void SendDataFlood()
 
 void SendData()
 {
-   if (trx.Connected())
+/*   if (trx.Connected())
    {
       if (trx.CycleData())
       {
         static IMFrame frame;
         frame.Reset();
-         COUNTER++;
-         IMFrameData *data =frame.Data();
-//        long mm=millis();
+        long mm=millis();
 //        DataDS18B20(frame);
-//        DBGINFO(" :");
-//        DBGINFO(millis()-mm);
-        data->w[0]=100;
-        data->w[2]=COUNTER;
-        data->w[3]=1;
-        data->w[4]=COUNTER;
+        DBGINFO(" :");
+        DBGINFO(millis()-mm);
         
 
-//        DBGINFO("SendData ");
+        DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
-//        ERRFLASH();
+        ERRFLASH();
       } else{
          trx.printCycle();
 
@@ -111,24 +111,27 @@ void SendData()
      trx.ListenBroadcast();
    }
 
-
+*/
 }
 
 
 
 void ReceiveData()
 {
+//  static IMFrame rxFrame;
 //ERRLEDON();
 //  DBGINFO(" Receive ");
-      while (trx.GetData())
+    while(trx.GetData()){ 
+  //    if(trx.GetFrame(rxFrame))
+      if (trx.Parse())
       {
-        if (trx.Parse())
+    //    if (!trx.ParseFrame(rxFrame))
         {
-          DBGINFO(" rxGET ");
+      //    DBGINFO(" rxGET ");
         }
       }
       DBGINFO("\r\n");
-
+    }
 //ERRLEDOFF();
 
 }
@@ -146,15 +149,16 @@ void PrintStatus()
 void stageloop(byte stage)
 {
 //   if (stage== STARTBROADCAST){
-//    DBGINFO("stageloop=");  DBGINFO(millisT2());
-//    DBGINFO(":");  DBGINFO(stage);
+ //   DBGINFO("stageloop=");  DBGINFO(millisT2());
+ //   DBGINFO(":");  DBGINFO(stage);
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();   break;
+    case STARTBROADCAST:  trx.ListenBroadcast();  digitalWrite(5,HIGH);delay(50); break;
 //    case STOPBROADCAST:  trx.StopListenBroadcast();      break;
-    case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: trx.Wakeup();SendData();/*trx.ListenData(); */ break;
+//    case STOPBROADCAST:  trx.Knock();      break;
+    case STOPBROADCAST:  digitalWrite(5,LOW);      break;
+    case STARTDATA: trx.Wakeup();DataFlash();trx.ListenData();  break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
@@ -171,7 +175,7 @@ void stageloop(byte stage)
     break;
   }
 
-   DBGINFO("@@\r\n");
+ //  DBGINFO("@@\r\n");
 
 }
 
@@ -181,29 +185,29 @@ void stageloop(byte stage)
 
 void setup()
 {
-  noInterrupts(); 
-  pinMode(DBGPIN ,OUTPUT);
-  digitalWrite(DBGPIN ,HIGH);
-  digitalWrite(DBGPIN ,LOW);
+  pinMode(DBGPIN,OUTPUT);
+  pinMode(5,OUTPUT);
+  digitalWrite(DBGPIN,HIGH);
+  digitalWrite(DBGPIN,LOW);
   wdt_disable();
   INITDBG();
-  digitalWrite(DBGPIN ,HIGH);
+  digitalWrite(DBGPIN,HIGH);
   DBGINFO("SETUP");
   digitalWrite(DBGPIN,LOW);
 //  DBGINFO(freeRam());
 //  DBGINFO(buf3._IM);
   
   DBGINFO("_");
-//  setupTimer2();
-  digitalWrite(4,HIGH);
+  setupTimer2();
+  digitalWrite(DBGPIN,HIGH);
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
   ERRLEDINIT();
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
-//  disableADCB();
-  digitalWrite(4,LOW);
+  disableADCB();
+  digitalWrite(DBGPIN,LOW);
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 
@@ -216,11 +220,24 @@ void setup()
   
   long start2=millis();
   long start2T=millisT2();
+  
 //  pciSetup(9);
+  DBGINFO(incTimer2());
+    DBGINFO(millisT2());
+    DBGINFO("\r\n");
     ERRLEDON();
  //   delay(1000);
-    delay(200);
+    delay(2000);
     ERRLEDOFF();
+    DBGINFO(start2T-start2);
+    DBGINFO(incTimer2());
+    DBGINFO(millisT2());
+    DBGINFO("\r\n");
+    delay(200);
+    DBGINFO(start2T-start2);
+  DBGINFO(incTimer2());
+    DBGINFO(millisT2());
+    DBGINFO("\r\n");
      //  trx.TimerSetup();
     //   DBGINFO("classtest Timer");
  // DBGINFO(IMTimer::ClassTest());
@@ -229,6 +246,9 @@ void setup()
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
   DBGINFO("ASSR_") ; DBGINFO(ASSR);
   DBGINFO("CLKPR_") ;DBGINFO(CLKPR);
+  DBGINFO(incTimer2());
+    DBGINFO(millisT2());
+    DBGINFO("\r\n");
 //  CLKPR = 0x80;    // Tell the AtMega we want to change the system clock
 //  CLKPR = 0x00;    // 1/256 prescaler = 60KHz for a 16MHz crystal
 
@@ -267,6 +287,7 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
     Serial.println(i);
   } 
  */ 
+ /*
   for (uint8_t ii=0;ii<8;ii++)
   {
   for (uint8_t i=0;i<16;i++)
@@ -275,7 +296,7 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
   } 
    DBGINFO("\r\n");
    }
-
+*/
 }
 
 void loop()
@@ -289,8 +310,10 @@ void loop()
 //  wdt_reset();
 //  PrintStatus();
 //  delay(300);
-  DBGINFO("\r\n");
-  DBGINFO("LOOP");
+//  DBGINFO("\r\n");
+  DBGINFO("\r\nLOOP");
+  DBGINFO(incTimer2());
+  DBGINFO(millisT2());
     
   byte xstage;
   do{

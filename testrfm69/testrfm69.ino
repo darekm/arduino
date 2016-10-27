@@ -112,18 +112,20 @@ void SendData()
 
 void ReceiveData()
 {
-  static IMFrame rxFrame;
+//  static IMFrame rxFrame;
 ERRLEDON();
 //  DBGINFO(" Receive ");
-      if (trx.GetFrame(rxFrame))
+    while(trx.GetData()){ 
+  //    if(trx.GetFrame(rxFrame))
+      if (trx.Parse())
       {
-        if (!trx.ParseFrame(rxFrame))
+    //    if (!trx.ParseFrame(rxFrame))
         {
-          DBGINFO(" rxGET ");
+      //    DBGINFO(" rxGET ");
         }
       }
       DBGINFO("\r\n");
-
+    }
 ERRLEDOFF();
 
 }
@@ -151,8 +153,8 @@ void stageloop(byte stage)
     case STOPBROADCAST:  trx.Knock();      break;
     case STARTDATA: trx.Wakeup();SendDataFlood();trx.ListenData();  break;
     case STOPDATA:   trx.StopListen();      break;
-    case LISTENDATA : ReceiveData();break;
-    case LISTENBROADCAST : ReceiveData();break;
+    case LISTENDATA :digitalWrite(5,HIGH); ReceiveData();digitalWrite(5,LOW);break;
+    case LISTENBROADCAST : digitalWrite(5,HIGH);ReceiveData();digitalWrite(5,LOW);break;
     case IMTimer::IDDLESTAGE : {
      DBGINFO("***IDLE DATA");
 
@@ -177,6 +179,13 @@ void stageloop(byte stage)
 void setup()
 {
   pinMode(DBGPIN,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(4,INPUT_PULLUP);
+  pinMode(10,OUTPUT);
+  digitalWrite(10,HIGH);
+  digitalWrite(DBGPIN,HIGH);
+  digitalWrite(DBGPIN,LOW);
+
   digitalWrite(DBGPIN,HIGH);
   digitalWrite(DBGPIN,LOW);
   wdt_disable();
@@ -189,7 +198,7 @@ void setup()
   
   DBGINFO("_");
 //  setupTimer2();
-  digitalWrite(4,HIGH);
+  digitalWrite(DBGPIN,HIGH);
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
@@ -203,6 +212,7 @@ void setup()
 
   trx.myMAC=MMAC;
       DBGINFO2(trx.myMAC,HEX);
+//  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
  // trx.timer.onStage=stageloop;

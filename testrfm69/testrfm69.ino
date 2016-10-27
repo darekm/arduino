@@ -20,9 +20,9 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x200001  // My MAC
+#define MMAC 0x130020  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 7     //Type of device
+#define MDEVICE 3     //Type of device
 
 
 
@@ -38,8 +38,8 @@
 //#include "imbuftest.h"
 
 
-IMBuffer    buf3;
 Transceiver trx;
+IMBuffer    buf3;
 
 
 
@@ -61,11 +61,11 @@ void SendDataFlood()
      frame.Reset();
      COUNTER++;
      IMFrameData *data =frame.Data();
-     frame.Header.Function=32;
      for(byte i = 0; i < 4; i++){
         data->w[0]=100;
-        data->w[1]=i;
         data->w[2]=COUNTER;
+        data->w[3]=i;
+        data->w[4]=COUNTER;
 
         trx.SendData(frame);
 //        trx.Transmit();
@@ -79,22 +79,28 @@ void SendDataFlood()
 
 void SendData()
 {
-/*   if (trx.Connected())
+   if (trx.Connected())
    {
       if (trx.CycleData())
       {
         static IMFrame frame;
         frame.Reset();
-        long mm=millis();
+         COUNTER++;
+         IMFrameData *data =frame.Data();
+//        long mm=millis();
 //        DataDS18B20(frame);
-        DBGINFO(" :");
-        DBGINFO(millis()-mm);
+//        DBGINFO(" :");
+//        DBGINFO(millis()-mm);
+        data->w[0]=100;
+        data->w[2]=COUNTER;
+        data->w[3]=1;
+        data->w[4]=COUNTER;
         
 
-        DBGINFO("SendData ");
+//        DBGINFO("SendData ");
         trx.SendData(frame);
-        trx.Transmit();
-        ERRFLASH();
+ //       trx.Transmit();
+//        ERRFLASH();
       } else{
          trx.printCycle();
 
@@ -105,7 +111,7 @@ void SendData()
      trx.ListenBroadcast();
    }
 
-*/
+
 }
 
 
@@ -113,20 +119,16 @@ void SendData()
 void ReceiveData()
 {
 //  static IMFrame rxFrame;
-ERRLEDON();
+//ERRLEDON();
 //  DBGINFO(" Receive ");
-    while(trx.GetData()){ 
-  //    if(trx.GetFrame(rxFrame))
-      if (trx.Parse())
+      while (trx.GetData())
       {
-    //    if (!trx.ParseFrame(rxFrame))
+        if (trx.Parse())
         {
       //    DBGINFO(" rxGET ");
         }
       }
       DBGINFO("\r\n");
-    }
-ERRLEDOFF();
 
 }
 
@@ -143,15 +145,15 @@ void PrintStatus()
 void stageloop(byte stage)
 {
 //   if (stage== STARTBROADCAST){
-    DBGINFO("stageloop=");  DBGINFO(millisT2());
-    DBGINFO(":");  DBGINFO(stage);
+//    DBGINFO("stageloop=");  DBGINFO(millisT2());
+//    DBGINFO(":");  DBGINFO(stage);
 //  }
   switch (stage)
   {
     case STARTBROADCAST:  trx.ListenBroadcast();   break;
 //    case STOPBROADCAST:  trx.StopListenBroadcast();      break;
     case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: trx.Wakeup();SendDataFlood();trx.ListenData();  break;
+    case STARTDATA: trx.Wakeup();SendData();/*trx.ListenData(); */ break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA :digitalWrite(5,HIGH); ReceiveData();digitalWrite(5,LOW);break;
     case LISTENBROADCAST : digitalWrite(5,HIGH);ReceiveData();digitalWrite(5,LOW);break;
@@ -178,14 +180,11 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(DBGPIN,OUTPUT);
-  pinMode(5,OUTPUT);
+  noInterrupts();
   pinMode(4,INPUT_PULLUP);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
-  digitalWrite(DBGPIN,HIGH);
-  digitalWrite(DBGPIN,LOW);
-
+  pinMode(DBGPIN ,OUTPUT);
   digitalWrite(DBGPIN,HIGH);
   digitalWrite(DBGPIN,LOW);
   wdt_disable();
@@ -206,7 +205,7 @@ void setup()
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
 //  disableADCB();
-  digitalWrite(DBGPIN,LOW);
+  digitalWrite(4,LOW);
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 

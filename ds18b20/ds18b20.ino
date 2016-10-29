@@ -39,18 +39,10 @@
 
 #include "imtrans.h"
 #include "imtimer.h"
-#include "imbufcc1101.h"
+#include "imbufrfm69.h"
 
-
-// IMCC1101  cc1101;
-IMBuffer    buffer;
 Transceiver trx;
-
-
-
-
-
-
+IMBuffer    buffer;
 
 
 
@@ -99,22 +91,18 @@ void SendData()
       {
         static IMFrame frame;
         frame.Reset();
-        long mm=millis();
+/*        long mm=millis();
         DataDS18B20(frame);
         DBGINFO(" :");
         DBGINFO(millis()-mm);
-        
-
+*/        
         DBGINFO("SendData ");
         trx.SendData(frame);
-        trx.Transmit();
-        ERRFLASH();
+//        trx.Transmit();
+//        ERRFLASH();
       } else{
          trx.printCycle();
-
-
       }
-
    } else {
      trx.ListenBroadcast();
    }
@@ -125,15 +113,14 @@ void SendData()
 
 void ReceiveData()
 {
-  static IMFrame rxFrame;
-      if (trx.GetFrame(rxFrame))
+      while (trx.GetData())
       {
-        if (!trx.ParseFrame(rxFrame))
+        if (trx.Parse())
         {
           DBGINFO(" rxGET ");
         }
       }
-      DBGINFO("\r\n");
+     DBGINFO("\r\n");
 
 
 }
@@ -142,7 +129,7 @@ void PrintStatus()
 {
   DBGINFO("\r\n");
   DBGINFO(" Status ");
-  trx.printStatus();
+//  trx.printStatus();
   DBGINFO("\r\n");
 
 }
@@ -158,7 +145,7 @@ void stageloop(byte stage)
   {
     case STARTBROADCAST:  trx.ListenBroadcast();  PrepareData();   break;
     case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: SendData();  SendDataFlood();break;
+    case STARTDATA: trx.Wakeup();SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
@@ -185,12 +172,16 @@ void stageloop(byte stage)
 
 void setup()
 {
-  delay(1000);
+  pinMode(DBGPIN ,OUTPUT);
+  digitalWrite(DBGPIN ,HIGH);
+  digitalWrite(DBGPIN ,LOW);
+  wdt_disable();
+
   INITDBG();
   DBGINFO(F("*****start"));
   ERRLEDINIT();   ERRLEDOFF();
   IMMAC ad=SetupDS18B20();
-  wdt_enable(WDTO_8S);
+//  wdt_enable(WDTO_8S);
 
   interrupts ();
   randomSeed(analogRead(0)+internalrandom());
@@ -220,7 +211,7 @@ void setup()
     reboot();
 
   }     
-  DBGINFO(F("Free RAM bytes: "));DBGINFO(freeRam());
+//  DBGINFO(F("Free RAM bytes: "));DBGINFO(freeRam());
   
 //  trx.TimerSetup();
 //   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
@@ -228,7 +219,7 @@ void setup()
 
 void loop()
 {
-  wdt_reset();
+//  wdt_reset();
   PrintStatus();  
   byte xstage;
   do{

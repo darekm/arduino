@@ -39,7 +39,8 @@
 
 #include "imtrans.h"
 #include "imtimer.h"
-#include "imbufrfm69.h"
+#include "imbufcc1101.h"
+
 
 Transceiver trx;
 IMBuffer    buffer;

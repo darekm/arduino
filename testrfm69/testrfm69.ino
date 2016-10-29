@@ -99,7 +99,7 @@ void SendData()
 
 //        DBGINFO("SendData ");
         trx.SendData(frame);
- //       trx.Transmit();
+//        trx.Transmit();
 //        ERRFLASH();
       } else{
          trx.printCycle();

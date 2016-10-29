@@ -1,42 +1,22 @@
 
 #include <imframe.h>
-#define REQUIRESALARMS 0
 #include <imatmega.h>
 #include <OneWire.h>
-#include <DallasTemperature.h>
-#include <avr/wdt.h>
-
-// Data wire is plugged into pin 2 on the Arduino
-#define ONE_WIRE_BUS 2
-
-
-
-
-
-
-
-//#.define DBGLVL 2
+#include <SPI.h>
 #include "imdebug.h"
-#include "ds18b20.h"
-
-
-
-
 
 /******************************** Configuration *************************************/
-
+#define REQUIRESALARMS 0
+// Data wire is plugged into pin 2 on the Arduino
+#define ONE_WIRE_BUS 2
 #define MMAC 0x170000  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 7     //Type of device
 
-
-
-
-
-
 /************************* Module specyfic functions **********************/
 
-
+#include <DallasTemperature.h>
+#include "ds18b20.h"
 #include "imtrans.h"
 #include "imtimer.h"
 #include "imbufrfm69.h"
@@ -45,42 +25,18 @@ Transceiver trx;
 IMBuffer    buffer;
 
 
-
-
-
-
-
-
 void PrepareData()
 {
    if (trx.Connected())
    {
       if (trx.CycleData())
       {
-       PrepareDS18B20();
-       }
+         PrepareDS18B20();
+      }
    }  
 }  
 
 
-void SendDataFlood()
-{
-  return;
-   if (trx.Connected())
-   {
-     static IMFrame frame;
-     frame.Reset();
-     IMFrameData *data =frame.Data();
-     for(byte i = 0; i < 8; i++){
-        data->w[0]=100;
-        data->w[1]=i;
-
-        trx.SendData(frame);
-        trx.Transmit();
-
-     }
-   }
-}
 
 
 void SendData()
@@ -106,7 +62,6 @@ void SendData()
    } else {
      trx.ListenBroadcast();
    }
-
 }
 
 
@@ -121,8 +76,6 @@ void ReceiveData()
         }
       }
      DBGINFO("\r\n");
-
-
 }
 
 void PrintStatus()
@@ -131,7 +84,6 @@ void PrintStatus()
   DBGINFO(" Status ");
 //  trx.printStatus();
   DBGINFO("\r\n");
-
 }
 
 
@@ -156,14 +108,12 @@ void stageloop(byte stage)
      }
     case IMTimer::PERIOD : 
   //      ERRFLASH();
- //     PrintStatus();
+  //     PrintStatus();
     break;
     default:
     break;
   }
-
 //   DBGINFO("@@\r\n");
-
 }
 
 

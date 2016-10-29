@@ -36,9 +36,6 @@ void PrepareData()
    }  
 }  
 
-
-
-
 void SendData()
 {
    if (trx.Connected())
@@ -47,15 +44,11 @@ void SendData()
       {
         static IMFrame frame;
         frame.Reset();
-/*        long mm=millis();
+//        long mm=millis();
         DataDS18B20(frame);
-        DBGINFO(" :");
-        DBGINFO(millis()-mm);
-*/        
+//        DBGINFO(" :");        DBGINFO(millis()-mm);
         DBGINFO("SendData ");
         trx.SendData(frame);
-//        trx.Transmit();
-//        ERRFLASH();
       } else{
          trx.printCycle();
       }
@@ -102,8 +95,7 @@ void stageloop(byte stage)
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
     case IMTimer::IDDLESTAGE : {
-     DBGINFO("***IDDLE DATA");
-
+       DBGINFO("***IDDLE DATA");
        ReceiveData();break;
      }
     case IMTimer::PERIOD : 
@@ -122,6 +114,9 @@ void stageloop(byte stage)
 
 void setup()
 {
+  pinMode(4,INPUT_PULLUP);
+  pinMode(10,OUTPUT);
+  digitalWrite(10,HIGH);
   pinMode(DBGPIN ,OUTPUT);
   digitalWrite(DBGPIN ,HIGH);
   digitalWrite(DBGPIN ,LOW);

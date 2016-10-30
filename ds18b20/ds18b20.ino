@@ -40,8 +40,10 @@ void SendData()
 {
    if (trx.Connected())
    {
-      if (trx.CycleData())
+      
+     if (trx.CycleData())
       {
+        trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
 //        long mm=millis();
@@ -49,6 +51,7 @@ void SendData()
 //        DBGINFO(" :");        DBGINFO(millis()-mm);
         DBGINFO("SendData ");
         trx.SendData(frame);
+        trx.Transmit();
       } else{
          trx.printCycle();
       }
@@ -90,7 +93,7 @@ void stageloop(byte stage)
   {
     case STARTBROADCAST:  trx.ListenBroadcast();  PrepareData();   break;
     case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: trx.Wakeup();SendData();  /*SendDataFlood();*/break;
+    case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;

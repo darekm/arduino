@@ -132,7 +132,7 @@ void setup()
 //  wdt_enable(WDTO_8S);
 
   interrupts ();
-  randomSeed(analogRead(0)+internalrandom());
+
   trx.myMAC=MMAC;
   trx.myMAC+=ad;
   trx.Init(buffer);
@@ -142,6 +142,7 @@ void setup()
   trx.myDevice=MDEVICE;
 //  trx.timer.onStage=stageloop;
 //    pciSetup(9);
+#if DBGLED>=1
   if (ad>0){
     ERRLEDON();
     delay(1000);
@@ -158,7 +159,8 @@ void setup()
     ERRLEDOFF();
     reboot();
 
-  }     
+  }
+#endif
 //  DBGINFO(F("Free RAM bytes: "));DBGINFO(freeRam());
   
 //  trx.TimerSetup();

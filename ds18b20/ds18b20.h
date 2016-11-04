@@ -60,6 +60,7 @@ void PrepareDS18B20()
 
 void DataDS18B20(IMFrame &frame)
 {
+   power_adc_enable();
    IMFrameData *data =frame.Data();
 //   DeviceAddress deviceAddress;
 //   bool ex=sensors.getAddress(deviceAddress, 0);
@@ -74,6 +75,7 @@ void DataDS18B20(IMFrame &frame)
        data->w[2]=hh;
    uint16_t Vin=internalVcc();
    data->w[0]=Vin;
+   ShutOffADC();
 
 
 

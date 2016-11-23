@@ -40,23 +40,20 @@ void SendData()
 {
    if (trx.Connected())
    {
-      
-     if (trx.CycleData())
-      {
+      if (trx.CycleData()) {
         trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
 //        long mm=millis();
         DataDS18B20(frame);
-//        DBGINFO(" :");        DBGINFO(millis()-mm);
         DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
-      } else{
-         trx.printCycle();
+      } else {
+        trx.printCycle();
       }
    } else {
-     trx.ListenBroadcast();
+//     trx.ListenBroadcast();
    }
 }
 

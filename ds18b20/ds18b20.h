@@ -60,7 +60,7 @@ void PrepareDS18B20()
 
 void DataDS18B20(IMFrame &frame)
 {
-   power_adc_enable();
+   SetupADC();
    IMFrameData *data =frame.Data();
 //   DeviceAddress deviceAddress;
 //   bool ex=sensors.getAddress(deviceAddress, 0);

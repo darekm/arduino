@@ -48,7 +48,7 @@
 
 
 
-byte toggle;
+byte toggle2;
       
 
 
@@ -116,7 +116,7 @@ void PrintStatus()
 
 }
 
-
+#define CRYSTAL32K 
 
 void setupTimer3()
 {
@@ -127,11 +127,13 @@ void setupTimer3()
    /* First disable the timer overflow interrupt while we're configuring */
   TIMSK2 &= ~(1<<TOIE2);
   TIMSK2 &= ~(1<<OCIE2A);
+  TIMSK2=0;
 
   /* Configure timer2 in normal mode (pure counting, no PWM etc.) */
   TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
 
   TCCR2A |= ((1<<WGM21) );
+//  TCCR2A=2;
 
   TCCR2B &= ~(1<<WGM22);
 
@@ -143,12 +145,13 @@ void setupTimer3()
 //  TIFR2  = 0x00;        //Timer2 INT Flag Reg: Clear Timer Overflow Flag
 
   ASSR |= ((1<<AS2));
-  DDRB|=(1<<DDB3);
+ // DDRB|=(1<<DDB3);
   DDRD|= (1<<DDD3);
-  TCCR2A |= ((1<<COM2A0) );
-  TCCR2A &= ~(1<<COM2A1);
+ // TCCR2A |= ((1<<COM2A0) );
+ // TCCR2A &= ~(1<<COM2A1);
   TCCR2A |= ((1<<COM2B0) );
   TCCR2A &= ~(1<<COM2B1);
+  
 //  ASSR = 0x20;
   TCCR2B=0x2;
 //  TCCR2B &= ~((1<<CS22)  | (1<<CS20)); // Set bits
@@ -156,7 +159,7 @@ void setupTimer3()
 //  TCCR2B &= ~(1<<CS20);             // Clear bit
  // TCCR2B |= (1<<FOC2A);             // Clear bit
  // TCCR2B |= (1<<FOC2B);             // Clear bit
-  OCR2A= 1;
+  OCR2A= 15;
   #else
    ASSR &= ~((1<<AS2));
 
@@ -204,26 +207,30 @@ void setup()
    }
 
   pinMode(DBGPIN,OUTPUT);
+  pinMode(DBGCLOCK,INPUT);
   pinMode(DBGCLOCK,OUTPUT);
   wdt_disable();
   INITDBG();
  // digitalWrite(DBGPIN,HIGH);
   DBGINFO("SETUP");
- // digitalWrite(DBGPIN,LOW);
+  digitalWrite(DBGCLOCK,HIGH);
 //  DBGINFO(freeRam());
 //  DBGINFO(buf3._IM);
   
   DBGINFO("_");
  // setupTimer2();
-  digitalWrite(DBGPIN,HIGH);
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
   ERRLEDINIT();
   ERRLEDOFF();
+  toggle2=true;
   //  wdt_enable(WDTO_8S);
-//  disableADCB();
-  DBGPINLOW();
+  disableADCB();
+  power_timer0_disable();
+//      power_spi_disable(); // SPI
+
+  DBGPINHIGH();
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 
@@ -294,23 +301,6 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
   start2T -=millisT2();
   DBGINFO("\r\nTIMERS") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
   */
-  /*
-  Serial.flush();
-  for (uint8_t i=0;i<32;i++)\
-  {
-    Serial.println(i);
-  } 
- */ 
- /*
-  for (uint8_t ii=0;ii<8;ii++)
-  {
-  for (uint8_t i=0;i<16;i++)
-  {
-    trx.timer.Watchdog(100);
-  } 
-   DBGINFO("\r\n");
-   }
-*/
   setupTimer3();
 }
 
@@ -319,8 +309,18 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
 ISR(TIMER2_COMPA_vect) {
   incTimer2();
   #ifdef DBGCLOCK
-    toggle = ~toggle;
-      digitalWrite(DBGCLOCK,toggle);
+    toggle2 = ~toggle2;
+  /*  if (toggle){
+        PORTD|=(1<<PORTD6);
+    } else{
+        PORTD&=~(1<<PORTD6);
+    };
+*/
+//  digitalWrite(DBGCLOCK,toggle2);  
+ // digitalWrite(DBGCLOCK,~toggle2);
+      digitalWrite(DBGCLOCK,toggle2);
+  // digitalWrite(DBGCLOCK,LOW);
+ //   digitalWrite(DBGCLOCK,HIGH);
   #endif
 }
 #endif        
@@ -339,11 +339,25 @@ void loop()
   DBGINFO("\r\nLOOP");
   DBGINFO(incTimer2());
   DBGINFO(millisT2());
-    
+  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
+  sleep_enable();
   long watchdog =0;
   do{
+     sei();
      watchdog++; 
-  }while( watchdog>1000);
-
+     while ((ASSR & (1<<OCR2AUB)) != 0x00) {
+       DBGPINLOW();
+       DBGPINHIGH();
+     };
+     goSleep();
+     cli();
+     OCR2A= 15;
+    
+   }while( watchdog<10);
+// sleep_disable(); 
+ sei();
+  DBGPINLOW();
+  DBGPINHIGH();
+  digitalWrite(DBGCLOCK,LOW);
 
 }

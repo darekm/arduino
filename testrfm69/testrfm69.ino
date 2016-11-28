@@ -83,6 +83,7 @@ void SendData()
    {
       if (trx.CycleData())
       {
+        trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
          COUNTER++;
@@ -99,16 +100,17 @@ void SendData()
 
 //        DBGINFO("SendData ");
         trx.SendData(frame);
-//        trx.Transmit();
+        trx.Transmit();
 //        ERRFLASH();
       } else{
          trx.printCycle();
 
 
       }
+      trx.ListenData();
 
    } else {
-     trx.ListenBroadcast();
+  //   trx.ListenBroadcast();
    }
 
 
@@ -153,10 +155,10 @@ void stageloop(byte stage)
     case STARTBROADCAST:  trx.ListenBroadcast();   break;
 //    case STOPBROADCAST:  trx.StopListenBroadcast();      break;
     case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: trx.Wakeup();SendData();/*trx.ListenData(); */ break;
+    case STARTDATA: SendData();/*trx.ListenData(); */ break;
     case STOPDATA:   trx.StopListen();      break;
-    case LISTENDATA :digitalWrite(5,HIGH); ReceiveData();digitalWrite(5,LOW);break;
-    case LISTENBROADCAST : digitalWrite(5,HIGH);ReceiveData();digitalWrite(5,LOW);break;
+    case LISTENDATA :DBGPINHIGH(); ReceiveData();DBGPINLOW();break;
+    case LISTENBROADCAST : DBGPINHIGH();ReceiveData();DBGPINLOW();break;
     case IMTimer::IDDLESTAGE : {
      DBGINFO("***IDLE DATA");
 
@@ -180,10 +182,10 @@ void stageloop(byte stage)
 
 void setup()
 {
-  noInterrupts();
   pinMode(4,INPUT_PULLUP);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
+  pinMode(DBGCLOCK,OUTPUT);
   pinMode(DBGPIN ,OUTPUT);
   digitalWrite(DBGPIN,HIGH);
   digitalWrite(DBGPIN,LOW);
@@ -204,8 +206,8 @@ void setup()
   ERRLEDINIT();
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
-//  disableADCB();
-  digitalWrite(4,LOW);
+   disableADCB();
+   power_timer0_disable();
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 
@@ -214,17 +216,8 @@ void setup()
 //  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
- // trx.timer.onStage=stageloop;
-//  trx.DisableWatchdog();
-  
-  long start2=millis();
-  long start2T=millisT2();
-//  pciSetup(9);
-    ERRLEDON();
- //   delay(1000);
-    delay(200);
-    ERRLEDOFF();
-     //  trx.TimerSetup();
+   
+      //  trx.TimerSetup();
     //   DBGINFO("classtest Timer");
  // DBGINFO(IMTimer::ClassTest());
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
@@ -263,13 +256,8 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
   start2T -=millisT2();
   DBGINFO("\r\nTIMERS") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
   */
-  /*
-  Serial.flush();
-  for (uint8_t i=0;i<32;i++)\
-  {
-    Serial.println(i);
-  } 
- */ 
+ 
+ /*
   for (uint8_t ii=0;ii<8;ii++)
   {
   for (uint8_t i=0;i<16;i++)
@@ -278,17 +266,12 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
   } 
    DBGINFO("\r\n");
    }
-
+*/
+ setupTimer2();
 }
 
 void loop()
 {
-/*  DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
-  DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
-  DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
-  DBGINFO("ASSR_") ; DBGINFO(ASSR);
-  DBGINFO("CLKPR_") ;DBGINFO(CLKPR);
-  */
 //  wdt_reset();
 //  PrintStatus();
 //  delay(300);
@@ -297,9 +280,10 @@ void loop()
     
   byte xstage;
   do{
-
+   DBGPINLOW();
      xstage=trx.timer.WaitStage();
      stageloop(xstage);
+  DBGPINHIGH();
   }while( xstage!=IMTimer::PERIOD);
 
 

@@ -144,16 +144,16 @@ void setupTimer3()
 //   TCCR2A &= ~(1<<WGM21);
 //  TIFR2  = 0x00;        //Timer2 INT Flag Reg: Clear Timer Overflow Flag
 
-  ASSR |= ((1<<AS2));
+ 
  // DDRB|=(1<<DDB3);
   DDRD|= (1<<DDD3);
  // TCCR2A |= ((1<<COM2A0) );
  // TCCR2A &= ~(1<<COM2A1);
   TCCR2A |= ((1<<COM2B0) );
-  TCCR2A &= ~(1<<COM2B1);
-  
-//  ASSR = 0x20;
-  TCCR2B=0x2;
+  TCCR2A &= ~(1<<COM2B1);  
+ 
+  ASSR |= ((1<<AS2));
+  TCCR2B=0x3;
 //  TCCR2B &= ~((1<<CS22)  | (1<<CS20)); // Set bits
 //  TCCR2B &= ~(1<<CS22);             // Clear bit
 //  TCCR2B &= ~(1<<CS20);             // Clear bit
@@ -237,77 +237,22 @@ void setup()
  
  // trx.timer.onStage=stageloop;
 //  trx.DisableWatchdog();
-#if DBGLVL >=1  
-  long start2=millis();
-  long start2T=millisT2();
-  
-//  pciSetup(9);
-  DBGINFO(incTimer2());
-    DBGINFO(millisT2());
-    DBGINFO("\r\n");
-    ERRLEDON();
- //   delay(1000);
-    delay(2000); kjnkjnkj
-    ERRLEDOFF();
-    DBGINFO(start2T-start2);
-    DBGINFO(incTimer2());
-    DBGINFO(millisT2());
-    DBGINFO("\r\n");
-    delay(200);
-    DBGINFO(start2T-start2);
-  DBGINFO(incTimer2());
-    DBGINFO(millisT2());
-    DBGINFO("\r\n");
-#endif
      //  trx.TimerSetup();
     //   DBGINFO("classtest Timer");
  // DBGINFO(IMTimer::ClassTest());
-  DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
-  DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
-  DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
-  DBGINFO("ASSR_") ; DBGINFO(ASSR);
-  DBGINFO("CLKPR_") ;DBGINFO(CLKPR);
   DBGINFO(incTimer2());
     DBGINFO(millisT2());
     DBGINFO("\r\n");
 //  CLKPR = 0x80;    // Tell the AtMega we want to change the system clock
 //  CLKPR = 0x00;    // 1/256 prescaler = 60KHz for a 16MHz crystal
 
-/*  delay(1000);
-  start2 -=millis();
-  start2T -=millisT2();
-  Serial.flush();
-  DBGINFO("TIMER") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
-  start2=millis();
-  start2T=millisT2();
-  delay(1200);
-  DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;  
-  start2 -=millis();
-  start2T -=millisT2();
-  DBGINFO("\r\nTIMERB") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
-  Serial.flush();
-  start2=millis();
-  start2T=millisT2();
-  delaySleepT2(1200);
-DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;  
-  start2 -=millis();
-  start2T -=millisT2();
-  DBGINFO("\r\nTIMERST") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
-  Serial.flush();
-  start2=millis();
-  start2T=millisT2();
-  delaySleep(1200);
-  start2 -=millis();
-  start2T -=millisT2();
-  DBGINFO("\r\nTIMERS") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
-  */
   setupTimer3();
 }
 
 
 #if defined(__AVR_ATmega328P__)
 ISR(TIMER2_COMPA_vect) {
-  incTimer2();
+ // incTimer2();
   #ifdef DBGCLOCK
     toggle2 = ~toggle2;
   /*  if (toggle){
@@ -326,12 +271,7 @@ ISR(TIMER2_COMPA_vect) {
 #endif        
 void loop()
 {
-/*  DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
-  DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
-  DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
-  DBGINFO("ASSR_") ; DBGINFO(ASSR);
-  DBGINFO("CLKPR_") ;DBGINFO(CLKPR);
-  */
+
 //  wdt_reset();
 //  PrintStatus();
 //  delay(300);
@@ -343,14 +283,14 @@ void loop()
   sleep_enable();
   long watchdog =0;
   do{
-     sei();
+  //   sei();
      watchdog++; 
      while ((ASSR & (1<<OCR2AUB)) != 0x00) {
        DBGPINLOW();
        DBGPINHIGH();
      };
      goSleep();
-     cli();
+  //   cli();
      OCR2A= 15;
     
    }while( watchdog<10);

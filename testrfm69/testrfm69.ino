@@ -182,6 +182,7 @@ void stageloop(byte stage)
 
 void setup()
 {
+  pinMode(3,INPUT_PULLUP);
   pinMode(4,INPUT_PULLUP);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
@@ -194,6 +195,7 @@ void setup()
   digitalWrite(DBGPIN,HIGH);
   DBGINFO("SETUP");
   digitalWrite(DBGPIN,LOW);
+  setupTimer2();
 //  DBGINFO(freeRam());
 //  DBGINFO(buf3._IM);
   
@@ -207,7 +209,7 @@ void setup()
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
    disableADCB();
-   power_timer0_disable();
+   power_timer0_enable();
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 
@@ -216,6 +218,7 @@ void setup()
 //  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
+  power_timer0_disable();
    
       //  trx.TimerSetup();
     //   DBGINFO("classtest Timer");

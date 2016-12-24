@@ -10,7 +10,7 @@
 #ifndef imDS18B20_h
 #define imDS18B20_h
 
-#include "Arduino.h"
+//#include "Arduino.h"
 #include "imframe.h"
 #include "imdebug.h"
 
@@ -26,6 +26,8 @@ DallasTemperature sensors(&oneWire);
 
 
 DeviceAddress  dsAddress;
+uint16_t cpuVin;
+uint16_t cpuVinCycle=0;
 
 IMMAC SetupDS18B20()
 {
@@ -37,8 +39,7 @@ IMMAC SetupDS18B20()
   sensors.setWaitForConversion(false);
 //  sensors.getAddress(&dsAddress,1);
   sensors.getAddress(dsAddress, 0);
-  
-   for(byte i = 0; i < 8; i++)
+  for(byte i = 0; i < 8; i++)
     {
       DBGINFO2( dsAddress[i], HEX );
       DBGINFO(" ");
@@ -54,31 +55,28 @@ IMMAC SetupDS18B20()
 void PrepareDS18B20()
 {
    sensors.requestTemperatures();
-  
 }  
 
 
 void DataDS18B20(IMFrame &frame)
-{
-   SetupADC();
+{   
+  if (cpuVinCycle % 4==0){ 
+    SetupADC();
+    cpuVin=internalVcc();
+    ShutOffADC();
+  }
+   cpuVinCycle++;
+  
    IMFrameData *data =frame.Data();
-//   DeviceAddress deviceAddress;
 //   bool ex=sensors.getAddress(deviceAddress, 0);
-  int16_t hh=sensors.getTempHex((uint8_t*)dsAddress);
- 
-//  float Temp=sensors.getTempCByIndex(0);
-      	DBGINFO("temp: ");
-       DBGINFO(sensors.getTempCByIndex(0));
+   int16_t hh=sensors.getTempHex((uint8_t*)dsAddress);
+       	DBGINFO("temp: ");
+        DBGINFO(sensors.getTempCByIndex(0));
         DBGINFO(" ");
         DBGINFO(hh);
-//        DBGINFO(ex);
        data->w[2]=hh;
-   uint16_t Vin=internalVcc();
-   data->w[0]=Vin;
-   ShutOffADC();
-
-
-
+ //  Vin=internalVcc();
+   data->w[0]=cpuVin;
 }
 
 

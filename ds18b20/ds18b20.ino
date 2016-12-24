@@ -31,7 +31,9 @@ void PrepareData()
    {
       if (trx.CycleData())
       {
-         PrepareDS18B20();
+  DBGPINHIGH();
+  PrepareDS18B20();
+  DBGPINLOW();
       }
    }  
 }  
@@ -41,19 +43,21 @@ void SendData()
    if (trx.Connected())
    {
       if (trx.CycleData()) {
+        DBGPINHIGH();
         trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
-//        long mm=millis();
         DataDS18B20(frame);
+        DBGPINLOW();
         DBGINFO("SendData ");
         trx.SendData(frame);
-        trx.Transmit();
+         trx.Transmit();
       } else {
         trx.printCycle();
       }
+      trx.ListenData();
    } else {
-//     trx.ListenBroadcast();
+     //trx.ListenBroadcast();
    }
 }
 
@@ -95,6 +99,7 @@ void stageloop(byte stage)
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
     case IMTimer::IDDLESTAGE : {
+
        DBGINFO("***IDDLE DATA");
        ReceiveData();break;
      }
@@ -114,31 +119,48 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(4,INPUT_PULLUP);
+  pinMode(3,OUTPUT);
+  digitalWrite(3,LOW);
+  pinMode(DBGCLOCK,OUTPUT);
+  digitalWrite(DBGCLOCK ,HIGH);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   pinMode(DBGPIN ,OUTPUT);
-  digitalWrite(DBGPIN ,HIGH);
-  digitalWrite(DBGPIN ,LOW);
+  DBGPINHIGH();
+  DBGPINLOW();
   wdt_disable();
-
   INITDBG();
   DBGINFO(F("*****start"));
   ERRLEDINIT();   ERRLEDOFF();
+  setupTimer2();
+  power_timer0_enable();
+  SetupADC();
+  interrupts();
+  delay(1000);
   IMMAC ad=SetupDS18B20();
 //  wdt_enable(WDTO_8S);
-
-  interrupts ();
+   disableADCB();
 
   trx.myMAC=MMAC;
   trx.myMAC+=ad;
   trx.Init(buffer);
-
-    DBGINFO(" MMAC ");  DBGINFO2(trx.myMAC,HEX);
-//       DBGINFO();
   trx.myDevice=MDEVICE;
+  power_timer0_disable();
 //  trx.timer.onStage=stageloop;
 //    pciSetup(9);
+#if DBGPIN>1
+  if (ad==0){
+      for(int i=0;i<100000;i++){
+        DBGPINHIGH();
+        delaySleepT2(10);
+        DBGPINLOW();
+        delaySleepT2(1);
+         
+      }
+      reboot();
+  }
+ 
+#endif  
 #if DBGLED>=1
   if (ad>0){
     ERRLEDON();
@@ -158,21 +180,20 @@ void setup()
 
   }
 #endif
-//  DBGINFO(F("Free RAM bytes: "));DBGINFO(freeRam());
-  
-//  trx.TimerSetup();
-//   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
+setupTimer2();
 }
 
 void loop()
 {
 //  wdt_reset();
-  PrintStatus();  
+//  PrintStatus(); 
   byte xstage;
   do{
-
+DBGPINLOW();
      xstage=trx.timer.WaitStage();
+    // DBGPINLOW();
      stageloop(xstage);
+   // DBGPINHIGH();
   }while( xstage!=IMTimer::PERIOD);
 
 

@@ -182,26 +182,28 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(3,INPUT_PULLUP);
-  pinMode(4,INPUT_PULLUP);
+  pinMode(3,OUTPUT);
+  pinMode(4,OUTPUT);
+  digitalWrite(3,LOW);
+  digitalWrite(4,LOW);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   pinMode(DBGCLOCK,OUTPUT);
   pinMode(DBGPIN ,OUTPUT);
-  digitalWrite(DBGPIN,HIGH);
-  digitalWrite(DBGPIN,LOW);
+  DBGPINHIGH();
+  DBGPINLOW();
   wdt_disable();
   INITDBG();
-  digitalWrite(DBGPIN,HIGH);
+  DBGPINHIGH();
   DBGINFO("SETUP");
-  digitalWrite(DBGPIN,LOW);
-  setupTimer2();
+  DBGPINLOW();
+
 //  DBGINFO(freeRam());
 //  DBGINFO(buf3._IM);
   
   DBGINFO("_");
-//  setupTimer2();
-  digitalWrite(DBGPIN,HIGH);
+  setupTimer2();
+  DBGPINHIGH();
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
@@ -211,6 +213,7 @@ void setup()
    disableADCB();
    power_timer0_enable();
    interrupts ();
+   delay(1000);
 //  randomSeed(analogRead(0)+internalrandom());
 
   trx.myMAC=MMAC;
@@ -232,44 +235,9 @@ void setup()
 //  CLKPR = 0x00;    // 1/256 prescaler = 60KHz for a 16MHz crystal
 
 /*  delay(1000);
-  start2 -=millis();
-  start2T -=millisT2();
-  Serial.flush();
-  DBGINFO("TIMER") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
-  start2=millis();
-  start2T=millisT2();
-  delay(1200);
-  DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;  
-  start2 -=millis();
-  start2T -=millisT2();
-  DBGINFO("\r\nTIMERB") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
-  Serial.flush();
-  start2=millis();
-  start2T=millisT2();
-  delaySleepT2(1200);
-DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;  
-  start2 -=millis();
-  start2T -=millisT2();
-  DBGINFO("\r\nTIMERST") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
-  Serial.flush();
-  start2=millis();
-  start2T=millisT2();
-  delaySleep(1200);
-  start2 -=millis();
-  start2T -=millisT2();
-  DBGINFO("\r\nTIMERS") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
   */
  
- /*
-  for (uint8_t ii=0;ii<8;ii++)
-  {
-  for (uint8_t i=0;i<16;i++)
-  {
-    trx.timer.Watchdog(100);
-  } 
-   DBGINFO("\r\n");
-   }
-*/
+ 
  setupTimer2();
 }
 

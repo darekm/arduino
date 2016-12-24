@@ -196,6 +196,8 @@ void setup()
         pinMode(i, INPUT_PULLUP);
    }
 
+  pinMode(DBGPIN,INPUT);
+  pinMode(DBGCLOCK,INPUT);
   pinMode(DBGPIN,OUTPUT);
   pinMode(DBGCLOCK,OUTPUT);
   wdt_disable();
@@ -215,7 +217,8 @@ void setup()
   ERRLEDINIT();
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
-//  disableADCB();
+  disableADCB();
+  power_timer0_enable();
   DBGPINLOW();
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
@@ -225,6 +228,7 @@ void setup()
   trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
+  power_timer0_disable();
 
  // trx.timer.onStage=stageloop;
 //  trx.DisableWatchdog();

@@ -34,7 +34,7 @@ void PrepareData()
       if (trx.CycleData())
       {
   DBGPINHIGH();
- // PrepareDS18B20();
+  PrepareHX711();
   DBGPINLOW();
       }
    }  
@@ -87,7 +87,7 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();    break;
+    case STARTBROADCAST:  trx.ListenBroadcast();  PrepareData();  break;
     case STOPBROADCAST:  trx.Knock();      break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;

@@ -26,27 +26,36 @@ uint16_t cpuVinCycle=0;
 
 void SetupHX711()
 {
-  scale.begin(2, 3);
+  scale.begin(A4, A5,128);
 }
 
-
+void PrepareHX711()
+{
+    scale.power_up();
+    DIDR0 = ~(0x10 ); //ADC4D,
+}
 void DataHX711(IMFrame &frame)
 {   
-  if (cpuVinCycle % 4==0){ 
+  if (cpuVinCycle % 4==0){
+    
     SetupADC();
     cpuVin=internalVcc();
     ShutOffADC();
   }
+  pinMode(A4, INPUT);
    cpuVinCycle++;
   
    IMFrameData *data =frame.Data();
 //   bool ex=sensors.getAddress(deviceAddress, 0);
-   int16_t hh=scale.read();
+   unsigned long hh=scale.read();
        	DBGINFO("temp: ");
          DBGINFO(hh);
        data->w[2]=hh;
+    data->w[3]=(hh >>16);
+  //  data->w[1]=cpuVinCycle;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
+   scale.power_down();
 }
 
 

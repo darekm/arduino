@@ -15,6 +15,8 @@ class MAX6675 {
   MAX6675(int8_t SCLK, int8_t CS, int8_t MISO);
 
   uint16_t read(void);
+  void prepare(void);
+  void restart(void);
   private:
   int8_t _mxx;
   void delay_mx(int8_t x);

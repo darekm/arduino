@@ -10,7 +10,7 @@
 /******************************** Configuration *************************************/
 
 // Data wire is plugged into pin 2 on the Arduino
-#define ONE_WIRE_BUS 2
+
 #define MMAC 0x210000  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 21     //Type of device
@@ -114,8 +114,8 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(3,OUTPUT);
-  digitalWrite(3,LOW);
+ // pinMode(3,OUTPUT);
+ // digitalWrite(3,LOW);
   pinMode(DBGCLOCK,OUTPUT);
   digitalWrite(DBGCLOCK ,HIGH);
   pinMode(10,OUTPUT);

@@ -21,7 +21,7 @@
 int thermoDO = A4;
 int thermoCS = 2;
 int thermoCLK = A5;
-int vccPin = 3;
+int vccPin = A0;
 
  
 
@@ -31,15 +31,25 @@ uint16_t cpuVinCycle=0;
 
 void SetupMAX6675()
 {
+   pinMode(vccPin, INPUT); 
   pinMode(vccPin, OUTPUT); 
+   digitalWrite(vccPin, LOW);
+   thermo.restart();
  //scale.begin(A4, A5,128);
 }
 
 void PrepareMAX6675()
 {
+ // SetupADC();
+    power_adc_enable(); // ADC converter
+ //   ACSR = 48;                        // disable A/D comparator
+ //   ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
+//    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
+ //   DIDR1 = 0x00;       
   digitalWrite(vccPin, HIGH);
- //   scale.power_up();
     DIDR0 = ~(0x10 ); //ADC4D,
+//  pinMode(thermoDO, INPUT); 
+    thermo.prepare();
 }
 void DataMAX6675(IMFrame &frame)
 {   
@@ -49,7 +59,7 @@ void DataMAX6675(IMFrame &frame)
     cpuVin=internalVcc();
     ShutOffADC();
   }
-  pinMode(A4, INPUT);
+ // pinMode(A4, INPUT);
    cpuVinCycle++;
   
    IMFrameData *data =frame.Data();
@@ -59,7 +69,7 @@ void DataMAX6675(IMFrame &frame)
          DBGINFO(hh);
        data->w[2]=hh;
  //   data->w[3]=(hh >>16);
-  //  data->w[1]=cpuVinCycle;
+    data->w[4]=cpuVinCycle;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
      digitalWrite(vccPin, LOW);

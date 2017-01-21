@@ -18,8 +18,8 @@
 #include <max6675.h>
 
 
-int thermoDO = A4;
-int thermoCS = 2;
+int thermoDO = 2;
+int thermoCS = A4;
 int thermoCLK = A5;
 int vccPin = A0;
 
@@ -41,13 +41,14 @@ void SetupMAX6675()
 void PrepareMAX6675()
 {
  // SetupADC();
-    power_adc_enable(); // ADC converter
+ //   power_adc_enable(); // ADC converter
  //   ACSR = 48;                        // disable A/D comparator
  //   ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
 //    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
  //   DIDR1 = 0x00;       
   digitalWrite(vccPin, HIGH);
-    DIDR0 = ~(0x10 ); //ADC4D,
+  digitalWrite(thermoCS,HIGH);
+ //   DIDR0 = ~(0x10 ); //ADC4D,
 //  pinMode(thermoDO, INPUT); 
     thermo.prepare();
 }
@@ -73,6 +74,7 @@ void DataMAX6675(IMFrame &frame)
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
      digitalWrite(vccPin, LOW);
+     digitalWrite(thermoCS,LOW);
  //  scale.power_down();
 }
 

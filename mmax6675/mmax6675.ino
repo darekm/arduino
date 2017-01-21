@@ -2,10 +2,12 @@
 #include <imframe.h>
 #include <imatmega.h>
 #include <SPI.h>
+#include <EEPROM.h>
 #include "mmax6675.h"
 
 
 #include "imdebug.h"
+#include "imeprom.h"
 
 /******************************** Configuration *************************************/
 
@@ -29,21 +31,21 @@ IMBuffer    buffer;
 
 void PrepareData()
 {
-   if (trx.Connected())
-   {
+ //  if (trx.Connected())
+ //  {
       if (trx.CycleData())
       {
   DBGPINHIGH();
   PrepareMAX6675();
   DBGPINLOW();
       }
-   }  
+ //  }  
 }  
 
 void SendData()
 {
-   if (trx.Connected())
-   {
+ //  if (trx.Connected())
+ //  {
       if (trx.CycleData()) {
         DBGPINHIGH();
         trx.Wakeup();
@@ -54,13 +56,13 @@ void SendData()
         DBGINFO("SendData ");
         trx.SendData(frame);
          trx.Transmit();
-      } else {
-        trx.printCycle();
+  //    } else {
+  //      trx.printCycle();
       }
-      trx.ListenData();
-   } else {
+ //     trx.ListenData();
+ //  } else {
      //trx.ListenBroadcast();
-   }
+ //  }
 }
 
 

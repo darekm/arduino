@@ -31,8 +31,6 @@ IMBuffer    buffer;
 
 void PrepareData()
 {
- //  if (trx.Connected())
- //  {
       if (trx.CycleData())
       {
   DBGPINHIGH();

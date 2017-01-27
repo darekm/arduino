@@ -39,6 +39,7 @@ void MAX6675::delay_mx(int8_t x){
 
 void MAX6675::prepare(){
   digitalWrite(cs, LOW);
+  delay_mx(1);
   digitalWrite(cs, HIGH);
 }
 

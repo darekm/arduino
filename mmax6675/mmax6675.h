@@ -46,8 +46,10 @@ void PrepareMAX6675()
  //   ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
 //    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
  //   DIDR1 = 0x00;       
-  digitalWrite(vccPin, HIGH);
   digitalWrite(thermoCS,HIGH);
+  digitalWrite(vccPin, HIGH);
+  delaySleepT2(1);
+ 
  //   DIDR0 = ~(0x10 ); //ADC4D,
 //  pinMode(thermoDO, INPUT); 
     thermo.prepare();

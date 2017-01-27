@@ -1,6 +1,7 @@
 
 #include <imframe.h>
 #include <imatmega.h>
+#include <EEPROM.h>
 //#include <avr/wdt.h>
 #include <SPI.h>
 // Data wire is plugged into pin 2 on the Arduino
@@ -79,8 +80,8 @@ void SendDataFlood()
 
 void SendData()
 {
-   if (trx.Connected())
-   {
+//   if (trx.Connected())
+//   {
       if (trx.CycleData())
       {
         trx.Wakeup();
@@ -96,22 +97,23 @@ void SendData()
         data->w[2]=COUNTER;
         data->w[3]=1;
         data->w[4]=COUNTER;
+        data->w[6]=trx.Connected();
         
 
 //        DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
 //        ERRFLASH();
-      } else{
-         trx.printCycle();
+  //    } else{
+   //      trx.printCycle();
 
 
-      }
-      trx.ListenData();
+     }
+  //    trx.ListenData();
 
-   } else {
+ //  } else {
   //   trx.ListenBroadcast();
-   }
+ //  }
 
 
 }
@@ -123,6 +125,8 @@ void ReceiveData()
 //  static IMFrame rxFrame;
 //ERRLEDON();
 //  DBGINFO(" Receive ");
+//DBGPINHIGH();
+//DBGPINLOW();
       while (trx.GetData())
       {
         if (trx.Parse())
@@ -130,6 +134,7 @@ void ReceiveData()
       //    DBGINFO(" rxGET ");
         }
       }
+      
       DBGINFO("\r\n");
 
 }
@@ -152,13 +157,13 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();   break;
+    case STARTBROADCAST: DBGPINHIGH();trx.ListenBroadcast();DBGPINLOW();DBGPINHIGH(); trx.ListenBroadcast();  DBGPINLOW(); break;
 //    case STOPBROADCAST:  trx.StopListenBroadcast();      break;
-    case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: SendData();/*trx.ListenData(); */ break;
-    case STOPDATA:   trx.StopListen();      break;
-    case LISTENDATA :DBGPINHIGH(); ReceiveData();DBGPINLOW();break;
-    case LISTENBROADCAST : DBGPINHIGH();ReceiveData();DBGPINLOW();break;
+    case STOPBROADCAST: DBGPINHIGH();DBGPINLOW(); trx.Knock();DBGPINHIGH();DBGPINLOW();      break;
+    case STARTDATA:DBGPINHIGH(); SendData();/*trx.ListenData(); */ break;
+    case STOPDATA:  DBGPINLOW(); trx.StopListen();      break;
+    case LISTENDATA : ReceiveData();break;
+    case LISTENBROADCAST : ReceiveData();break;
     case IMTimer::IDDLESTAGE : {
      DBGINFO("***IDLE DATA");
 
@@ -182,14 +187,14 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(3,OUTPUT);
-  pinMode(4,OUTPUT);
-  digitalWrite(3,LOW);
-  digitalWrite(4,LOW);
+   resetPin();
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
+    pinMode(DBGPIN,INPUT);
+  pinMode(DBGCLOCK,INPUT);
+  pinMode(DBGPIN,OUTPUT);
   pinMode(DBGCLOCK,OUTPUT);
-  pinMode(DBGPIN ,OUTPUT);
+  
   DBGPINHIGH();
   DBGPINLOW();
   wdt_disable();
@@ -251,10 +256,10 @@ void loop()
     
   byte xstage;
   do{
-   DBGPINLOW();
+
      xstage=trx.timer.WaitStage();
      stageloop(xstage);
-  DBGPINHIGH();
+
   }while( xstage!=IMTimer::PERIOD);
 
 

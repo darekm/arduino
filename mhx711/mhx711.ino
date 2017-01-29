@@ -1,6 +1,7 @@
 
 #include <imframe.h>
 #include <imatmega.h>
+#include <EEPROM.h>
 #include <SPI.h>
 #include <HX711.h>
 
@@ -29,21 +30,19 @@ IMBuffer    buffer;
 
 void PrepareData()
 {
-   if (trx.Connected())
-   {
-      if (trx.CycleData())
+       if (trx.CycleData())
       {
-  DBGPINHIGH();
+//  DBGPINHIGH();
   PrepareHX711();
-  DBGPINLOW();
+//  DBGPINLOW();
       }
-   }  
+   
 }  
 
 void SendData()
 {
-   if (trx.Connected())
-   {
+ //  if (trx.Connected())
+  // {
       if (trx.CycleData()) {
         DBGPINHIGH();
         trx.Wakeup();
@@ -54,13 +53,11 @@ void SendData()
         DBGINFO("SendData ");
         trx.SendData(frame);
          trx.Transmit();
-      } else {
-        trx.printCycle();
-      }
-      trx.ListenData();
-   } else {
+       }
+  //    trx.ListenData();
+ //  } else {
      //trx.ListenBroadcast();
-   }
+ //  }
 }
 
 
@@ -114,6 +111,7 @@ void stageloop(byte stage)
 
 void setup()
 {
+   resetPin();
   pinMode(3,OUTPUT);
   digitalWrite(3,LOW);
   pinMode(DBGCLOCK,OUTPUT);
@@ -141,29 +139,7 @@ void setup()
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
   power_timer0_disable();
-//  trx.timer.onStage=stageloop;
-//    pciSetup(9);
-
-#if DBGLED>=1
-  if (ad>0){
-    ERRLEDON();
-    delay(1000);
-    delay(200);
-    ERRLEDOFF();
-    DBGINFO(F("TEMPERARUEEE\r\n"));
-   } else{
-    ERRLEDON();
-    delay(300);
-    ERRLEDOFF();
-    delay(200);
-    ERRLEDON();
-    delay(300);
-    ERRLEDOFF();
-    reboot();
-
-  }
-#endif
-setupTimer2();
+  setupTimer2();
 }
 
 void loop()
@@ -171,7 +147,7 @@ void loop()
 //  wdt_reset();
   byte xstage;
   do{
-DBGPINLOW();
+
      xstage=trx.timer.WaitStage();
     // DBGPINLOW();
      stageloop(xstage);

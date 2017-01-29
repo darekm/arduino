@@ -32,17 +32,20 @@ void SetupHX711()
 void PrepareHX711()
 {
     scale.power_up();
+     pinMode(A4, INPUT_PULLUP);
+    pinMode(A4, OUTPUT);
+     pinMode(A4, INPUT);
     DIDR0 = ~(0x10 ); //ADC4D,
 }
 void DataHX711(IMFrame &frame)
 {   
   if (cpuVinCycle % 4==0){
     
-    SetupADC();
-    cpuVin=internalVcc();
-    ShutOffADC();
+  //  SetupADC();
+  //  cpuVin=internalVcc();
+   // ShutOffADC();
   }
-  pinMode(A4, INPUT);
+ // pinMode(A4, INPUT);
    cpuVinCycle++;
   
    IMFrameData *data =frame.Data();

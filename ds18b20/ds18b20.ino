@@ -1,6 +1,7 @@
 
 #include <imframe.h>
 #include <imatmega.h>
+#include <EEPROM.h>
 #include <OneWire.h>
 #include <SPI.h>
 #include "imdebug.h"
@@ -16,7 +17,6 @@
 /************************* Module specyfic functions **********************/
 
 #include <DallasTemperature.h>
-#include "ds18b20.h"
 #include "imtrans.h"
 #include "imtimer.h"
 #include "imbufrfm69.h"
@@ -24,47 +24,36 @@
 Transceiver trx;
 IMBuffer    buffer;
 
+#include "ds18b20.h"
 
 void PrepareData()
 {
-   if (trx.Connected())
-   {
       if (trx.CycleData())
       {
-  DBGPINHIGH();
+  //      trx.Wakeup();
   PrepareDS18B20();
-  DBGPINLOW();
       }
-   }  
 }  
 
 void SendData()
 {
-   if (trx.Connected())
-   {
       if (trx.CycleData()) {
-        DBGPINHIGH();
         trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
         DataDS18B20(frame);
-        DBGPINLOW();
         DBGINFO("SendData ");
         trx.SendData(frame);
          trx.Transmit();
-      } else {
-        trx.printCycle();
       }
-      trx.ListenData();
-   } else {
-     //trx.ListenBroadcast();
-   }
+ 
 }
 
 
 
 void ReceiveData()
 {
+  
       while (trx.GetData())
       {
         if (trx.Parse())
@@ -72,7 +61,7 @@ void ReceiveData()
           DBGINFO(" rxGET ");
         }
       }
-     DBGINFO("\r\n");
+       DBGINFO("\r\n");
 }
 
 void PrintStatus()
@@ -119,16 +108,13 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(3,OUTPUT);
-  digitalWrite(3,LOW);
+  resetPin();
   pinMode(DBGCLOCK,OUTPUT);
   digitalWrite(DBGCLOCK ,HIGH);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
-  pinMode(DBGPIN ,OUTPUT);
   DBGPINHIGH();
   DBGPINLOW();
-  wdt_disable();
   INITDBG();
   DBGINFO(F("*****start"));
   ERRLEDINIT();   ERRLEDOFF();
@@ -138,8 +124,8 @@ void setup()
   interrupts();
   delay(1000);
   IMMAC ad=SetupDS18B20();
-//  wdt_enable(WDTO_8S);
    disableADCB();
+  wdt_enable(WDTO_8S);
 
   trx.myMAC=MMAC;
   trx.myMAC+=ad;
@@ -185,11 +171,10 @@ setupTimer2();
 
 void loop()
 {
-//  wdt_reset();
+  wdt_reset();
 //  PrintStatus(); 
   byte xstage;
   do{
-DBGPINLOW();
      xstage=trx.timer.WaitStage();
     // DBGPINLOW();
      stageloop(xstage);

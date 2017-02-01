@@ -75,6 +75,7 @@ void DataDS18B20(IMFrame &frame)
         DBGINFO(" ");
         DBGINFO(hh);
        data->w[2]=hh;
+   data->w[6]=trx.Connected();
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
 }

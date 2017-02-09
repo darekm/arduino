@@ -38,7 +38,7 @@ Below are the connections for a typical Arduino.
 */
 void SetupMHMC()
 {
-
+ power_twi_enable();
 
 //SetupADC();
  //ShutOffADC();
@@ -52,14 +52,14 @@ void SetupMHMC()
      pinMode(A4, INPUT);
     DIDR0 = ~(0x10 ); //ADC4D,
   Wire.begin();
-  Compass.SetSamplingMode(COMPASS_SINGLE);
-  Compass.SetScale(COMPASS_SCALE_130);
+//  Compass.SetSamplingMode(COMPASS_SINGLE);
+//  Compass.SetScale(COMPASS_SCALE_130);
 } 
 
 void PrepareMHMC()
 {
- power_adc_enable();
-    
+// power_adc_enable();
+  Compass.Trigger();    
 }
 void DataMHMC(IMFrame &frame)
 {   
@@ -77,12 +77,11 @@ void DataMHMC(IMFrame &frame)
    cpuVinCycle++;
   HMC5883L_Simple::MagnetometerSample sample;
    IMFrameData *data =frame.Data();
-   sample=Compass.ReadAxes();
+  sample=Compass.ReadAxes();
  //  float heading = Compass.GetHeadingDegrees();
 //   bool ex=sensors.getAddress(deviceAddress, 0);
  //  unsigned long hh=scale.read();
-       	DBGINFO("temp: ");
-         DBGINFO(hh);
+  //       DBGINFO(hh);
        data->w[2]=sample.X;
     data->w[3]=sample.Y;
 	data->w[4]=sample.Z;
@@ -91,7 +90,7 @@ void DataMHMC(IMFrame &frame)
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
    
-    power_adc_disable();
+  //  power_adc_disable();
 }
 
 

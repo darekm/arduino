@@ -137,11 +137,12 @@ class HMC5883L_Simple
     };
     
     MagnetometerSample ReadAxes();
+	void Trigger();
         
-    uint16_t  mode;
-    float    declination_offset_radians;
     
   private:
+    uint16_t  mode;
+    float    declination_offset_radians;
     uint8_t  i2c_address;
 };
 #endif

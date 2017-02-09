@@ -109,6 +109,13 @@ void HMC5883L_Simple::SetOrientation( uint16_t orientation )
 /** Get the heading of the compass in degrees. */
 float HMC5883L_Simple::GetHeadingDegrees()
 {     
+ if(mode & COMPASS_SINGLE) 
+  { 
+     Trigger();
+	    delay(66); // We could listen to the data ready pin instead of waiting.
+ 
+	 
+   }
   // Obtain a sample of the magnetic axes
   MagnetometerSample sample = ReadAxes();
   
@@ -183,13 +190,13 @@ float HMC5883L_Simple::GetHeadingDegrees()
  * just grab the most recent result in the registers.
  */
 
+void HMC5883L_Simple::Trigger()
+{
+    Write(COMPASS_MODE_REGISTER, (uint8_t)( mode & 0x03 ));  
+} 
+ 
 HMC5883L_Simple::MagnetometerSample HMC5883L_Simple::ReadAxes()
 {
-  if(mode & COMPASS_SINGLE) 
-  {    
-    Write(COMPASS_MODE_REGISTER, (uint8_t)( mode & 0x03 ));  
-    delay(66); // We could listen to the data ready pin instead of waiting.
-  }
   
   uint8_t buffer[6];
   Read(COMPASS_DATA_REGISTER, buffer, 6);

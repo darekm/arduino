@@ -1,0 +1,104 @@
+// 
+//    FILE:
+// VERSION: 0.1.00
+// PURPOSE: HMC5883L logger  for imwave
+//
+//
+// HISTORY:
+//
+
+// lub:https://github.com/sleemanj/HMC5883L_Simple
+
+#ifndef imMHMC_h
+#define imMHMC_h
+
+//#include "Arduino.h"
+#include "imframe.h"
+#include "imdebug.h"
+
+
+#include <HMC5883L.h>
+
+
+
+HMC5883L_Simple Compass;
+
+uint16_t cpuVin;
+uint16_t cpuVinCycle=0;
+/*
+
+Below are the connections for a typical Arduino.
+
+    GY-273 Compass Module -> Arduino
+    VCC -> VCC (See Note Below)
+    GND -> GND
+    SCL -> A5/SCL, (Use Pin 21 on the Arduino Mega)
+    SDA -> A4/SDA, (Use Pin 20 on the Arduino Mega)
+    DRDY -> Not Connected (in this example)
+*/
+void SetupMHMC()
+{
+
+
+//SetupADC();
+ //ShutOffADC();
+ power_adc_enable();
+  ACSR = 48;                        // disable A/D comparator
+//  ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
+    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
+ 
+  pinMode(A4, INPUT_PULLUP);
+    pinMode(A4, OUTPUT);
+     pinMode(A4, INPUT);
+    DIDR0 = ~(0x10 ); //ADC4D,
+  Wire.begin();
+  Compass.SetSamplingMode(COMPASS_SINGLE);
+  Compass.SetScale(COMPASS_SCALE_130);
+} 
+
+void PrepareMHMC()
+{
+ power_adc_enable();
+    
+}
+void DataMHMC(IMFrame &frame)
+{   
+ //  power_adc_enable();
+  if (cpuVinCycle % 4==0){
+    
+  //  SetupADC();
+  //  cpuVin=internalVcc();
+  //  ShutOffADC();
+  }
+  // power_adc_enable();
+  //  DIDR0 = ~(0x10 ); //ADC4D,
+
+ // pinMode(A4, INPUT);
+   cpuVinCycle++;
+  HMC5883L_Simple::MagnetometerSample sample;
+   IMFrameData *data =frame.Data();
+   sample=Compass.ReadAxes();
+ //  float heading = Compass.GetHeadingDegrees();
+//   bool ex=sensors.getAddress(deviceAddress, 0);
+ //  unsigned long hh=scale.read();
+       	DBGINFO("temp: ");
+         DBGINFO(hh);
+       data->w[2]=sample.X;
+    data->w[3]=sample.Y;
+	data->w[4]=sample.Z;
+    data->w[5]=cpuVinCycle;
+  //  data->w[1]=cpuVinCycle;
+ //  Vin=internalVcc();
+   data->w[0]=cpuVin;
+   
+    power_adc_disable();
+}
+
+
+
+
+
+#endif
+//
+// END OF FILE
+//

@@ -1,9 +1,10 @@
 
 #include <imframe.h>
 #include <imatmega.h>
-//#include <avr/wdt.h>
+#include <avr/wdt.h>
 #include <SPI.h>
-// Data wire is plugged into pin 2 on the Arduino
+#include <EEPROM.h>
+// Data wire is plugged into pin 0 on the Arduino
 
 
 
@@ -20,9 +21,9 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x210030  // My MAC
+#define MMAC 0x220030  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 21     //Type of device
+#define MDEVICE 22     //Type of device
 
 
 
@@ -35,26 +36,32 @@
 #include "imtrans.h"
 #include "imbuffer.h"
 #include "imbufrfm69.h"
-#include "imatmega.h"
-#include "acs720.h"
-//#include "imbuftest.h"
+
+
+
 
 
 Transceiver trx;
 IMBuffer    buf3;
 
 
+#include "acs720.h"
 
 
 
 
 
 
+#define pinLED 9
 
-
-
-void MeasureData(){
+void PrepareData(){
+      if (trx.CycleData())
+      {
+  
+  digitalWrite(pinLED,HIGH);
   MeasureACS720();
+  digitalWrite(pinLED,LOW);
+      }
 }
 
 
@@ -62,8 +69,6 @@ void MeasureData(){
 
 void SendData()
 {
-   if (trx.Connected())
-   {
       if (trx.CycleData())
       {
         trx.Wakeup();
@@ -72,12 +77,12 @@ void SendData()
         frame.Reset();
          IMFrameData *data =frame.Data();
         DataACS720(frame);
-        trx.setMeasure(TimeMeasure,TimeMeasure+1);
+   //     trx.setMeasure(TimeMeasure,TimeMeasure+1);
 
 //        long mm=millis();
 //        DBGINFO(" :");
 //        DBGINFO(millis()-mm);
-        data->w[8]=0xA;
+   //     data->w[8]=0xA;
         data->w[10]=0xA;
         
       DBGINFO("data:");
@@ -89,16 +94,7 @@ void SendData()
 //        DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
-//        ERRFLASH();
-      } else{
-         trx.printCycle();
-      }
-      trx.ListenData();
-
-   } else {
-  //   trx.ListenBroadcast();
-   }
-
+       }
 
 }
 
@@ -106,9 +102,6 @@ void SendData()
 
 void ReceiveData()
 {
-//  static IMFrame rxFrame;
-//ERRLEDON();
-//  DBGINFO(" Receive ");
       while (trx.GetData())
       {
         if (trx.Parse())
@@ -132,20 +125,15 @@ void PrintStatus()
 
 void stageloop(byte stage)
 {
-//   if (stage== STARTBROADCAST){
-    DBGINFO("stageloop=");  DBGINFO(millisT2());
-    DBGINFO(":");  DBGINFO(stage);
-//  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();   break;
-//    case STOPBROADCAST:  trx.StopListenBroadcast();      break;
+    case STARTBROADCAST:  trx.ListenBroadcast(); PrepareData();  break;
     case STOPBROADCAST:  trx.Knock();      break;
-    case STARTDATA: SendData();/*trx.ListenData(); */ break;
+    case STARTDATA: SendData(); break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA :DBGPINHIGH(); ReceiveData();DBGPINLOW();break;
     case LISTENBROADCAST : DBGPINHIGH();ReceiveData();DBGPINLOW();break;
-    case MEASUREDATA : MeasureACS();break;
+//    case MEASUREDATA : MeasureACS();break;
     case IMTimer::IDDLESTAGE : {
      DBGINFO("***IDLE DATA");
 
@@ -169,41 +157,38 @@ void stageloop(byte stage)
 
 void setup()
 {
-  pinMode(4,INPUT_PULLUP);
+    resetPin();
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
-  pinMode(DBGCLOCK,OUTPUT);
-  pinMode(DBGPIN ,OUTPUT);
-  wdt_disable();
-  INITDBG();
-  digitalWrite(DBGPIN,HIGH);
-  DBGINFO("SETUP");
-  DBGINFO(internalVcc());
-  digitalWrite(DBGPIN,LOW);
 
-  DBGINFO("_");
-//  setupTimer2();
-  DBGPINHIGH();
-  ERRLEDINIT();
-  ERRLEDOFF();
- //  wdt_enable(WDTO_8S);
+  INITDBG();
+  setupTimer2();
+  power_timer0_enable();
+  SetupADC();
+ //  setupTimer2();
+  //  wdt_enable(WDTO_8S);
 //   power_timer0_disable();
 //  disableADCB();
 //  digitalWrite(4,LOW);
    interrupts ();
+   delay(500);
+   disableADCB();
   trx.myMAC=MMAC;
       DBGINFO2(trx.myMAC,HEX);
+      SetupACS720();
 //  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
-
+  wdt_enable(WDTO_8S);
+  power_timer0_disable();
+  
 
  setupTimer2();
 }
 
 void loop()
 {
-//  wdt_reset();
+  wdt_reset();
 //  PrintStatus();
   DBGINFO("\r\n");
   DBGINFO("LOOP");

@@ -58,9 +58,9 @@ void PrepareData(){
       if (trx.CycleData())
       {
   
-  digitalWrite(pinLED,HIGH);
+ // digitalWrite(pinLED,HIGH);
   MeasureACS720();
-  digitalWrite(pinLED,LOW);
+//  digitalWrite(pinLED,LOW);
       }
 }
 
@@ -179,9 +179,9 @@ void setup()
 //  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
-  wdt_enable(WDTO_8S);
-  power_timer0_disable();
-  
+//  wdt_enable(WDTO_8S);
+ // power_timer0_disable();
+  SetupACS720();
 
  setupTimer2();
 }

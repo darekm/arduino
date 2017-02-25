@@ -57,9 +57,16 @@ int COUNTER=0;
 
 void DataFlash()
 {
-  
-      ERRFLASH();
-      delay(50);
+    power_spi_disable();
+    power_timer0_disable();
+  //  power_timer2_enable();
+  ShutOffADC();
+  DBGPINLOW(); 
+     // ERRFLASH();
+      delaySleepT2(1000);
+      DBGPINHIGH();
+     power_spi_enable(); 
+     power_timer0_enable();
 }    
 void SendDataFlood()
 {
@@ -154,11 +161,11 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();  digitalWrite(5,HIGH);delay(50); break;
-//    case STOPBROADCAST:  trx.StopListenBroadcast();      break;
+    case STARTBROADCAST: DBGPINLOW(); trx.ListenBroadcast();   break;
+//    case STOPBROADCAST: digitalWrite(5,HIGH); trx.StopListenBroadcast();      break;
 //    case STOPBROADCAST:  trx.Knock();      break;
-    case STOPBROADCAST:  digitalWrite(5,LOW);      break;
-    case STARTDATA: trx.Wakeup();DataFlash();trx.ListenData();  break;
+    case STOPBROADCAST:    DBGPINHIGH();  break;
+    case STARTDATA: DataFlash(); break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
@@ -185,20 +192,24 @@ void stageloop(byte stage)
 
 void setup()
 {
+  for (byte i=0; i<20; i++) {    //make all pins inputs with pullups enabled
+        pinMode(i, INPUT_PULLUP);
+   }
+
+  pinMode(DBGPIN,INPUT);
+  pinMode(DBGCLOCK,INPUT);
   pinMode(DBGPIN,OUTPUT);
-  pinMode(5,OUTPUT);
-  digitalWrite(DBGPIN,HIGH);
-  digitalWrite(DBGPIN,LOW);
+  pinMode(DBGCLOCK,OUTPUT);
   wdt_disable();
   INITDBG();
-  digitalWrite(DBGPIN,HIGH);
+ // digitalWrite(DBGPIN,HIGH);
   DBGINFO("SETUP");
-  digitalWrite(DBGPIN,LOW);
+ // digitalWrite(DBGPIN,LOW);
 //  DBGINFO(freeRam());
 //  DBGINFO(buf3._IM);
   
   DBGINFO("_");
-  setupTimer2();
+ // setupTimer2();
   digitalWrite(DBGPIN,HIGH);
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
@@ -207,17 +218,21 @@ void setup()
   ERRLEDOFF();
   //  wdt_enable(WDTO_8S);
   disableADCB();
-  digitalWrite(DBGPIN,LOW);
+  power_timer0_enable();
+  DBGPINLOW();
    interrupts ();
 //  randomSeed(analogRead(0)+internalrandom());
 
   trx.myMAC=MMAC;
       DBGINFO2(trx.myMAC,HEX);
+  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
+  power_timer0_disable();
+
  // trx.timer.onStage=stageloop;
 //  trx.DisableWatchdog();
-  
+#if DBGLVL >=1  
   long start2=millis();
   long start2T=millisT2();
   
@@ -225,9 +240,9 @@ void setup()
   DBGINFO(incTimer2());
     DBGINFO(millisT2());
     DBGINFO("\r\n");
-    ERRLEDON();
+    ERRLEDON(); iiiiii
  //   delay(1000);
-    delay(2000);
+    delay(2000); 
     ERRLEDOFF();
     DBGINFO(start2T-start2);
     DBGINFO(incTimer2());
@@ -238,6 +253,7 @@ void setup()
   DBGINFO(incTimer2());
     DBGINFO(millisT2());
     DBGINFO("\r\n");
+#endif
      //  trx.TimerSetup();
     //   DBGINFO("classtest Timer");
  // DBGINFO(IMTimer::ClassTest());
@@ -297,6 +313,7 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
    DBGINFO("\r\n");
    }
 */
+  setupTimer2();
 }
 
 void loop()

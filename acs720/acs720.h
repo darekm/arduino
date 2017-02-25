@@ -18,7 +18,7 @@
 #define pinACS A4
 #define pinVAD A5
 
-uint16_t Measure[32];
+uint16_t Measure[42];
 uint16_t current;
 
 
@@ -86,7 +86,7 @@ int rawAnalog( void )
 
 void SetupACS720()
 {
- // SetupADC();
+  SetupADC();
 //  TWCR=0;
 //  DIDR0=0;
   
@@ -97,12 +97,12 @@ void SetupACS720()
 //  digitalWrite(pinACS,HIGH);
   pinMode(pinACS,INPUT);
   pinMode(pinVAD,OUTPUT);
-  digitalWrite(pinACS,HIGH);
+//  digitalWrite(pinACS,HIGH);
   digitalWrite(pinVAD,HIGH);
  // pinMode(pinACS,OUTPUT);
  // digitalWrite(pinACS,HIGH);
   current=0;
-  //    ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
+      ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
 
 
 }
@@ -112,18 +112,20 @@ void MeasureACS720()
      //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
 //TWCR=0;
  // SetupACS720();
-//  ADCVHIGH();
+ power_adc_enable();
+  ADCVHIGH();
    delaySleepT2(1);
-   for (int8_t i=19; i>=0; i--)
+   for (int8_t i=40; i>=0; i--)  //41cycles ~ 40ms
   {
    DBGPINHIGH();
-//   Measure[i]=rawAnalog();
+   Measure[i]=rawAnalog();
     DBGPINLOW();
    setSleepModeT2();
    delayT2();
   // delaySleepT2(1);
    }
- // ADCVLOW();
+  ADCVLOW();
+  power_adc_disable();
 
 }  
 
@@ -134,14 +136,14 @@ void DataACS720(IMFrame &frame)
 //   SetupADC();
   int x=0;
   long xx=0;
-     for (int8_t i=19; i>=0; i--)
+     for (int8_t i=40; i>=0; i--)
   {
          x+=Measure[i];
       int y=Measure[i]-adcMedium;
          xx+=y*y;
    }
  //  xx=xx ;
-   adcMedium=x/20;
+   adcMedium=x/41;
 
 
    IMFrameData *data =frame.Data();

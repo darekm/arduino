@@ -21,7 +21,7 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x220030  // My MAC
+#define MMAC 0x220031  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 22     //Type of device
 
@@ -179,9 +179,9 @@ void setup()
 //  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
-//  wdt_enable(WDTO_8S);
- // power_timer0_disable();
+  wdt_enable(WDTO_8S);
   SetupACS720();
+  power_timer0_disable();
 
  setupTimer2();
 }

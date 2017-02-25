@@ -111,8 +111,8 @@ void MeasureACS720()
 { 
      //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
 //TWCR=0;
- // SetupACS720();
- power_adc_enable();
+  SetupADC();
+// power_adc_enable();
   ADCVHIGH();
    delaySleepT2(1);
    for (int8_t i=40; i>=0; i--)  //41cycles ~ 40ms
@@ -125,7 +125,9 @@ void MeasureACS720()
   // delaySleepT2(1);
    }
   ADCVLOW();
-  power_adc_disable();
+  ShutOffADC();
+  
+ // power_adc_disable();
 
 }  
 

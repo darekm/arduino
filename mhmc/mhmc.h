@@ -25,6 +25,10 @@ HMC5883L_Simple Compass;
 
 uint16_t cpuVin;
 uint16_t cpuVinCycle=0;
+long averageX=0;
+long averageY=0;
+long averageZ=0;
+#define stepAVG =8;
 /*
 
 Below are the connections for a typical Arduino.
@@ -45,12 +49,12 @@ void SetupMHMC()
  power_adc_enable();
   ACSR = 48;                        // disable A/D comparator
 //  ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
-    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
+ //   DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
  
-  pinMode(A4, INPUT_PULLUP);
-    pinMode(A4, OUTPUT);
-     pinMode(A4, INPUT);
-    DIDR0 = ~(0x10 ); //ADC4D,
+//  pinMode(A4, INPUT_PULLUP);
+//    pinMode(A4, OUTPUT);
+ //    pinMode(A4, INPUT);
+ //   DIDR0 = ~(0x10 ); //ADC4D,
   Wire.begin();
 //  Compass.SetSamplingMode(COMPASS_SINGLE);
 //  Compass.SetScale(COMPASS_SCALE_130);
@@ -82,10 +86,16 @@ void DataMHMC(IMFrame &frame)
 //   bool ex=sensors.getAddress(deviceAddress, 0);
  //  unsigned long hh=scale.read();
   //       DBGINFO(hh);
+   averageX = ((averageX*stepAVG) + sample.X ) / (stepAVG + 1);
+   averageY=((averageY*stepAVG)+ sample.Y )/(stepAVG+1);
+   averageZ=((averageZ*stepAVG)+ sample.Z )/(stepAVG+1);
        data->w[2]=sample.X;
     data->w[3]=sample.Y;
 	data->w[4]=sample.Z;
-    data->w[5]=cpuVinCycle;
+	data->w[5]=averageX & 0xFFFF;
+	data->w[6]=averageY & 0xFFFF;
+	data->w[7]=averageZ & 0xFFFF;
+    data->w[1]=cpuVinCycle;
   //  data->w[1]=cpuVinCycle;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;

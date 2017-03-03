@@ -52,7 +52,7 @@ IMBuffer    buf3;
 
 
 
-
+#define pinLED  9
 int COUNTER=0;
 
 
@@ -84,7 +84,8 @@ void SendData()
 //   {
       if (trx.CycleData())
       {
-        trx.Wakeup();
+       digitalWrite(pinLED,HIGH);
+    trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
          COUNTER++;
@@ -103,6 +104,8 @@ void SendData()
 //        DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
+             digitalWrite(pinLED,LOW);
+
 //        ERRFLASH();
   //    } else{
    //      trx.printCycle();

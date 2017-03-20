@@ -12,7 +12,7 @@
 /******************************** Configuration *************************************/
 
 
-#define MMAC 0x230000  // My MAC
+#define MMAC 0x230003  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 23     //Type of device
 
@@ -125,14 +125,15 @@ void setup()
   interrupts();
   delay(1000);
    wdt_enable(WDTO_8S);
-   disableADCB();
- SetupMHMC();
+//   disableADCB();
+// SetupMHMC();
 
   trx.myMAC=MMAC;
  
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
-  power_timer0_disable();
+  SetupMHMC();
+// power_timer0_disable();
   setupTimer2();
 }
 

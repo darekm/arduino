@@ -193,10 +193,10 @@ void setup()
    resetPin();
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
-    pinMode(DBGPIN,INPUT);
-  pinMode(DBGCLOCK,INPUT);
-  pinMode(DBGPIN,OUTPUT);
-  pinMode(DBGCLOCK,OUTPUT);
+//    pinMode(DBGPIN,INPUT);
+//  pinMode(DBGCLOCK,INPUT);
+//  pinMode(DBGPIN,OUTPUT);
+//  pinMode(DBGCLOCK,OUTPUT);
   
   DBGPINHIGH();
   DBGPINLOW();
@@ -251,7 +251,7 @@ void setup()
 
 void loop()
 {
-//  wdt_reset();
+  wdt_reset();
 //  PrintStatus();
 //  delay(300);
   DBGINFO("\r\n");

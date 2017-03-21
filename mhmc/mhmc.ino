@@ -133,7 +133,7 @@ void setup()
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
   SetupMHMC();
-// power_timer0_disable();
+ power_timer0_disable();
   setupTimer2();
 }
 

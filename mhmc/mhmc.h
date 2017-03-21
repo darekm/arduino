@@ -49,7 +49,7 @@ void SetupMHMC()
  power_adc_enable();
   ACSR = 48;                        // disable A/D comparator
 //  power_twi_disable();
-  power_adc_disable();
+//  power_adc_disable();
 //  ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
  //   DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
  
@@ -58,7 +58,7 @@ void SetupMHMC()
  //    pinMode(A4, INPUT);
  //   DIDR0 = ~(0x10 ); //ADC4D,
   Wire.begin();
-  Compass.SetSamplingMode(COMPASS_IDLE);
+  Compass.SetSamplingMode(COMPASS_SINGLE);
    ShutOffADC();
 //  Shutoff
 //  Compass.SetScale(COMPASS_SCALE_130);
@@ -66,9 +66,9 @@ void SetupMHMC()
 
 void PrepareMHMC()
 {
-// power_adc_enable();
+ power_adc_enable();
  power_twi_enable();
- // Compass.Trigger();    
+  Compass.Trigger();    
 }
 void DataMHMC(IMFrame &frame)
 {   
@@ -86,7 +86,7 @@ void DataMHMC(IMFrame &frame)
    cpuVinCycle++;
   HMC5883L_Simple::MagnetometerSample sample;
    IMFrameData *data =frame.Data();
-//  sample=Compass.ReadAxes();
+  sample=Compass.ReadAxes();
  //  float heading = Compass.GetHeadingDegrees();
   
    averageX = (averageX*stepAVG + sample.X );

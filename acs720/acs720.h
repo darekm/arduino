@@ -24,9 +24,12 @@ uint16_t current;
 
 uint16_t cpuVin;
 uint16_t cpuVinCycle=0;
-volatile int adcReading;
+volatile uint16_t adcReading;
 volatile boolean adcDone;
-int adcMedium;
+long adcMedium;
+long adcLow;
+long adcHigh;
+
 
 #define ADCVHIGH() PORTC|=(B00100000);//digitalWrite(DBGPIN,HIGH)
 #define ADCVLOW()  PORTC&=~(B00100000);//digitalWrite(DBGPIN,LOW)
@@ -127,7 +130,7 @@ void MeasureACS720()
   ADCVLOW();
   ShutOffADC();
   
- // power_adc_disable();
+  power_adc_disable();
 
 }  
 
@@ -136,16 +139,21 @@ void DataACS720(IMFrame &frame)
 {
  // long x=0;
 //   SetupADC();
-  int x=0;
+  long xSum=0;
   long xx=0;
+  adcLow=0xFFFF;
+  adcHigh=0;
      for (int8_t i=40; i>=0; i--)
   {
-         x+=Measure[i];
-      int y=Measure[i]-adcMedium;
+     long x=Measure[i];
+     if(x>adcHigh) adcHigh=x;
+     if (x<adcLow) adcLow=x;
+         xSum+=x;
+      long y=x-adcMedium;
          xx+=y*y;
    }
  //  xx=xx ;
-   adcMedium=x/41;
+   adcMedium=xSum/41;
 
 
    IMFrameData *data =frame.Data();
@@ -157,6 +165,8 @@ void DataACS720(IMFrame &frame)
  //  data->w[0]=Vin;
    current++;
 //   ShutOffADC();
+   data->w[5]=adcHigh;
+   data->w[4]=adcLow;
    data->w[3]=adcMedium;
    data->w[2]=xx;
    data->w[1]=current;

@@ -27,6 +27,7 @@ DallasTemperature sensors(&oneWire);
 
 DeviceAddress  dsAddress;
 uint16_t cpuVin;
+uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 
 IMMAC SetupDS18B20()
@@ -60,10 +61,13 @@ void PrepareDS18B20()
 
 void DataDS18B20(IMFrame &frame)
 {   
-  if (cpuVinCycle % 4==0){ 
+  if (cpuVinCycle % 8==0){ 
     SetupADC();
     cpuVin=internalVcc();
+    cpuTemp=internalTemp();
+    cpuTemp=internalTemp();
     ShutOffADC();
+    power_adc_disable();
   }
    cpuVinCycle++;
   
@@ -77,6 +81,7 @@ void DataDS18B20(IMFrame &frame)
        data->w[2]=hh;
    data->w[6]=trx.Connected();
  //  Vin=internalVcc();
+   data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
 }
 

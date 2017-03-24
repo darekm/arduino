@@ -25,13 +25,17 @@ Transceiver trx;
 IMBuffer    buffer;
 
 #include "ds18b20.h"
-
+#define pinLED 9
 void PrepareData()
 {
       if (trx.CycleData())
       {
+         digitalWrite(pinLED,HIGH);
+
   //      trx.Wakeup();
   PrepareDS18B20();
+   digitalWrite(pinLED,LOW);
+
       }
 }  
 

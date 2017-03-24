@@ -56,3 +56,9 @@ backup/
 tmp/
 build/
 libraries/
+mmax6675/doc/MAX6675-Library-master(1).zip
+*.zip
+mmax6675/doc/MAX6675ISA+.pdf
+mhmc/doc/29133-HMC5883L-Compass-Module-IC-Documentation-v1.0.pdf
+mhmc/doc/HMC5883L_3-Axis_Digital_Compass_IC.pdf
+mhmc/doc/Compass.ino

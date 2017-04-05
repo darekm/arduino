@@ -82,7 +82,6 @@ void SendData()
          trx.SendData(frame);
          trx.Transmit();
          
-//         ERRFLASH();
       } 
 
    } else {
@@ -145,7 +144,6 @@ void stageloop(byte stage)
 void setup()
 {
   INITDBG();
-  ERRLEDINIT(); ERRLEDOFF();
   SetupIntrappFlex();
 ////  wdt_enable(WDTO_8S);  
   interrupts ();

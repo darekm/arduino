@@ -1,6 +1,7 @@
 
 #include <imframe.h>
 #include <imatmega.h>
+#include <EEPROM.h>
 //#include <avr/wdt.h>
 #include <SPI.h>
 // Data wire is plugged into pin 2 on the Arduino
@@ -85,7 +86,6 @@ void SendDataFlood()
        DBGINFO("\r\n");
 }
      
-      ERRFLASH();
      
 }
 
@@ -193,7 +193,8 @@ void stageloop(byte stage)
 void setup()
 {
   for (byte i=0; i<20; i++) {    //make all pins inputs with pullups enabled
-        pinMode(i, INPUT_PULLUP);
+        pinMode(i, OUTPUT);
+        digitalWrite(i,LOW);
    }
 
   pinMode(DBGPIN,INPUT);

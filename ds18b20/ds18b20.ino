@@ -121,7 +121,6 @@ void setup()
   DBGPINLOW();
   INITDBG();
   DBGINFO(F("*****start"));
-  ERRLEDINIT();   ERRLEDOFF();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
@@ -132,6 +131,7 @@ void setup()
   wdt_enable(WDTO_8S);
 
   trx.myMAC=MMAC;
+  trs.startMAC=MMAC;
   trx.myMAC+=ad;
   trx.Init(buffer);
   trx.myDevice=MDEVICE;

@@ -117,7 +117,6 @@ void setup()
   wdt_disable();
   INITDBG();
   DBGINFO(F("*****start"));
-  ERRLEDINIT();   ERRLEDOFF();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
@@ -126,8 +125,9 @@ void setup()
   SetupMAX6675();
    disableADCB();
   wdt_enable(WDTO_8S);
-
+  trx.startMAC=MMAC;
   trx.myMAC=MMAC;
+  
  
   trx.Init(buffer);
   trx.myDevice=MDEVICE;

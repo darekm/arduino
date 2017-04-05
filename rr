@@ -1,0 +1,262 @@
+commit 4cc3954171b6afe2c8e4ac85d912273e11dd0422
+Author: darekm <darekm@emadar.com>
+Date:   Sat Dec 24 01:25:30 2016 +0100
+
+    upd(testrfm) add delay on start
+
+diff --git a/ds18b20/ds18b20.h b/ds18b20/ds18b20.h
+index 764acc8..6986c42 100644
+--- a/ds18b20/ds18b20.h
++++ b/ds18b20/ds18b20.h
+@@ -10,7 +10,7 @@
+ #ifndef imDS18B20_h
+ #define imDS18B20_h
+ 
+-#include "Arduino.h"
++//#include "Arduino.h"
+ #include "imframe.h"
+ #include "imdebug.h"
+ 
+diff --git a/ds18b20/ds18b20.ino b/ds18b20/ds18b20.ino
+index fe07185..08b822d 100644
+--- a/ds18b20/ds18b20.ino
++++ b/ds18b20/ds18b20.ino
+@@ -31,7 +31,7 @@ void PrepareData()
+    {
+       if (trx.CycleData())
+       {
+-         PrepareDS18B20();
++  //       PrepareDS18B20();
+       }
+    }  
+ }  
+@@ -52,8 +52,9 @@ void SendData()
+       } else {
+         trx.printCycle();
+       }
++      trx.ListenData();
+    } else {
+-//     trx.ListenBroadcast();
++     //trx.ListenBroadcast();
+    }
+ }
+ 
+@@ -95,6 +96,7 @@ void stageloop(byte stage)
+     case LISTENDATA : ReceiveData();break;
+     case LISTENBROADCAST : ReceiveData();break;
+     case IMTimer::IDDLESTAGE : {
++
+        DBGINFO("***IDDLE DATA");
+        ReceiveData();break;
+      }
+@@ -114,31 +116,47 @@ void stageloop(byte stage)
+ 
+ void setup()
+ {
+-  pinMode(4,INPUT_PULLUP);
++  pinMode(3,OUTPUT);
++  digitalWrite(3,LOW);
++  pinMode(DBGCLOCK,OUTPUT);
++  digitalWrite(DBGCLOCK ,HIGH);
+   pinMode(10,OUTPUT);
+   digitalWrite(10,HIGH);
+   pinMode(DBGPIN ,OUTPUT);
+-  digitalWrite(DBGPIN ,HIGH);
+-  digitalWrite(DBGPIN ,LOW);
++  DBGPINHIGH();
++  DBGPINLOW();
+   wdt_disable();
+-
+   INITDBG();
+   DBGINFO(F("*****start"));
+   ERRLEDINIT();   ERRLEDOFF();
++  setupTimer2();
++  power_timer0_enable();
++  interrupts();
++  delay(1000);
+   IMMAC ad=SetupDS18B20();
+ //  wdt_enable(WDTO_8S);
+-
+-  interrupts ();
++   disableADCB();
+ 
+   trx.myMAC=MMAC;
+   trx.myMAC+=ad;
+   trx.Init(buffer);
+-
+-    DBGINFO(" MMAC ");  DBGINFO2(trx.myMAC,HEX);
+-//       DBGINFO();
+   trx.myDevice=MDEVICE;
++  power_timer0_disable();
+ //  trx.timer.onStage=stageloop;
+ //    pciSetup(9);
++#if DBGPIN>1
++  if (ad==0){
++      for(int i=0;i<100000;i++){
++        DBGPINHIGH();
++        delaySleepT2(10);
++        DBGPINLOW();
++        delaySleepT2(1);
++         
++      }
++      reboot();
++  }
++ 
++#endif  
+ #if DBGLED>=1
+   if (ad>0){
+     ERRLEDON();
+@@ -158,21 +176,20 @@ void setup()
+ 
+   }
+ #endif
+-//  DBGINFO(F("Free RAM bytes: "));DBGINFO(freeRam());
+-  
+-//  trx.TimerSetup();
+-//   DBGINFO("classtest Timer");  DBGINFO(IMTimer::ClassTest());
++setupTimer2();
+ }
+ 
+ void loop()
+ {
+ //  wdt_reset();
+-  PrintStatus();  
++//  PrintStatus(); 
+   byte xstage;
+   do{
+-
++DBGPINLOW();
+      xstage=trx.timer.WaitStage();
++     DBGPINLOW();
+      stageloop(xstage);
++     DBGPINHIGH();
+   }while( xstage!=IMTimer::PERIOD);
+ 
+ 
+diff --git a/testrfm69/testrfm69.ino b/testrfm69/testrfm69.ino
+index 83d62b9..b3df8b0 100644
+--- a/testrfm69/testrfm69.ino
++++ b/testrfm69/testrfm69.ino
+@@ -182,26 +182,28 @@ void stageloop(byte stage)
+ 
+ void setup()
+ {
+-  pinMode(3,INPUT_PULLUP);
+-  pinMode(4,INPUT_PULLUP);
++  pinMode(3,OUTPUT);
++  pinMode(4,OUTPUT);
++  digitalWrite(3,LOW);
++  digitalWrite(4,LOW);
+   pinMode(10,OUTPUT);
+   digitalWrite(10,HIGH);
+   pinMode(DBGCLOCK,OUTPUT);
+   pinMode(DBGPIN ,OUTPUT);
+-  digitalWrite(DBGPIN,HIGH);
+-  digitalWrite(DBGPIN,LOW);
++  DBGPINHIGH();
++  DBGPINLOW();
+   wdt_disable();
+   INITDBG();
+-  digitalWrite(DBGPIN,HIGH);
++  DBGPINHIGH();
+   DBGINFO("SETUP");
+-  digitalWrite(DBGPIN,LOW);
+-  setupTimer2();
++  DBGPINLOW();
++
+ //  DBGINFO(freeRam());
+ //  DBGINFO(buf3._IM);
+   
+   DBGINFO("_");
+-//  setupTimer2();
+-  digitalWrite(DBGPIN,HIGH);
++  setupTimer2();
++  DBGPINHIGH();
+   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
+   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
+   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
+@@ -211,6 +213,7 @@ void setup()
+    disableADCB();
+    power_timer0_enable();
+    interrupts ();
++   delay(1000);
+ //  randomSeed(analogRead(0)+internalrandom());
+ 
+   trx.myMAC=MMAC;
+@@ -232,44 +235,9 @@ void setup()
+ //  CLKPR = 0x00;    // 1/256 prescaler = 60KHz for a 16MHz crystal
+ 
+ /*  delay(1000);
+-  start2 -=millis();
+-  start2T -=millisT2();
+-  Serial.flush();
+-  DBGINFO("TIMER") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
+-  start2=millis();
+-  start2T=millisT2();
+-  delay(1200);
+-  DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;  
+-  start2 -=millis();
+-  start2T -=millisT2();
+-  DBGINFO("\r\nTIMERB") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
+-  Serial.flush();
+-  start2=millis();
+-  start2T=millisT2();
+-  delaySleepT2(1200);
+-DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;  
+-  start2 -=millis();
+-  start2T -=millisT2();
+-  DBGINFO("\r\nTIMERST") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
+-  Serial.flush();
+-  start2=millis();
+-  start2T=millisT2();
+-  delaySleep(1200);
+-  start2 -=millis();
+-  start2T -=millisT2();
+-  DBGINFO("\r\nTIMERS") ; DBGINFO(start2);DBGINFO("  ");DBGINFO(start2T);
+   */
+  
+- /*
+-  for (uint8_t ii=0;ii<8;ii++)
+-  {
+-  for (uint8_t i=0;i<16;i++)
+-  {
+-    trx.timer.Watchdog(100);
+-  } 
+-   DBGINFO("\r\n");
+-   }
+-*/
++ 
+  setupTimer2();
+ }
+ 
+diff --git a/timer2sleep/timer2sleep.ino b/timer2sleep/timer2sleep.ino
+index d51347a..6b83e96 100644
+--- a/timer2sleep/timer2sleep.ino
++++ b/timer2sleep/timer2sleep.ino
+@@ -196,6 +196,8 @@ void setup()
+         pinMode(i, INPUT_PULLUP);
+    }
+ 
++  pinMode(DBGPIN,INPUT);
++  pinMode(DBGCLOCK,INPUT);
+   pinMode(DBGPIN,OUTPUT);
+   pinMode(DBGCLOCK,OUTPUT);
+   wdt_disable();
+@@ -215,7 +217,8 @@ void setup()
+   ERRLEDINIT();
+   ERRLEDOFF();
+   //  wdt_enable(WDTO_8S);
+-//  disableADCB();
++  disableADCB();
++  power_timer0_enable();
+   DBGPINLOW();
+    interrupts ();
+ //  randomSeed(analogRead(0)+internalrandom());
+@@ -225,6 +228,7 @@ void setup()
+   trx.NoRadio=true;
+   trx.Init(buf3);
+   trx.myDevice=MDEVICE;
++  power_timer0_disable();
+ 
+  // trx.timer.onStage=stageloop;
+ //  trx.DisableWatchdog();

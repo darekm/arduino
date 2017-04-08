@@ -73,8 +73,8 @@ void stageloop(byte stage)
 {
   switch (stage)
   {
-    case STARTBROADCAST:  DBGPINHIGH();trx.Knock(); trx.ListenBroadcast();    break;
-    case STOPBROADCAST:  DBGPINLOW();PrepareData();     break;
+    case STARTBROADCAST:  trx.Knock();     break;
+    case STOPBROADCAST:  PrepareData();     break;
     case STARTDATA: SendData();  break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -111,14 +111,14 @@ void setup()
   delay(100);
   wdt_enable(WDTO_8S);
   SetupMAX30100();
-   disableADCB();
-  trx.startMAC=MMAC;
+ //  disableADCB();
+  trx.startMAC=0;
   trx.myMAC=MMAC;
   
  
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
-  power_timer0_disable();
+ // power_timer0_disable();
   setupTimer2();
 }
 

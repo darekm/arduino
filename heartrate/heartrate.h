@@ -18,7 +18,7 @@
 #include <heartRateLib.h>
 
 
-int intPin = 2;
+int intPin = 2;//D2
 int thermoCS = A4;
 int thermoCLK = A5;
 int vccPin = A0;
@@ -29,9 +29,8 @@ MAX30100 sensor;
 //uint8_t maxValuePointer;
 uint16_t maxValueLast;
 uint16_t maxValueCurr;
-int x = 0;
 uint16_t last=0; //last avarage
-uint16_t avarage;
+uint16_t average;
 int pointer=0; //what do next
 int meassureMode=0; //looking for falling in avarge
 uint16_t dataIndex; //index or every mesurment came in
@@ -42,13 +41,6 @@ uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 
-void SetupMAX30100()
-{
- Wire.begin();
-  pinMode(intPin,INPUT);
-  //getPulse();
-  sensor.shutdown();
-}
 
 
 //void saveMaxValue(){
@@ -59,13 +51,13 @@ void SetupMAX30100()
 void ifBigger(){ //check if avarge is rising or falling
  // pointer=1;
   if(meassureMode==0){
-    if(avarage>last){
+    if(average>last){
       //Serial.println("Start finding max value");
       meassureMode=1;//looking for loss
     }
   }
   else{
-    if(avarage < last){
+    if(average < last){
       meassureMode=0;
       maxValueLast=maxValueCurr;
       maxValueCurr=dataIndex;
@@ -73,13 +65,13 @@ void ifBigger(){ //check if avarge is rising or falling
 //      saveMaxValue(); //index of that measurement
     }
   }
-  last=avarage;
+  last=average;
 }
 
 void computeMeasure(){
     for(int i=0;i<15;i++){
       dataIndex++;
-      avarage= avarage*0.99+sensor.dataContainer[i]*0.01;
+      average= average*0.99+sensor.dataContainer[i]*0.01;
       ifBigger();
     }
 }
@@ -87,17 +79,19 @@ void computeMeasure(){
 
 
 void interruptMax(){//interrupt function
-  x++;
-  pointer=2;
+DBGPINHIGH();
+  
+//  pointer=2;
   IMTimer::doneMeasure();
+  DBGPINLOW();
 }
 
 void startMeassure(){
   dataIndex=0;
   //stopIndex=0;
  // maxValuePointer=0;
-  avarage=sensor.dataContainer[0];
-  last=avarage+1;
+  average=sensor.dataContainer[0];
+  last=average+1;
 }
 void startPulse(){ //run settings for heart rate
     attachInterrupt(0,interruptMax,FALLING);
@@ -117,8 +111,6 @@ void whatNext(){ //modes of working
     pointer=1;
     sensor.clearInt();
     sensor.readFullFIFO();
-    if(x==1){
-    }
     computeMeasure();
   }
   if(pointer == 3){
@@ -132,11 +124,30 @@ void whatNext(){ //modes of working
    
 }
 
+
+void SetupMAX30100()
+{
+  DBGLEDON();
+   power_twi_enable(); 
+   power_adc_enable();
+ Wire.begin();
+  pinMode(intPin,INPUT_PULLUP);
+  //getPulse();
+//  sensor.shutdown();
+    startPulse();
+      startMeassure();
+      DBGLEDOFF();
+ 
+}
+
 void MeasureMAX30100()
 {
-    sensor.clearInt();
+     power_twi_enable(); 
+ DBGLEDON();
+ sensor.clearInt();
     sensor.readFullFIFO();
     computeMeasure();
+    DBGLEDOFF();
 }    
 
 void PrepareMAX30100()
@@ -149,9 +160,16 @@ void PrepareMAX30100()
  //   DIDR1 = 0x00;       
   
  //   DIDR0 = ~(0x10 ); //ADC4D,
-   startPulse();
-      startMeassure();
+ //  startPulse();
+ //     startMeassure();
      pointer=1;
+         power_twi_enable(); 
+ DBGLEDON();
+ sensor.clearInt();
+    sensor.readFullFIFO();
+    computeMeasure();
+    DBGLEDOFF();
+
 }
 
 
@@ -174,8 +192,8 @@ void DataMAX30100(IMFrame &frame)
         // data->w[2]=hh;
  //   data->w[3]=(hh >>16);
     data->w[6]=cpuVinCycle;
-    data->w[5]=maxValueCurr;
-    data->w[3]=maxValueCurr-maxValueLast;
+    data->w[3]=maxValueCurr;
+    data->w[2]=maxValueCurr-maxValueLast;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
    data->w[1]=cpuTemp;

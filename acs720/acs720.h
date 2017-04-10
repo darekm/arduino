@@ -13,16 +13,18 @@
 
 #include "imframe.h"
 #include "imdebug.h"
+#include "imatmega.h"
 
 
 #define pinACS A4
 #define pinVAD A5
 
-uint16_t Measure[42];
+uint16_t Measure[85];
 uint16_t current;
 
 
 uint16_t cpuVin;
+uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 volatile uint16_t adcReading;
 volatile boolean adcDone;
@@ -34,7 +36,8 @@ long adcHigh;
 #define ADCVHIGH() PORTC|=(B00100000);//digitalWrite(DBGPIN,HIGH)
 #define ADCVLOW()  PORTC&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
-
+// disassembly
+// http://rcarduino.blogspot.com/2012/09/how-to-view-arduino-assembly.html
 
 // ADC complete ISR
 ISR (ADC_vect)
@@ -118,42 +121,56 @@ void MeasureACS720()
 // power_adc_enable();
   ADCVHIGH();
    delaySleepT2(1);
-   for (int8_t i=40; i>=0; i--)  //41cycles ~ 40ms
+   delaySleepT2(1);
+   for (int8_t i=80; i>=0; i--)  //41cycles ~ 40ms
   {
-   DBGPINHIGH();
+ //  DBGPINHIGH();
    Measure[i]=rawAnalog();
-    DBGPINLOW();
+ //   DBGPINLOW();
    setSleepModeT2();
    delayT2();
   // delaySleepT2(1);
    }
   ADCVLOW();
+    setSleepModeT2();
   ShutOffADC();
   
   power_adc_disable();
-
-}  
+}
 
 
 void DataACS720(IMFrame &frame)
 {
- // long x=0;
 //   SetupADC();
   long xSum=0;
-  long xx=0;
-  adcLow=0xFFFF;
+  byte xLast =0;
+  unsigned long xx=0;
+  adcLow=90000;
   adcHigh=0;
-     for (int8_t i=40; i>=0; i--)
+  for (int8_t i=80; i>=0; i--)
+  {
+     xSum+=Measure[i];
+//     if(x>adcHigh) adcHigh=x;
+//     if (x<adcLow) adcLow=x;
+   //   xSum+=x;
+//      long y=x-adcMedium;
+//         xx+=(y*y);
+      xLast++;
+   }
+  adcMedium=xSum/81;
+  
+  for (int8_t i=80; i>=0; i--)
   {
      long x=Measure[i];
      if(x>adcHigh) adcHigh=x;
      if (x<adcLow) adcLow=x;
-         xSum+=x;
+   //      xSum+=x;
       long y=x-adcMedium;
-         xx+=y*y;
+         xx+=(y*y);
+//      xLast=i;
    }
  //  xx=xx ;
-   adcMedium=xSum/41;
+  // adcMedium=(adcMedium *9 +xSum/81)/10;
 
 
    IMFrameData *data =frame.Data();
@@ -164,12 +181,31 @@ void DataACS720(IMFrame &frame)
   //  uint16_t Vin=internalVcc();
  //  data->w[0]=Vin;
    current++;
+   xLast+=10;
 //   ShutOffADC();
+   data->w[7]=xx;
+   data->w[6]=xSum;
    data->w[5]=adcHigh;
    data->w[4]=adcLow;
    data->w[3]=adcMedium;
-   data->w[2]=xx;
-   data->w[1]=current;
+  // data->w[4]=trx.dataw3;
+  // data->w[3]=trx.Deviation();
+   data->w[2]=sqrt32(xx);
+   data->w[1]=cpuTemp;
+   data->w[0]=cpuVin;
+
+    SetupADC();
+    cpuVin=internalVcc();
+    cpuTemp=internalTemp();
+    cpuTemp=internalTemp();
+     ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
+
+    ShutOffADC();
+    power_adc_disable();
+  }
+
+
+  // data->w[0]=xLast;
   // data->w[0]=analogRead(A4);
 }
 

@@ -16,6 +16,8 @@
 #define MMAC 0x240002  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 24     //Type of device
+#define MCHANNEL 1
+
 
 /************************* Module specyfic functions **********************/
 
@@ -115,9 +117,10 @@ void setup()
   trx.startMAC=0;
   trx.myMAC=MMAC;
   
- 
+  trx.myChannel=MCHANNEL;
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
+  
  // power_timer0_disable();
   setupTimer2();
 }

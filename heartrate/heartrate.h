@@ -23,14 +23,19 @@ int thermoCS = A4;
 int thermoCLK = A5;
 int vccPin = A0;
 
-
+#define ValueSize 8
 MAX30100 sensor;
 //uint8_t maxValueIndex[5]; //wait for 5 measurements
 //uint8_t maxValuePointer;
 uint16_t maxValueLast;
 uint16_t maxValueCurr;
-uint16_t last=0; //last avarage
+uint16_t Value[ValueSize]; 
+uint16_t last=0; //last average
 uint16_t average;
+int wait=0;
+byte sendStore=0;
+byte sendPop=0;
+byte was;
 int pointer=0; //what do next
 int meassureMode=0; //looking for falling in avarge
 uint16_t dataIndex; //index or every mesurment came in
@@ -50,22 +55,34 @@ uint16_t cpuVinCycle=0;
 
 void ifBigger(){ //check if avarge is rising or falling
  // pointer=1;
+ if(wait > 0){
+   last=average+1;
+ }
+ else{
   if(meassureMode==0){
-    if(average>last){
+    if(average > last){
       //Serial.println("Start finding max value");
       meassureMode=1;//looking for loss
     }
   }
   else{
     if(average < last){
+      DBGLEDON();
       meassureMode=0;
       maxValueLast=maxValueCurr;
       maxValueCurr=dataIndex;
-      dataIndex=0;
+      sendStore++;
+//      Value[sendStore %ValueSize]=maxValueCurr-maxValueLast;
+      Value[1]=maxValueCurr-maxValueLast;
+      wait=32;
+      DBGLEDOFF();
+   //   dataIndex=0;
 //      saveMaxValue(); //index of that measurement
     }
   }
   last=average;
+ }
+ wait--;
 }
 
 void computeMeasure(){
@@ -143,11 +160,13 @@ void SetupMAX30100()
 void MeasureMAX30100()
 {
      power_twi_enable(); 
- DBGLEDON();
+ //DBGLEDON();
  sensor.clearInt();
     sensor.readFullFIFO();
     computeMeasure();
-    DBGLEDOFF();
+    was=1;
+ //   DBGLEDOFF();
+    
 }    
 
 void PrepareMAX30100()
@@ -162,16 +181,35 @@ void PrepareMAX30100()
  //   DIDR0 = ~(0x10 ); //ADC4D,
  //  startPulse();
  //     startMeassure();
-     pointer=1;
+
+//     pointer=1;
          power_twi_enable(); 
- DBGLEDON();
- sensor.clearInt();
+ //DBGLEDON();
+ if (was ==0) {
+    sensor.clearInt();
     sensor.readFullFIFO();
     computeMeasure();
-    DBGLEDOFF();
-
+ }   
+// DBGLEDOFF();
+ 
+ was=0;
 }
 
+void SendDataAll()
+{
+        static IMFrame frame;
+        frame.Reset();
+        IMFrameData *data =frame.Data();
+    for(byte i=0;i<10;i++){
+      data->w[i]=sensor.dataContainer[i];
+    }
+    int8_t xx,x2;
+    xx=sensor.dataContainer[2]-sensor.dataContainer[1];
+    x2=sensor.dataContainer[3]-sensor.dataContainer[2];
+    data->w[11]=((uint8_t)x2 <<8) | xx;
+       //    DBGPINLOW();
+         trx.SendData(frame);
+}
 
 void DataMAX30100(IMFrame &frame)
 {   
@@ -191,12 +229,26 @@ void DataMAX30100(IMFrame &frame)
        	DBGINFO("temp: ");
         // data->w[2]=hh;
  //   data->w[3]=(hh >>16);
-    data->w[6]=cpuVinCycle;
-    data->w[3]=maxValueCurr;
-    data->w[2]=maxValueCurr-maxValueLast;
+    data->w[7]=cpuVinCycle;
+ //   data->w[3]=maxValueCurr;
+  //  data->w[2]=maxValueCurr-maxValueLast;
+    byte i=3;
+    while ((sendPop<sendStore) && (i<7)){
+      sendPop++;
+      data->w[i]=Value[sendPop %ValueSize];
+      i++;
+    //  data->w[2]++;
+      
+    }
+   // int x= 15;
+    //data->w[3]=x;
+    data->w[0]=dataIndex;
  //  Vin=internalVcc();
-   data->w[0]=cpuVin;
-   data->w[1]=cpuTemp;
+ //  data->w[0]=cpuVin;
+ //  data->w[1]=cpuTemp;
+    data->w[2]=maxValueCurr;
+    data->w[1]=maxValueLast;
+      
       
  //  scale.power_down();
  // power_adc_disable();  

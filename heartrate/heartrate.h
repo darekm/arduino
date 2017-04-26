@@ -100,7 +100,7 @@ DBGPINHIGH();
   
 //  pointer=2;
   IMTimer::doneMeasure();
-  DBGPINLOW();
+//  DBGPINLOW();
 }
 
 void startMeassure(){
@@ -141,6 +141,22 @@ void whatNext(){ //modes of working
    
 }
 
+void SendDataAll()
+{
+        DBGLEDON();
+        static IMFrame frame;
+        frame.Reset();
+        IMFrameData *data =frame.Data();
+    for(byte i=0;i<10;i++){
+      data->w[i]=sensor.dataContainer[i];
+    }
+    int8_t xx,x2;
+    xx=sensor.dataContainer[2]-sensor.dataContainer[1];
+    x2=sensor.dataContainer[3]-sensor.dataContainer[2];
+    data->w[11]=((uint8_t)x2 <<8) | xx;
+           DBGLEDOFF();
+         trx.SendData(frame);
+}
 
 void SetupMAX30100()
 {
@@ -163,6 +179,7 @@ void MeasureMAX30100()
  //DBGLEDON();
  sensor.clearInt();
     sensor.readFullFIFO();
+    SendDataAll();
     computeMeasure();
     was=1;
  //   DBGLEDOFF();
@@ -195,21 +212,6 @@ void PrepareMAX30100()
  was=0;
 }
 
-void SendDataAll()
-{
-        static IMFrame frame;
-        frame.Reset();
-        IMFrameData *data =frame.Data();
-    for(byte i=0;i<10;i++){
-      data->w[i]=sensor.dataContainer[i];
-    }
-    int8_t xx,x2;
-    xx=sensor.dataContainer[2]-sensor.dataContainer[1];
-    x2=sensor.dataContainer[3]-sensor.dataContainer[2];
-    data->w[11]=((uint8_t)x2 <<8) | xx;
-       //    DBGPINLOW();
-         trx.SendData(frame);
-}
 
 void DataMAX30100(IMFrame &frame)
 {   

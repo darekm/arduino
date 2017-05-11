@@ -24,6 +24,7 @@ int thermoCLK = A5;
 int vccPin = A0;
 
 #define ValueSize 8
+#define StepSize 16
 MAX30100 sensor;
 //uint8_t maxValueIndex[5]; //wait for 5 measurements
 //uint8_t maxValuePointer;
@@ -31,7 +32,11 @@ uint16_t maxValueLast;
 uint16_t maxValueCurr;
 uint16_t Value[ValueSize]; 
 uint16_t last=0; //last average
-uint16_t average;
+float average;
+float averageStep;
+float stepDown;
+float Step[StepSize];
+int stepIndex;
 int wait=0;
 byte sendStore=0;
 byte sendPop=0;
@@ -85,11 +90,30 @@ void ifBigger(){ //check if avarge is rising or falling
  wait--;
 }
 
+
+void computeStep(){
+  if (stepDown>averageStep)
+       averageStep=averageStep*0.9+stepDown*0.1;
+  else
+     averageStep=averageStep*0.7+stepDown*0.3;
+}
+        
+void ifCross(){
+  
+}  
+        
 void computeMeasure(){
     for(int i=0;i<15;i++){
       dataIndex++;
-      average= average*0.99+sensor.dataContainer[i]*0.01;
-      ifBigger();
+      stepIndex++;
+      stepIndex%=16;
+      average= average*0.9+sensor.dataContainer[i]*0.1;
+      stepDown=average -Step[stepIndex];
+      Step[stepIndex]=averageStep;
+      computeStep();
+      
+     // average= average*0.99+sensor.dataContainer[i]*0.01;
+      ifCross();
     }
 }
 
@@ -179,7 +203,7 @@ void MeasureMAX30100()
  //DBGLEDON();
  sensor.clearInt();
     sensor.readFullFIFO();
-    SendDataAll();
+//    SendDataAll();
     computeMeasure();
     was=1;
  //   DBGLEDOFF();

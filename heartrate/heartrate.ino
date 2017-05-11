@@ -117,10 +117,9 @@ void setup()
   trx.startMAC=0;
   trx.myMAC=MMAC;
   
-  trx.myChannel=MCHANNEL;
+ 
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
-  
  // power_timer0_disable();
   setupTimer2();
 }
@@ -133,4 +132,4 @@ void loop()
      xstage=trx.timer.WaitStage();
      stageloop(xstage);
   }while( xstage!=IMTimer::PERIOD);
-}
+}                                                                                    

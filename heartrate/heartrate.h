@@ -37,6 +37,9 @@ float averageStep;
 float stepDown;
 float Step[StepSize];
 int stepIndex;
+long xLast;
+long xCurr;
+
 int wait=0;
 byte sendStore=0;
 byte sendPop=0;
@@ -90,17 +93,28 @@ void ifBigger(){ //check if avarge is rising or falling
  wait--;
 }
 
-
-void computeStep(){
+void computeStep(float aax,float aay){
   if (stepDown>averageStep)
-       averageStep=averageStep*0.9+stepDown*0.1;
+       averageStep=averageStep*(1-aax)+stepDown*aax;
   else
-     averageStep=averageStep*0.7+stepDown*0.3;
+     averageStep=averageStep*(1-aay)+stepDown*aay;
 }
         
-void ifCross(){
-  
-}  
+bool xSwap;
+int crossStep(int aStep){
+  xCurr++;
+  if (stepDown<averageStep){
+        if ((xCurr>(xLast+aStep)) && xSwap){
+           xLast=xCurr;
+           xSwap=false;
+           return 100;
+        }    
+   } else{
+            xSwap=true;
+   }
+      return 0;  
+}
+
         
 void computeMeasure(){
     for(int i=0;i<15;i++){
@@ -109,11 +123,14 @@ void computeMeasure(){
       stepIndex%=16;
       average= average*0.9+sensor.dataContainer[i]*0.1;
       stepDown=average -Step[stepIndex];
-      Step[stepIndex]=averageStep;
-      computeStep();
+      Step[stepIndex]=average;
+      computeStep(0.02,0.1);
+      int cross=crossStep(20);
+  
+     // computeStep();
       
      // average= average*0.99+sensor.dataContainer[i]*0.01;
-      ifCross();
+     
     }
 }
 

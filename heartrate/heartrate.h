@@ -25,21 +25,28 @@ int vccPin = A0;
 
 #define ValueSize 8
 #define StepSize 16
+#define MaxRaster 100
+
 MAX30100 sensor;
 //uint8_t maxValueIndex[5]; //wait for 5 measurements
 //uint8_t maxValuePointer;
 uint16_t maxValueLast;
 uint16_t maxValueCurr;
-uint16_t Value[ValueSize]; 
+uint16_t Value[ValueSize];
+byte ValueStep[16];
 uint16_t last=0; //last average
 float average;
 float averageStep;
 float stepDown;
 float Step[StepSize];
+float heartRate;
 int stepIndex;
 long xLast;
+float lastDown;
+float
+lastUp;
 long xCurr;
-
+byte detected=0;
 int wait=0;
 byte sendStore=0;
 byte sendPop=0;
@@ -101,38 +108,65 @@ void computeStep(float aax,float aay){
 }
         
 bool xSwap;
+uint16_t lastHR;
 int crossStep(int aStep){
   xCurr++;
   if (stepDown<averageStep){
         if ((xCurr>(xLast+aStep)) && xSwap){
            xLast=xCurr;
+           lastDown=stepDown;
            xSwap=false;
-           return 100;
-        }    
+//           return 100;
+        }
+       if (!xSwap){
+         if (stepDown>lastDown){
+             if ((lastUp-lastDown)<20)
+                return 0;
+             lastUp=stepDown;
+             return 100;
+         } else    
+           lastDown=stepDown;
+       }     
    } else{
+        if (stepDown>lastUp)
+            lastUp=stepDown;
+      
             xSwap=true;
    }
       return 0;  
 }
 
-        
-void computeMeasure(){
-    for(int i=0;i<15;i++){
-      dataIndex++;
-      stepIndex++;
-      stepIndex%=16;
-      average= average*0.9+sensor.dataContainer[i]*0.1;
-      stepDown=average -Step[stepIndex];
-      Step[stepIndex]=average;
-      computeStep(0.02,0.1);
-      int cross=crossStep(20);
+int minDiff=MaxRaster /3;
+int maxDiff=MaxRaster*2;
+bool synchro;
+bool computeHeartRate(uint16_t currHR){
   
-     // computeStep();
-      
-     // average= average*0.99+sensor.dataContainer[i]*0.01;
-     
-    }
-}
+  int xDiff=currHR-lastHR;
+  lastHR=currHR;
+  if (xDiff < minDiff) return xDiff=3000;
+  if (xDiff > maxDiff) return xDiff=3000;
+  if (xDiff==3000) {
+    minDiff=MaxRaster /3;
+    maxDiff=MaxRaster*2;
+   // detected--;
+    return false;
+  }
+  
+  float heartR = (60*MaxRaster)/ xDiff;
+  heartRate=heartRate *0.9+heartR*0.1;
+  
+  int x= ((heartRate-heartR)*100)/heartRate;
+  synchro= ((x<50)&&(x>-50));
+  if (synchro){
+       maxDiff=xDiff*1.5;
+       minDiff=xDiff*0.5;
+       detected++;
+  }
+  
+  return true;
+//  maxDiff=heartRate*
+}  
+        
 
 
 
@@ -166,10 +200,10 @@ void whatNext(){ //modes of working
      startPulse();
  }
   if(pointer == 2){ //after interrupt
-    pointer=1;
+   pointer=1;
     sensor.clearInt();
     sensor.readFullFIFO();
-    computeMeasure();
+   // computeMeasure();
   }
   if(pointer == 3){
     stopPulse();
@@ -184,24 +218,24 @@ void whatNext(){ //modes of working
 
 void SendDataAll()
 {
-        DBGLEDON();
+        //DBGLEDON();
         static IMFrame frame;
         frame.Reset();
         IMFrameData *data =frame.Data();
-    for(byte i=0;i<10;i++){
-      data->w[i]=sensor.dataContainer[i];
+    for(byte i=0;i<15;i++){
+      frame.Body[i+7]=ValueStep[i];
     }
     int8_t xx,x2;
-    xx=sensor.dataContainer[2]-sensor.dataContainer[1];
-    x2=sensor.dataContainer[3]-sensor.dataContainer[2];
-    data->w[11]=((uint8_t)x2 <<8) | xx;
-           DBGLEDOFF();
+  //  xx=sensor.dataContainer[2]-sensor.dataContainer[1];
+ //   x2=sensor.dataContainer[3]-sensor.dataContainer[2];
+    data->w[2]=heartRate;
+//           DBGLEDOFF();
          trx.SendData(frame);
 }
 
 void SetupMAX30100()
 {
-  DBGLEDON();
+//  DBGLEDON();
    power_twi_enable(); 
    power_adc_enable();
  Wire.begin();
@@ -210,9 +244,43 @@ void SetupMAX30100()
 //  sensor.shutdown();
     startPulse();
       startMeassure();
-      DBGLEDOFF();
+ //     DBGLEDOFF();
  
 }
+
+
+void computeMeasure(){
+  //         DBGLEDON();
+    for(int i=0;i<15;i++){
+      dataIndex++;
+      stepIndex++;
+      stepIndex%=StepSize;
+      average= average*0.9+sensor.dataContainer[i]*0.1;
+      stepDown=average -Step[stepIndex];
+      Step[stepIndex]=average;
+      computeStep(0.02,0.1);
+      int8_t ss=stepDown;
+      ValueStep[i]=(uint8_t)ss;
+      int cross=crossStep(20);
+      if ((cross==100)) {
+           DBGLEDON();
+           computeHeartRate(dataIndex);  
+           DBGLEDOFF();
+        }
+     //   else
+    //       DBGLEDOFF();
+           
+        
+     // computeStep();
+      
+     // average= average*0.99+sensor.dataContainer[i]*0.01;
+     
+    }
+      //    DBGLEDOFF();
+     
+//    SendDataAll();
+}
+
 
 void MeasureMAX30100()
 {
@@ -222,6 +290,7 @@ void MeasureMAX30100()
     sensor.readFullFIFO();
 //    SendDataAll();
     computeMeasure();
+   // SendDataAll();
     was=1;
  //   DBGLEDOFF();
     
@@ -258,8 +327,8 @@ void DataMAX30100(IMFrame &frame)
 {   
   if (cpuVinCycle % 8==0){
     
- //   SetupADC();
- //   cpuVin=internalVcc();
+    SetupADC();
+    cpuVin=internalVcc();
 //    cpuTemp=internalTemp();
 //    cpuTemp=internalTemp();
  
@@ -270,27 +339,31 @@ void DataMAX30100(IMFrame &frame)
   
    IMFrameData *data =frame.Data();
        	DBGINFO("temp: ");
+    for(byte i=0;i<15;i++){
+      frame.Body[i+7]=ValueStep[i];
+    }
+
         // data->w[2]=hh;
  //   data->w[3]=(hh >>16);
-    data->w[7]=cpuVinCycle;
+ //   data->w[7]=cpuVinCycle;
  //   data->w[3]=maxValueCurr;
   //  data->w[2]=maxValueCurr-maxValueLast;
-    byte i=3;
-    while ((sendPop<sendStore) && (i<7)){
-      sendPop++;
-      data->w[i]=Value[sendPop %ValueSize];
-      i++;
+  //  byte i=3;
+  //  while ((sendPop<sendStore) && (i<7)){
+  //    sendPop++;
+  //    data->w[i]=Value[sendPop %ValueSize];
+  //    i++;
     //  data->w[2]++;
       
-    }
+  //  }
    // int x= 15;
     //data->w[3]=x;
-    data->w[0]=dataIndex;
+//    data->w[0]=dataIndex;
  //  Vin=internalVcc();
- //  data->w[0]=cpuVin;
+   data->w[0]=cpuVin;
  //  data->w[1]=cpuTemp;
-    data->w[2]=maxValueCurr;
-    data->w[1]=maxValueLast;
+    data->w[2]=heartRate;
+ //   data->w[1]=maxValueLast;
       
       
  //  scale.power_down();

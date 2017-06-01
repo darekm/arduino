@@ -21,7 +21,7 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x130020  // My MAC
+#define MMAC 0x110020  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 3     //Type of device
 
@@ -56,6 +56,10 @@ IMBuffer    buf3;
 int COUNTER=0;
 
 
+
+#define ADCVHIGH() PORTC|=(B00100000);//digitalWrite(DBGPIN,HIGH)
+#define ADCVLOW()  PORTC&=~(B00100000);//digitalWrite(DBGPIN,LOW)
+
 void SendDataFlood()
 {
      static IMFrame frame;
@@ -79,11 +83,8 @@ void SendDataFlood()
 
 void SendData()
 {
-//   if (trx.Connected())
-//   {
-      if (trx.CycleData())
-      {
-   //    digitalWrite(pinLED,HIGH);
+
+       digitalWrite(pinLED,HIGH);
     trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
@@ -96,26 +97,13 @@ void SendData()
         data->w[0]=100;
         data->w[2]=COUNTER;
         data->w[3]=1;
-        data->w[4]=trx.myMacLo;
-        data->w[6]=trx.Connected();
-        
+        data->w[4]=COUNTER;
+
 
 //        DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
              digitalWrite(pinLED,LOW);
-
-//        ERRFLASH();
-  //    } else{
-   //      trx.printCycle();
-
-
-     }
-  //    trx.ListenData();
-
- //  } else {
-  //   trx.ListenBroadcast();
- //  }
 
 
 }
@@ -172,8 +160,6 @@ void stageloop(byte stage)
        ReceiveData();break;
      }
     case IMTimer::PERIOD : 
-  //      ERRFLASH();
- //     PrintStatus();
     break;
     default:
     break;
@@ -201,11 +187,7 @@ void setup()
   DBGPINLOW();
   wdt_disable();
   INITDBG();
-  DBGPINHIGH();
-  DBGINFO("SETUP");
-  DBGPINLOW();
-  DBGLEDON();
-
+ 
 //  DBGINFO(freeRam());
 //  DBGINFO(buf3._IM);
   
@@ -215,20 +197,21 @@ void setup()
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
-   //  wdt_enable(WDTO_8S);
+  ERRLEDINIT();
+  ERRLEDOFF();
+  //  wdt_enable(WDTO_8S);
    disableADCB();
    power_timer0_enable();
    interrupts ();
    delay(1000);
 //  randomSeed(analogRead(0)+internalrandom());
-  DBGLEDOFF();
+
   trx.myMAC=MMAC;
-  trx.startMAC=MMAC;
       DBGINFO2(trx.myMAC,HEX);
 //  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
-  power_timer0_disable();
+  power_timer0_enable();
    
       //  trx.TimerSetup();
     //   DBGINFO("classtest Timer");
@@ -238,9 +221,6 @@ void setup()
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
   DBGINFO("ASSR_") ; DBGINFO(ASSR);
   DBGINFO("CLKPR_") ;DBGINFO(CLKPR);
-//  CLKPR = 0x80;    // Tell the AtMega we want to change the system clock
-//  CLKPR = 0x00;    // 1/256 prescaler = 60KHz for a 16MHz crystal
-
 /*  delay(1000);
   */
  
@@ -250,12 +230,13 @@ void setup()
 
 void loop()
 {
+ADCVHIGH()
   wdt_reset();
-//  PrintStatus();
-//  delay(300);
-  DBGINFO("\r\n");
-  DBGINFO("LOOP");
-    
+  delay(10);
+  ADCVLOW();
+  delay(50);
+  SendDataFlood();
+ /*
   byte xstage;
   do{
 
@@ -263,6 +244,6 @@ void loop()
      stageloop(xstage);
 
   }while( xstage!=IMTimer::PERIOD);
-
+ */
 
 }

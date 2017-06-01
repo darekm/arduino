@@ -21,7 +21,7 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x220031  // My MAC
+#define MMAC 0x220038 // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 22     //Type of device
 
@@ -79,9 +79,6 @@ void SendData()
         DataACS720(frame);
    //     trx.setMeasure(TimeMeasure,TimeMeasure+1);
 
-//        long mm=millis();
-//        DBGINFO(" :");
-//        DBGINFO(millis()-mm);
    //     data->w[8]=0xA;
         data->w[10]=0xA;
         
@@ -127,8 +124,8 @@ void stageloop(byte stage)
 {
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast(); PrepareData();  break;
-    case STOPBROADCAST:  trx.Knock();      break;
+    case STARTBROADCAST:  trx.Knock();  break;
+    case STOPBROADCAST:   PrepareData();      break;
     case STARTDATA: SendData(); break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA :DBGPINHIGH(); ReceiveData();DBGPINLOW();break;
@@ -173,14 +170,15 @@ void setup()
    interrupts ();
    delay(500);
    disableADCB();
+    wdt_enable(WDTO_8S);
+ // trx.startMAC=MMAC;
   trx.myMAC=MMAC;
-      DBGINFO2(trx.myMAC,HEX);
-      SetupACS720();
+         SetupACS720();
 //  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
-  wdt_enable(WDTO_8S);
-  SetupACS720();
+ 
+//  SetupACS720();
   power_timer0_disable();
 
  setupTimer2();

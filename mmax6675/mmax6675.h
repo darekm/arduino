@@ -27,6 +27,7 @@ int vccPin = A0;
 
 MAX6675 thermo (thermoCLK, thermoCS, thermoDO);
 uint16_t cpuVin;
+uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 
 void SetupMAX6675()
@@ -48,6 +49,7 @@ void PrepareMAX6675()
  //   DIDR1 = 0x00;       
   digitalWrite(thermoCS,HIGH);
   digitalWrite(vccPin, HIGH);
+  digitalWrite(thermoCLK, HIGH);
   delaySleepT2(1);
  
  //   DIDR0 = ~(0x10 ); //ADC4D,
@@ -56,10 +58,13 @@ void PrepareMAX6675()
 }
 void DataMAX6675(IMFrame &frame)
 {   
-  if (cpuVinCycle % 4==0){
+  if (cpuVinCycle % 8==0){
     
     SetupADC();
     cpuVin=internalVcc();
+    cpuTemp=internalTemp();
+    cpuTemp=internalTemp();
+ 
     ShutOffADC();
   }
  // pinMode(A4, INPUT);
@@ -75,9 +80,13 @@ void DataMAX6675(IMFrame &frame)
     data->w[4]=cpuVinCycle;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
+   data->w[1]=cpuTemp;
      digitalWrite(vccPin, LOW);
      digitalWrite(thermoCS,LOW);
+     digitalWrite(thermoCLK,LOW);
+     
  //  scale.power_down();
+  power_adc_disable();  
 }
 
 

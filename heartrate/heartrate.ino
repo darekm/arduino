@@ -1,25 +1,27 @@
-
 #include <imframe.h>
 #include <imatmega.h>
-#include <EEPROM.h>
 #include <SPI.h>
-#include <HMC5883L.h>
+#include <EEPROM.h>
 #include <Wire.h>
+#include "heartRateLib.h"
 
 
 #include "imdebug.h"
+#include "imeprom.h"
 
 /******************************** Configuration *************************************/
 
+// Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x230003  // My MAC
+#define MMAC 0x240003  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 23     //Type of device
+#define MDEVICE 24     //Type of device
+#define MCHANNEL 2
+
 
 /************************* Module specyfic functions **********************/
 
 
-#include "mhmc.h"
 #include "imtrans.h"
 #include "imtimer.h"
 #include "imbufrfm69.h"
@@ -27,34 +29,31 @@
 Transceiver trx;
 IMBuffer    buffer;
 
-#define pinLED 9
+#include "heartrate.h"
+
 void PrepareData()
 {
-       if (trx.CycleData())
+      if (trx.CycleData())
       {
-        digitalWrite(pinLED,HIGH);
-//  DBGPINHIGH();
-  PrepareMHMC();
-    digitalWrite(pinLED,LOW);
-//  DBGPINLOW();
+   PrepareMAX30100();
+
       }
-   
 }  
 
 void SendData()
 {
       if (trx.CycleData()) {
-        DBGPINHIGH();
+     //   DBGPINHIGH();
         trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
-        DataMHMC(frame);
-        DBGPINLOW();
-        DBGINFO("SendData ");
-        trx.SendData(frame);
+        DataMAX30100(frame);
+    //    DBGPINLOW();
+         trx.SendData(frame);
          trx.Transmit();
        }
- }
+ 
+}
 
 
 
@@ -74,19 +73,15 @@ void ReceiveData()
 
 void stageloop(byte stage)
 {
-//   if (stage== STARTBROADCAST){
-//    DBGINFO("stageloop=");  DBGINFO(millis());
-//    DBGINFO(":");  DBGINFO(stage);
-//  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();   PrepareData();  break;
-    case STOPBROADCAST:  trx.Knock();     break;
-    case STARTDATA: SendData();  /*SendDataFlood();*/break;
+    case STARTBROADCAST:  trx.Knock();     break;
+    case STOPBROADCAST:  PrepareData();     break;
+    case STARTDATA: SendData();  break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
-    case CRONHOUR : delaySleepT2(10000);break;
+    case MEASUREDATA: MeasureMAX30100();break;
     case IMTimer::IDDLESTAGE : {
 
        DBGINFO("***IDDLE DATA");
@@ -107,33 +102,26 @@ void stageloop(byte stage)
 
 void setup()
 {
-   resetPin();
-  pinMode(DBGCLOCK,OUTPUT);
-  digitalWrite(DBGCLOCK ,HIGH);
+  resetPin();
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
-  pinMode(DBGPIN ,OUTPUT);
-  DBGPINHIGH();
-  DBGPINLOW();
-  wdt_disable();
   INITDBG();
-  DBGINFO(F("*****start"));
-  ERRLEDINIT();   ERRLEDOFF();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
   interrupts();
-  delay(1000);
-   wdt_enable(WDTO_8S);
-//   disableADCB();
-// SetupMHMC();
-
+  delay(100);
+  wdt_enable(WDTO_8S);
+  SetupMAX30100();
+ //  disableADCB();
+  trx.startMAC=0;
   trx.myMAC=MMAC;
+  trx.myChannel=MCHANNEL;
+  
  
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
-  SetupMHMC();
- power_timer0_disable();
+ // power_timer0_disable();
   setupTimer2();
 }
 
@@ -142,12 +130,7 @@ void loop()
   wdt_reset();
   byte xstage;
   do{
-
      xstage=trx.timer.WaitStage();
-    // DBGPINLOW();
      stageloop(xstage);
-   // DBGPINHIGH();
   }while( xstage!=IMTimer::PERIOD);
-
-
-}
+}                                                                                    

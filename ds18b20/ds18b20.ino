@@ -13,6 +13,7 @@
 #define MMAC 0x170000  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 7     //Type of device
+#define MCHANNEL 1
 
 /************************* Module specyfic functions **********************/
 
@@ -30,8 +31,9 @@ void PrepareData()
 {
       if (trx.CycleData())
       {
-  //      trx.Wakeup();
-  PrepareDS18B20();
+        DBGLEDON();
+        PrepareDS18B20();
+        DBGLEDOFF();
       }
 }  
 
@@ -44,9 +46,8 @@ void SendData()
         DataDS18B20(frame);
         DBGINFO("SendData ");
         trx.SendData(frame);
-         trx.Transmit();
+        trx.Transmit();
       }
- 
 }
 
 
@@ -81,8 +82,8 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();  PrepareData();   break;
-    case STOPBROADCAST:  trx.Knock();      break;
+    case STARTBROADCAST: trx.Knock();      break;
+    case STOPBROADCAST:    PrepareData();    break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -117,24 +118,24 @@ void setup()
   DBGPINLOW();
   INITDBG();
   DBGINFO(F("*****start"));
-  ERRLEDINIT();   ERRLEDOFF();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
+  wdt_enable(WDTO_8S);
   interrupts();
-  delay(1000);
+  delay(300);
   IMMAC ad=SetupDS18B20();
    disableADCB();
-  wdt_enable(WDTO_8S);
 
   trx.myMAC=MMAC;
+  trx.startMAC=0;
   trx.myMAC+=ad;
+  trx.myChannel=MCHANNEL;
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
-  power_timer0_disable();
 //  trx.timer.onStage=stageloop;
 //    pciSetup(9);
-#if DBGPIN>1
+#if DBGPIN>111
   if (ad==0){
       for(int i=0;i<100000;i++){
         DBGPINHIGH();
@@ -149,24 +150,28 @@ void setup()
 #endif  
 #if DBGLED>=1
   if (ad>0){
-    ERRLEDON();
-    delay(1000);
-    delay(200);
-    ERRLEDOFF();
+    DBGLEDON();
+    delaySleepT2(300);
+    DBGLEDOFF();
     DBGINFO(F("TEMPERARUEEE\r\n"));
    } else{
-    ERRLEDON();
-    delay(300);
-    ERRLEDOFF();
+    DBGLEDON();
     delay(200);
-    ERRLEDON();
-    delay(300);
-    ERRLEDOFF();
+    DBGLEDOFF();
+    delay(200);
+    DBGLEDON();
+    delay(200);
+    DBGLEDOFF();
+    delay(200);
+    DBGLEDON();
+    delay(200);
+    DBGLEDOFF();
     reboot();
 
   }
 #endif
-setupTimer2();
+  power_timer0_disable();
+  setupTimer2();
 }
 
 void loop()

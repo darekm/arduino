@@ -24,8 +24,8 @@ int thermoCLK = A5;
 int vccPin = A0;
 
 
-ADXL345 sensor;
-
+//ADXL345 sensor;
+Adafruit_ADXL345_Unified sensor;
 //uint8_t maxValueIndex[5]; //wait for 5 measurements
 //uint8_t maxValuePointer;
 
@@ -88,11 +88,12 @@ void SetupADXL345()
 //  DBGLEDON();
    power_twi_enable(); 
    power_adc_enable();
-   sensor.init();
 // Wire.begin();
+ // sensor.init();
   pinMode(CS,OUTPUT);
    digitalWrite(CS,HIGH);
- 
+  if (! sensor.begin()) 
+     DBGLEDON(); 
  
 }
 
@@ -153,9 +154,12 @@ void PrepareADXL345()
 
 //     pointer=1;
          power_twi_enable(); 
- //DBGLEDON();
- sensor.readXYX(&valueX,&valueY,&valueZ);
-// DBGLEDOFF();
+ DBGLEDON();
+// sensor.readXYZ(&valueX,&valueY,&valueZ);
+  valueX=sensor.getX();
+  valueY=sensor.getY();
+  valueZ=sensor.getZ();
+ DBGLEDOFF();
  
 }
 

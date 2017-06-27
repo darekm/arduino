@@ -33,16 +33,15 @@ IMBuffer    buffer;
 
 void PrepareData()
 {
-//      if (trx.CycleData())
-      {
+  if (trx.CycleData())    {
    PrepareADXL345();
+  
 
       }
 }  
 
 void SendData()
 {
-  return;
       if (trx.CycleData()) {
      //   DBGPINHIGH();
         trx.Wakeup();

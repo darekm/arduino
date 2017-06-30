@@ -18,8 +18,9 @@
 #include <ADXL345lib.h>
 
 
-int intPin = 2;//D2
-int CS = 2;//D2
+int intPin1 = 2;//D2
+int intPin2 = 5;//D2
+int CS = 5;//D5
 int thermoCLK = A5;
 int vccPin = A0;
 
@@ -51,7 +52,7 @@ void interruptMax(){//interrupt function
 }
 
 void startPulse(){ //run settings for heart rate
-    attachInterrupt(0,interruptMax,FALLING);
+    attachInterrupt(0,interruptMax,RISING);
     //sensor.clearInt();
 }
 void stopPulse(){
@@ -83,18 +84,36 @@ void SendDataAll()
               DBGLEDOFF();
 }
 
+void setupTap(){
+   sensor.writeRegister(ADXL345_REG_THRESH_TAP, 0x01);  
+   sensor.writeRegister(ADXL345_REG_DUR, 0x01);  
+   sensor.writeRegister(ADXL345_REG_TAP_AXES, 0x07);  
+   sensor.writeRegister(ADXL345_REG_THRESH_ACT, 0x21);  
+   sensor.writeRegister(ADXL345_REG_THRESH_INACT, 0x03);  
+   sensor.writeRegister(ADXL345_REG_ACT_INACT_CTL, 0x77);  
+ //  sensor.writeRegister(ADXL345_REG_FIFO_CTL, 0x41);  
+   sensor.writeRegister(ADXL345_REG_INT_ENABLE, 0x70);  
+ //  sensor.writeRegister(ADXL345_REG_INT_ENABLE, 0x68);  
+  
+}
 void SetupADXL345()
 {
 //  DBGLEDON();
    power_twi_enable(); 
    power_adc_enable();
+     pinMode(intPin1,INPUT_PULLUP);
+     pinMode(intPin2,INPUT_PULLUP);
+
 // Wire.begin();
  // sensor.init();
-  pinMode(CS,OUTPUT);
-   digitalWrite(CS,HIGH);
+//  pinMode(CS,OUTPUT);
+//   digitalWrite(CS,HIGH);
   if (! sensor.begin()) 
-     DBGLEDON(); 
- 
+    // DBGLEDON(); 
+    ;
+ sensor.writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
+  setupTap();
+ startPulse();
 }
 
 
@@ -119,14 +138,10 @@ void MeasureADXL345()
 {
   DBGPINHIGH();
   //DBGPINLOW();
-     power_twi_enable();
+  //   power_twi_enable();
  //   DBGPINHIGH(); 
-// sensor.clearInt();
 // DBGPINLOW();
 // DBGPINHIGH();
-  //  sensor.readFullFIFO();
-//    sensor.clearInt();
-  //  sensor.clearFIFO();
 
 //    DBGPINHIGH();
   //  DBGPINLOW();
@@ -134,9 +149,13 @@ void MeasureADXL345()
 
 //    SendDataAll();
     //computeMeasure();
-    SendDataAll();
+ //   SendDataAll();
    //   DBGPINLOW();
-    
+   DBGLEDON();
+    uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
+  if (src!=0) {
+          DBGLEDON();
+  }     
 }    
 
 void PrepareADXL345()
@@ -154,13 +173,17 @@ void PrepareADXL345()
 
 //     pointer=1;
          power_twi_enable(); 
- DBGLEDON();
+// DBGLEDON();
 // sensor.readXYZ(&valueX,&valueY,&valueZ);
   valueX=sensor.getX();
   valueY=sensor.getY();
   valueZ=sensor.getZ();
+ //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
  DBGLEDOFF();
- 
+ //   uint8_t ec = sensor.readRegister( ADXL345_REG_DEVID);
+  //  if (ec==0xe5)
+   //          DBGLEDON();
+// setupTap();
 }
 
 

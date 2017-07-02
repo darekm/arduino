@@ -34,6 +34,9 @@ Adafruit_ADXL345_Unified sensor;
 int valueX;
 int valueY;
 int valueZ;
+int tabX[8];
+int tabY[8];
+int tabZ[8];
 uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
@@ -84,6 +87,12 @@ void SendDataAll()
               DBGLEDOFF();
 }
 
+
+void setupFIFO(){
+   sensor.writeRegister(ADXL345_REG_INT_ENABLE, 0x82);  
+   sensor.writeRegister(ADXL345_REG_INT_MAP, 0x80);  
+   sensor.writeRegister(ADXL345_REG_FIFO_CTL, 0x47);  
+}
 void setupTap(){
    sensor.writeRegister(ADXL345_REG_THRESH_TAP, 0x01);  
    sensor.writeRegister(ADXL345_REG_DUR, 0x01);  
@@ -112,7 +121,7 @@ void SetupADXL345()
     // DBGLEDON(); 
     ;
  sensor.writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
-  setupTap();
+  setupFIFO();
  startPulse();
 }
 
@@ -136,7 +145,7 @@ void computeMeasure(){
 
 void MeasureADXL345()
 {
-  DBGPINHIGH();
+ // DBGPINHIGH();
   //DBGPINLOW();
   //   power_twi_enable();
  //   DBGPINHIGH(); 
@@ -155,7 +164,20 @@ void MeasureADXL345()
     uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
   if (src!=0) {
           DBGLEDON();
-  }     
+  }
+  
+//  for(int ii=0;ii<4;ii++){
+  int ii=0;
+  while (digitalRead(intPin2)==HIGH) do
+  DBGPINHIGH();
+    sensor.readXYZ(&tabX[ii],&tabY[ii],&tabZ[ii]);
+  DBGPINLOW();
+  }
+ // valueX=sensor.getX();
+ // valueY=sensor.getY();
+ // valueZ=sensor.getZ();
+          DBGLEDOFF();
+  
 }    
 
 void PrepareADXL345()
@@ -175,11 +197,14 @@ void PrepareADXL345()
          power_twi_enable(); 
 // DBGLEDON();
 // sensor.readXYZ(&valueX,&valueY,&valueZ);
-  valueX=sensor.getX();
-  valueY=sensor.getY();
-  valueZ=sensor.getZ();
+//  valueX=sensor.getX();
+//  valueY=sensor.getY();
+//  valueZ=sensor.getZ();
+  valueX=tabX[0];
+  valueY=tabY[0];
+  valueZ=tabZ[0];
  //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
- DBGLEDOFF();
+// DBGLEDOFF();
  //   uint8_t ec = sensor.readRegister( ADXL345_REG_DEVID);
   //  if (ec==0xe5)
    //          DBGLEDON();

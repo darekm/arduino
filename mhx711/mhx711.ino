@@ -27,13 +27,15 @@
 Transceiver trx;
 IMBuffer    buffer;
 
-
+#define pinLED 9
 void PrepareData()
 {
        if (trx.CycleData())
       {
+        digitalWrite(pinLED,HIGH);
 //  DBGPINHIGH();
   PrepareHX711();
+    digitalWrite(pinLED,LOW);
 //  DBGPINLOW();
       }
    
@@ -84,12 +86,13 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();  PrepareData();  break;
-    case STOPBROADCAST:  trx.Knock();      break;
+    case STARTBROADCAST: trx.Knock();      break;
+    case STOPBROADCAST:  trx.Knock(); PrepareData();    break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
+    case CRONHOUR : delaySleepT2(10000);break;
     case IMTimer::IDDLESTAGE : {
 
        DBGINFO("***IDDLE DATA");
@@ -111,9 +114,9 @@ void stageloop(byte stage)
 
 void setup()
 {
+   MCUSR = 0;
+  wdt_disable();
    resetPin();
-  pinMode(3,OUTPUT);
-  digitalWrite(3,LOW);
   pinMode(DBGCLOCK,OUTPUT);
   digitalWrite(DBGCLOCK ,HIGH);
   pinMode(10,OUTPUT);
@@ -124,15 +127,14 @@ void setup()
   wdt_disable();
   INITDBG();
   DBGINFO(F("*****start"));
-  ERRLEDINIT();   ERRLEDOFF();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
   interrupts();
   delay(1000);
-  SetupHX711();
-//  wdt_enable(WDTO_8S);
+   wdt_enable(WDTO_8S);
    disableADCB();
+ SetupHX711();
 
   trx.myMAC=MMAC;
  
@@ -144,7 +146,7 @@ void setup()
 
 void loop()
 {
-//  wdt_reset();
+  wdt_reset();
   byte xstage;
   do{
 

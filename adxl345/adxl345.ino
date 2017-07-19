@@ -13,10 +13,10 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x250006  // My MAC
+#define MMAC 0x250007  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 25     //Type of device
-#define MCHANNEL 3
+#define MCHANNEL 1
 
 
 /************************* Module specyfic functions **********************/
@@ -43,12 +43,10 @@ void PrepareData()
 void SendData()
 {
       if (trx.CycleData()) {
-     //   DBGPINHIGH();
         trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
         DataADXL345(frame);
-    //    DBGPINLOW();
          trx.SendData(frame);
          trx.Transmit();
        }
@@ -96,6 +94,7 @@ void stageloop(byte stage)
     default:
     break;
   }
+   
 }
 
 
@@ -137,4 +136,4 @@ void loop()
      xstage=trx.timer.WaitStage();
      stageloop(xstage);
   }while( xstage!=IMTimer::PERIOD);
-}                                                                                    
+}                                 

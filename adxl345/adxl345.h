@@ -22,9 +22,8 @@ int intPin1 = 2;//D2  WATERMARK
 int intPin2 = 5;//D5 DATA READY - DISABLE dbgpin
 int CS = 5;//D5
 
-int vccPin = A0;
 
-
+#define MAXTAB 33
 //ADXL345 sensor;
 Adafruit_ADXL345_Unified sensor;
 //uint8_t maxValueIndex[5]; //wait for 5 measurements
@@ -34,12 +33,19 @@ Adafruit_ADXL345_Unified sensor;
 int valueX;
 int valueY;
 int valueZ;
-int tabX[8];
-int tabY[8];
-int tabZ[8];
+int tabX[MAXTAB];
+int tabY[MAXTAB];
+int tabZ[MAXTAB];
+int tabYMax;
+int tabZMax;
+int tabXMax;
+int tabZMin;
+int tabYMin;
+int tabXMin;
+uint16_t cpuVinCycle=0;
+
 uint16_t cpuVin;
 uint16_t cpuTemp;
-uint16_t cpuVinCycle=0;
 
 
 
@@ -145,7 +151,7 @@ void MeasureADXL345()
 {
  // DBGPINHIGH();
   //DBGPINLOW();
-  //   power_twi_enable();
+     power_twi_enable();
  //   DBGPINHIGH(); 
 // DBGPINLOW();
 // DBGPINHIGH();
@@ -169,11 +175,18 @@ void MeasureADXL345()
   int ii=0;
   while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
     sensor.readXYZ(&tabX[ii],&tabY[ii],&tabZ[ii]);
+    if (tabX[ii]>tabXMax) tabXMax=tabX[ii];
+    if (tabY[ii]>tabYMax) tabYMax=tabY[ii];
+    if (tabZ[ii]>tabZMax) tabZMax=tabZ[ii];
+    if (tabX[ii]<tabXMin) tabXMin=tabX[ii];
+    if (tabY[ii]<tabYMin) tabYMin=tabY[ii];
+    if (tabZ[ii]<tabZMin) tabZMin=tabZ[ii];
   }
  // valueX=sensor.getX();
  // valueY=sensor.getY();
  // valueZ=sensor.getZ();
           DBGLEDOFF();
+//     power_twi_enable();
   
 }    
 
@@ -192,14 +205,14 @@ void PrepareADXL345()
 
 //     pointer=1;
   DBGLEDON();
-         power_twi_enable(); 
+  //       power_twi_enable(); 
 // sensor.readXYZ(&valueX,&valueY,&valueZ);
 //  valueX=sensor.getX();
 //  valueY=sensor.getY();
 //  valueZ=sensor.getZ();
-  valueX=tabX[0];
-  valueY=tabY[0];
-  valueZ=tabZ[0];
+  valueX=tabXMax;
+  valueY=tabYMax;
+  valueZ=tabZMax;
    DBGLEDOFF();
 
  //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
@@ -217,10 +230,12 @@ void DataADXL345(IMFrame &frame)
     
     SetupADC();
     cpuVin=internalVcc();
-//    cpuTemp=internalTemp();
+   cpuTemp=internalTemp();
+    cpuTemp=internalTemp();
+ //    cpuTemp=internalTemp();
 //    cpuTemp=internalTemp();
  
-//    ShutOffADC();
+    ShutOffADC();
   }
  // pinMode(A4, INPUT);
    cpuVinCycle++;
@@ -231,9 +246,19 @@ void DataADXL345(IMFrame &frame)
     }
 
         // data->w[2]=hh;
-    data->w[3]=valueX;
-    data->w[4]=valueY;
-    data->w[5]=valueZ;
+    data->w[3]=(uint16_t)tabXMax;
+    data->w[4]=(uint16_t)tabYMax;
+    data->w[5]=(uint16_t)tabZMax;
+    data->w[6]=(uint16_t)tabXMin;
+    data->w[7]=(uint16_t)tabYMin;
+    data->w[8]=(uint16_t)tabZMin;
+  tabXMax=-30000;
+  tabYMax=-30000;
+  tabZMax=-30000;
+  tabXMin=30000;
+  tabYMin=30000;
+  tabZMin=30000;
+
  //   data->w[7]=cpuVinCycle;
  //   data->w[3]=maxValueCurr;
   //  data->w[2]=maxValueCurr-maxValueLast;
@@ -244,7 +269,7 @@ void DataADXL345(IMFrame &frame)
 //    data->w[0]=dataIndex;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
- //  data->w[1]=cpuTemp;
+   data->w[1]=cpuTemp;
       
  //  scale.power_down();
  // power_adc_disable();  

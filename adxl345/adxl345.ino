@@ -13,10 +13,10 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x250007  // My MAC
+#define MMAC 0x25000A  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 25     //Type of device
-#define MCHANNEL 1
+#define MCHANNEL 3
 
 
 /************************* Module specyfic functions **********************/
@@ -112,9 +112,9 @@ void setup()
   SetupADC();
   interrupts();
   delay(100);
- // wdt_enable(WDTO_8S);
+  wdt_enable(WDTO_8S);
   SetupADXL345();
- //  disableADCB();
+   disableADCB();
   trx.startMAC=0;
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;
@@ -130,7 +130,7 @@ void setup()
 
 void loop()
 {
-//  wdt_reset();
+  wdt_reset();
   byte xstage;
   do{
      xstage=trx.timer.WaitStage();

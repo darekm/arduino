@@ -12,9 +12,11 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x210002  // My MAC
+#define MMAC 0x210006  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 21     //Type of device
+#define MCHANNEL 2
+
 
 /************************* Module specyfic functions **********************/
 
@@ -32,8 +34,9 @@ void PrepareData()
 {
       if (trx.CycleData())
       {
-   PrepareMAX6675();
-
+        DBGLEDON();
+        PrepareMAX6675();
+        DBGLEDOFF();
       }
 }  
 
@@ -49,7 +52,6 @@ void SendData()
          trx.SendData(frame);
          trx.Transmit();
        }
- 
 }
 
 
@@ -70,14 +72,10 @@ void ReceiveData()
 
 void stageloop(byte stage)
 {
-//   if (stage== STARTBROADCAST){
-//    DBGINFO("stageloop=");  DBGINFO(millis());
-//    DBGINFO(":");  DBGINFO(stage);
-//  }
   switch (stage)
   {
-    case STARTBROADCAST:  DBGPINHIGH();trx.ListenBroadcast();    break;
-    case STOPBROADCAST:  DBGPINLOW();trx.Knock(); PrepareData();     break;
+    case STARTBROADCAST:  trx.Knock();    break;
+    case STOPBROADCAST:   PrepareData();     break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -94,7 +92,6 @@ void stageloop(byte stage)
     default:
     break;
   }
-//   DBGINFO("@@\r\n");
 }
 
 
@@ -103,12 +100,7 @@ void stageloop(byte stage)
 
 void setup()
 {
- 
-   resetPin();
- // pinMode(3,OUTPUT);
- // digitalWrite(3,LOW);
- // pinMode(DBGCLOCK,OUTPUT);
- // digitalWrite(DBGCLOCK ,HIGH);
+    resetPin();
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   pinMode(DBGPIN ,OUTPUT);
@@ -125,15 +117,15 @@ void setup()
   SetupMAX6675();
    disableADCB();
   wdt_enable(WDTO_8S);
-  trx.startMAC=MMAC;
+  trx.startMAC=0;
   trx.myMAC=MMAC;
+  trx.myChannel=MCHANNEL;
+
   
  
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
   power_timer0_disable();
-//  trx.timer.onStage=stageloop;
-//    pciSetup(9);
 
 setupTimer2();
 }
@@ -143,12 +135,7 @@ void loop()
   wdt_reset();
   byte xstage;
   do{
-//DBGPINLOW();
      xstage=trx.timer.WaitStage();
-    // DBGPINLOW();
      stageloop(xstage);
-   // DBGPINHIGH();
   }while( xstage!=IMTimer::PERIOD);
-
-
 }

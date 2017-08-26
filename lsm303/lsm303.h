@@ -1,7 +1,7 @@
 // 
 //    FILE:
 // VERSION: 0.1.00
-// PURPOSE: MAX30100heartrate logger  for imwave
+// PURPOSE: LSM303D acc and magnetic logger  for imwave
 //
 //
 // HISTORY:
@@ -10,17 +10,14 @@
 #ifndef imLSM303_h
 #define imLSM303_h
 
-//#include "Arduino.h"
 #include "imframe.h"
 #include "imdebug.h"
-
-
 #include <LSM303D.h>
 
 
 int intPin1 = 2;//D2  WATERMARK
 int intPin2 = 5;//D5 DATA READY - DISABLE dbgpin
-int CS = 5;//D5
+int intCS = 4;//D5
 
 
 #define MAXTAB 33
@@ -45,10 +42,6 @@ uint16_t cpuVinCycle=0;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 
-
-
-
-        
 
 
 
@@ -98,12 +91,15 @@ void setupFIFO(){
 void SetupLSM303()
 {
   do{
- // DBGLEDON();
-   power_twi_enable(); 
+    delaySleepT2(200);
+   DBGLEDON();
+  power_twi_enable(); 
    power_adc_enable();
      pinMode(intPin1,INPUT_PULLUP);//INT1
      pinMode(intPin2,INPUT_PULLUP);//INT2
-
+    pinMode(intCS,OUTPUT);
+    //INT2
+digitalWrite(intCS,HIGH);
 // Wire.begin();
  // sensor.init();
 //  pinMode(CS,OUTPUT);
@@ -114,8 +110,9 @@ void SetupLSM303()
     DBGLEDON();
   }   
     ;
-  }while(true);  
+    digitalWrite(intCS,LOW);
 //    DBGLEDOFF();
+  }while(true);  
  //sensor.writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
 //  setupFIFO();
 // startPulse();
@@ -197,7 +194,7 @@ void PrepareLSM303()
  //     startMeassure();
 
 //     pointer=1;
-  DBGLEDON();
+//  DBGLEDON();
   //       power_twi_enable(); 
 // sensor.readXYZ(&valueX,&valueY,&valueZ);
 //  valueX=sensor.getX();
@@ -207,7 +204,7 @@ void PrepareLSM303()
   valueY=tabYMax;
   valueZ=tabZMax;
   sensor.init();
-   DBGLEDOFF();
+ //  DBGLEDOFF();
 
  //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
 // DBGLEDOFF();
@@ -268,8 +265,6 @@ void DataLSM303(IMFrame &frame)
  //  scale.power_down();
  // power_adc_disable();  
 }
-
-
 
 
 

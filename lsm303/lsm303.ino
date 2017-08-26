@@ -75,10 +75,10 @@ void stageloop(byte stage)
 {
   switch (stage)
   {
-    case STARTBROADCAST:  trx.Knock();     break;
-    case STOPBROADCAST:  PrepareData();     break;
-    case STARTDATA: SendData();  break;
-    case STOPDATA:   trx.StopListen();      break;
+    case STARTBROADCAST:  DBGLEDON();trx.Knock();     break;
+    case STOPBROADCAST:  DBGLEDOFF();PrepareData();     break;
+ //   case STARTDATA: SendData();  break;
+ //   case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
     case MEASUREDATA: MeasureLSM303();break;

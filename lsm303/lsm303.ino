@@ -3,7 +3,7 @@
 #include <SPI.h>
 #include <EEPROM.h>
 #include <Wire.h>
-#include "LSM303LIB.h"
+#include "LSM303D.h"
 
 
 #include "imdebug.h"
@@ -118,6 +118,7 @@ void setup()
   trx.startMAC=0;
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;
+  trx.NoRadio=true;
   
  
   trx.Init(buffer);

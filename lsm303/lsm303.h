@@ -15,7 +15,7 @@
 #include "imdebug.h"
 
 
-#include <LSM303.h>
+#include <LSM303D.h>
 
 
 int intPin1 = 2;//D2  WATERMARK
@@ -25,7 +25,7 @@ int CS = 5;//D5
 
 #define MAXTAB 33
 //ADXL345 sensor;
-Adafruit_LSM303_Accel_Unified sensor;
+LSM303 sensor;
 
  
 int valueX;
@@ -97,7 +97,8 @@ void setupFIFO(){
 }
 void SetupLSM303()
 {
-//  DBGLEDON();
+  do{
+ // DBGLEDON();
    power_twi_enable(); 
    power_adc_enable();
      pinMode(intPin1,INPUT_PULLUP);//INT1
@@ -107,12 +108,17 @@ void SetupLSM303()
  // sensor.init();
 //  pinMode(CS,OUTPUT);
 //   digitalWrite(CS,HIGH);
-  if (! sensor.begin()) 
-     DBGLEDON(); 
+  if ( sensor.testDevice()) {
+     DBGLEDOFF(); 
+  } else{
+    DBGLEDON();
+  }   
     ;
+  }while(true);  
+//    DBGLEDOFF();
  //sensor.writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
-  setupFIFO();
- startPulse();
+//  setupFIFO();
+// startPulse();
 }
 
 
@@ -200,6 +206,7 @@ void PrepareLSM303()
   valueX=tabXMax;
   valueY=tabYMax;
   valueZ=tabZMax;
+  sensor.init();
    DBGLEDOFF();
 
  //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);

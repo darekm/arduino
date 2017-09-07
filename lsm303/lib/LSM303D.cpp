@@ -127,11 +127,11 @@ void LSM303::enableDefault(void)
 
     // 0x00 = 0b00000000
     // AFS = 0 (+/- 2 g full scale)
-    writeReg(CTRL2, 0x00);
+    writeReg(CTRL2, 0x40);
 
     // 0x57 = 0b01010111
     // AODR = 0101 (50 Hz ODR); AZEN = AYEN = AXEN = 1 (all axes enabled)
-    writeReg(CTRL1, 0x57);
+    writeReg(CTRL1, 0x47);
 
     // Magnetometer
 
@@ -244,7 +244,20 @@ void LSM303::readAcc(void)
   Wire.write(OUT_X_L_A | (1 << 7));
   last_status = Wire.endTransmission();
   Wire.requestFrom(acc_address, (byte)6);
+     byte _buff[6];
 
+  int i = 0;
+    while(Wire.available())         // device may send less than requested (abnormal)
+    {
+        _buff[i] = Wire.read();    // receive a byte
+        i++;
+        if (i>=6) break;
+    }
+    if(i != 6){
+       i=-i;
+    }
+
+   /*
   unsigned int millis_start = millis();
   while (Wire.available() < 6) {
     if (io_timeout > 0 && ((unsigned int)millis() - millis_start) > io_timeout)
@@ -267,6 +280,11 @@ void LSM303::readAcc(void)
   a.x = (int16_t)(xha << 8 | xla);
   a.y = (int16_t)(yha << 8 | yla);
   a.z = (int16_t)(zha << 8 | zla);
+  */
+  a.x = (int16_t)(_buff[1] << 8 | _buff[0]);
+  a.y = (int16_t)(_buff[3] << 8 | _buff[2]);
+  a.z = (int16_t)(_buff[5] << 8 | _buff[4]);
+
 }
 
 // Reads the 3 magnetometer channels and stores them in vector m
@@ -278,7 +296,19 @@ void LSM303::readMag(void)
   Wire.write((_device == device_D) ? translated_regs[-OUT_X_L_M] | (1 << 7) : translated_regs[-OUT_X_H_M]);
   last_status = Wire.endTransmission();
   Wire.requestFrom(mag_address, (byte)6);
+     byte _buff[6];
 
+  int i = 0;
+    while(Wire.available())         // device may send less than requested (abnormal)
+    {
+        _buff[i] = Wire.read();    // receive a byte
+        i++;
+        if (i>=6) break;
+    }
+    if(i != 6){
+       i=-i;
+    }
+  /*
   unsigned int millis_start = millis();
   while (Wire.available() < 6) {
     if (io_timeout > 0 && ((unsigned int)millis() - millis_start) > io_timeout)
@@ -324,10 +354,16 @@ void LSM303::readMag(void)
     }
   }
 
+
   // combine high and low bytes
   m.x = (int16_t)(xhm << 8 | xlm);
   m.y = (int16_t)(yhm << 8 | ylm);
   m.z = (int16_t)(zhm << 8 | zlm);
+  */
+  m.x = (int16_t)(_buff[1] << 8 | _buff[0]);
+  m.y = (int16_t)(_buff[3] << 8 | _buff[2]);
+  m.z = (int16_t)(_buff[5] << 8 | _buff[4]);
+
 }
 
 // Reads all 6 channels of the LSM303 and stores them in the object variables

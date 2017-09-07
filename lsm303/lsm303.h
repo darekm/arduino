@@ -15,13 +15,12 @@
 #include <LSM303D.h>
 
 
-int intPin1 = 2;//D2  WATERMARK
-int intPin2 = 5;//D5 DATA READY - DISABLE dbgpin
+int intPin1 = 2;//D2  INT2 WATERMARK
+int intPin2 = 5;//D5 INT 1 DATA READY - DISABLE dbgpin
 int intCS = 4;//D5
 
 
 #define MAXTAB 33
-//ADXL345 sensor;
 LSM303 sensor;
 
  
@@ -74,8 +73,7 @@ void SendDataAll()
         frame.Body[i+7]=(uint8_t)tt;
         xl=xm;
     }
-    
-           DBGLEDON();
+               DBGLEDON();
   trx.Wakeup();
           trx.SendData(frame);
          
@@ -83,7 +81,27 @@ void SendDataAll()
 }
 
 
+void setupClick(){
+    sensor.writeReg(sensor.CLICK_CFG, 0x3F);//enable single click on XYZ
+    sensor.writeReg(sensor.CLICK_THS, 0x01);//threshold
+    sensor.writeReg(sensor.TIME_LIMIT, 0x01);//enable single click on XYZ
+    sensor.writeReg(LSM303::TIME_LATENCY , 0x0F);//threshold
+    sensor.writeReg(LSM303::TIME_WINDOW, 0x1F);//threshold
+    sensor.writeReg(LSM303::CTRL4, 0x80);//threshold
+  //  sensor.writeReg(sensor.CTRL0, 0x04);//data ready
+}
+
+void setupInertial(){
+    sensor.writeReg(LSM303::IG_CFG1, 0x20);//threshold
+    sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
+    sensor.writeReg(LSM303::CTRL4, 0x40);//threshold
+ //   sensor.writeReg(LSM303::CTRL5, 0x6D);//threshold
+
+}
+
 void setupFIFO(){
+    sensor.writeReg(sensor.CTRL3, 0x02);//data ready
+//    sensor.writeReg(sensor.CTRL4, 0x06);//data ready
   // sensor.writeRegister(ADXL345_REG_INT_ENABLE, 0x82);  //ENABLE int DATA READY & WATERMARK
  //  sensor.writeRegister(ADXL345_REG_INT_MAP, 0x80);  
  //  sensor.writeRegister(ADXL345_REG_FIFO_CTL, 0x57);  
@@ -101,36 +119,33 @@ void SetupLSM303()
     //INT2
 digitalWrite(intCS,HIGH);
 // Wire.begin();
- // sensor.init();
+  sensor.init(sensor.device_D);
+  sensor.enableDefault();
 //  pinMode(CS,OUTPUT);
 //   digitalWrite(CS,HIGH);
   if ( sensor.testDevice()) {
-     DBGLEDOFF(); 
+     DBGLEDOFF();
+    break; 
   } else{
     DBGLEDON();
   }   
     ;
-    digitalWrite(intCS,LOW);
+//    digitalWrite(intCS,LOW);
 //    DBGLEDOFF();
   }while(true);  
  //sensor.writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
 //  setupFIFO();
-// startPulse();
+  setupInertial();
+  setupFIFO();
+ startPulse();
 }
 
 
 void computeMeasure(){
   //         DBGLEDON();
     for(int i=0;i<15;i++){
-  // DBGPINLOW();
-           
-//   DBGPINHIGH();
-        
-    }
-    
-    
+    }  
       //    DBGLEDOFF();
-     
     SendDataAll();
 //      DBGPINLOW();
 }
@@ -140,31 +155,30 @@ void MeasureLSM303()
 {
  // DBGPINHIGH();
   //DBGPINLOW();
-     power_twi_enable();
+  //   power_twi_enable();
  //   DBGPINHIGH(); 
 // DBGPINLOW();
-// DBGPINHIGH();
+ DBGLEDON();
 
-//    DBGPINHIGH();
-  //  DBGPINLOW();
-  //   DBGPINHIGH();
-
+//    delaySleepT2(100);
+  sensor.readReg(LSM303::IG_SRC1);
 //    SendDataAll();
     //computeMeasure();
  //   SendDataAll();
    //   DBGPINLOW();
-   DBGLEDON();
+  // DBGLEDON();
    uint8_t src =0;
  //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
   if (src!=0) {
-          DBGLEDON();
+    //      DBGLEDON();
   }
 //  DBGLEDOFF();
   
 //  for(int ii=0;ii<4;ii++){
   int ii=0;
-  while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
+ // while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
  //   sensor.readXYZ(&tabX[ii],&tabY[ii],&tabZ[ii]);
+ {
     if (tabX[ii]>tabXMax) tabXMax=tabX[ii];
     if (tabY[ii]>tabYMax) tabYMax=tabY[ii];
     if (tabZ[ii]>tabZMax) tabZMax=tabZ[ii];
@@ -175,7 +189,7 @@ void MeasureLSM303()
  // valueX=sensor.getX();
  // valueY=sensor.getY();
  // valueZ=sensor.getZ();
-          DBGLEDOFF();
+//          DBGLEDOFF();
 //     power_twi_enable();
   
 }    
@@ -188,7 +202,34 @@ void PrepareLSM303()
  //   ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
 //    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
  //   DIDR1 = 0x00;       
-  
+digitalWrite(intCS,HIGH);
+
+//  while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
+  if (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
+  DBGLEDON();
+    sensor.readMag(); 
+   DBGLEDOFF();
+  } else{
+//    sensor.writeReg(LSM303::CTRL0, 0x80);//threshold
+  }
+//  sensor.readReg(LSM303::IG_SRC1);
+//  sensor.readReg(LSM303::IG_SRC2);
+//  sensor.readReg(LSM303::STATUS_M);
+//  sensor.readReg(LSM303::FIFO_SRC);
+
+
+  digitalWrite(intCS,LOW);
+
+/*  cpuVinCycle++;
+  if (cpuVinCycle % 3) { 
+  if ( sensor.testDevice()) {
+     DBGLEDOFF(); 
+  } else{
+ //   DBGLEDON();
+  }   
+  }
+  DBGLEDOFF();
+ */ 
  //   DIDR0 = ~(0x10 ); //ADC4D,
  //  startPulse();
  //     startMeassure();
@@ -203,8 +244,10 @@ void PrepareLSM303()
   valueX=tabXMax;
   valueY=tabYMax;
   valueZ=tabZMax;
-  sensor.init();
+//  sensor.init();
  //  DBGLEDOFF();
+
+
 
  //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
 // DBGLEDOFF();
@@ -218,19 +261,14 @@ void PrepareLSM303()
 void DataLSM303(IMFrame &frame)
 {  
   if (cpuVinCycle % 8==0){
-    
-    SetupADC();
+       SetupADC();
     cpuVin=internalVcc();
    cpuTemp=internalTemp();
     cpuTemp=internalTemp();
- //    cpuTemp=internalTemp();
-//    cpuTemp=internalTemp();
- 
-    ShutOffADC();
+     ShutOffADC();
   }
  // pinMode(A4, INPUT);
-   cpuVinCycle++;
-  
+   cpuVinCycle++;  
    IMFrameData *data =frame.Data();
        	DBGINFO("temp: ");
     for(byte i=0;i<15;i++){

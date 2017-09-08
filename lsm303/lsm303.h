@@ -49,6 +49,7 @@ void interruptMax(){//interrupt function
 }
 
 void startPulse(){ //run settings for heart rate
+  //  attachInterrupt(0,interruptMax,FALLING);  //D2 -> INT1
     attachInterrupt(0,interruptMax,RISING);  //D2 -> INT1
     //sensor.clearInt();
 }
@@ -94,13 +95,20 @@ void setupClick(){
 void setupInertial(){
     sensor.writeReg(LSM303::IG_CFG1, 0x20);//threshold
     sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
-    sensor.writeReg(LSM303::CTRL4, 0x40);//threshold
- //   sensor.writeReg(LSM303::CTRL5, 0x6D);//threshold
+    sensor.writeReg(LSM303::CTRL4, 0x01);//threshold
+    sensor.writeReg(LSM303::CTRL3, 0x02);//threshold
+  sensor.writeReg(LSM303::FIFO_CTRL, 0x3C);//stream
+   //   sensor.writeReg(LSM303::CTRL5, 0x6D);//threshold
 
 }
 
 void setupFIFO(){
-    sensor.writeReg(sensor.CTRL3, 0x02);//data ready
+   sensor.writeReg(LSM303::CTRL0, 0x60);//FIFO EMPTY in1
+    sensor.writeReg(LSM303::FIFO_CTRL, 0x3C);//stream
+    sensor.writeReg(LSM303::CTRL4, 0x01);//thr int2
+//     sensor.writeReg(LSM303::CTRL3, 0x01);//FIFO EMPTY in1
+     sensor.writeReg(LSM303::INT_CTRL_M, 0x00);//FIFO EMPTY in1
+   
 //    sensor.writeReg(sensor.CTRL4, 0x06);//data ready
   // sensor.writeRegister(ADXL345_REG_INT_ENABLE, 0x82);  //ENABLE int DATA READY & WATERMARK
  //  sensor.writeRegister(ADXL345_REG_INT_MAP, 0x80);  
@@ -110,7 +118,7 @@ void SetupLSM303()
 {
   do{
     delaySleepT2(200);
-   DBGLEDON();
+//   DBGLEDON();
   power_twi_enable(); 
    power_adc_enable();
      pinMode(intPin1,INPUT_PULLUP);//INT1
@@ -119,12 +127,12 @@ void SetupLSM303()
     //INT2
 digitalWrite(intCS,HIGH);
 // Wire.begin();
-  sensor.init(sensor.device_D);
-  sensor.enableDefault();
+sensor.testDevice();
+  sensor.init(sensor.device_D,LSM303::sa0_high);
 //  pinMode(CS,OUTPUT);
 //   digitalWrite(CS,HIGH);
   if ( sensor.testDevice()) {
-     DBGLEDOFF();
+  //   DBGLEDOFF();
     break; 
   } else{
     DBGLEDON();
@@ -133,10 +141,13 @@ digitalWrite(intCS,HIGH);
 //    digitalWrite(intCS,LOW);
 //    DBGLEDOFF();
   }while(true);  
+ //  sensor.writeReg(LSM303::CTRL0, 0x80);//Fmemory reset
+  sensor.enableDefault();
  //sensor.writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
-//  setupFIFO();
+ // setupFIFO();
   setupInertial();
-  setupFIFO();
+//  setupFIFO();
+//  setupClick();
  startPulse();
 }
 
@@ -161,7 +172,17 @@ void MeasureLSM303()
  DBGLEDON();
 
 //    delaySleepT2(100);
-  sensor.readReg(LSM303::IG_SRC1);
+ // sensor.readReg(LSM303::IG_SRC1);
+ //   while (digitalRead(intPin2)==LOW)  {  // dataready PIN int2
+  if (digitalRead(intPin2)==LOW)  {  // dataready PIN int2
+  
+   digitalWrite(intCS,HIGH);
+//    sensor.readAcc(); 
+   digitalWrite(intCS,LOW);
+
+  }
+ DBGLEDOFF();
+
 //    SendDataAll();
     //computeMeasure();
  //   SendDataAll();
@@ -202,9 +223,23 @@ void PrepareLSM303()
  //   ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
 //    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
  //   DIDR1 = 0x00;       
+  if ( sensor.testDevice()) {
+    DBGLEDON();
+  }
+  byte ffx=sensor.readReg(LSM303::FIFO_SRC);
+  byte ff=ffx & 0x1F;
+    
+  for (int8_t i=ff +1; i>=0; i--)
+  {
 digitalWrite(intCS,HIGH);
+    sensor.readAcc();
+digitalWrite(intCS,LOW);
+  }  
+  DBGLEDOFF();
+      sensor.readMag(); 
 
 //  while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
+/*
   if (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
   DBGLEDON();
     sensor.readMag(); 
@@ -212,12 +247,13 @@ digitalWrite(intCS,HIGH);
   } else{
 //    sensor.writeReg(LSM303::CTRL0, 0x80);//threshold
   }
-//  sensor.readReg(LSM303::IG_SRC1);
-//  sensor.readReg(LSM303::IG_SRC2);
-//  sensor.readReg(LSM303::STATUS_M);
-//  sensor.readReg(LSM303::FIFO_SRC);
+  */
+ // sensor.readReg(LSM303::IG_SRC1);
+ // sensor.readReg(LSM303::IG_SRC2);
+ // sensor.readReg(LSM303::STATUS_M);
+ // sensor.readReg(LSM303::FIFO_SRC);
 
-
+   
   digitalWrite(intCS,LOW);
 
 /*  cpuVinCycle++;

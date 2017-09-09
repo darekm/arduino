@@ -60,6 +60,7 @@ void stopPulse(){
 
 
 void ww(){
+    delaySleepT2(10);
 }    
   
 void SendDataAll()
@@ -101,7 +102,9 @@ void setupInertial(){
  ww();   sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
 //    sensor.writeReg(LSM303::CTRL4, 0x01);//threshold
  //   sensor.writeReg(LSM303::CTRL3, 0x02);//threshold
- ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x4F);//stream
+     sensor.writeReg(LSM303::CTRL1, 0x27);
+
+ ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x46);//stream
 ww();    sensor.writeReg(LSM303::CTRL4, 0x02);//thr int2
    //   sensor.writeReg(LSM303::CTRL5, 0x6D);//threshold
 

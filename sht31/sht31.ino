@@ -9,9 +9,9 @@
 /******************************** Configuration *************************************/
 #define REQUIRESALARMS 0
 // Data wire is plugged into pin 2 on the Arduino
-#define MMAC 0x250000  // My MAC
+#define MMAC 0x260001  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 25     //Type of device
+#define MDEVICE 0x26     //Type of device
 #define MCHANNEL 3
 
 /************************* Module specyfic functions **********************/
@@ -125,8 +125,8 @@ void setup()
   wdt_enable(WDTO_8S);
   interrupts();
   delay(300);
-  IMMAC ad=SetupSHT31();
-   disableADCB();
+ //  disableADCB();
+  uint16_t ad=SetupSHT31();
 
   trx.myMAC=MMAC;
   trx.startMAC=0;
@@ -150,7 +150,7 @@ void setup()
  
 #endif  
 #if DBGLED>=1
-  if (ad>0){
+  if (ad!=0xFFFF){
     DBGLEDON();
     delaySleepT2(300);
     DBGLEDOFF();

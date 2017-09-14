@@ -30,19 +30,29 @@ uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 
-IMMAC SetupSHT31()
+uint16_t SetupSHT31()
 {
-  pinMode(ONE_WIRE_BUS,INPUT_PULLUP);
+   ShutOffADC(); 
+  power_usart0_disable();
+//  pinMode(ONE_WIRE_BUS,INPUT_PULLUP);
+power_twi_enable();//
+power_adc_disable();
+power_timer1_disable();
+ACSR=0;
+   ADCSRA = 0;                        // disable A/D comparator
+   DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
   sensor.begin();
   
   
-  if ( sensor.readStatus()=0xFFFF) return 0;
-  return 1;
+  return  sensor.readStatus();
+ 
 }
 
 void PrepareSHT31()
 {
-   sensor.start();
+  power_twi_enable();
+ // power_adc_enable();
+  sensor.start();
 }  
 
 
@@ -72,6 +82,7 @@ void DataSHT31(IMFrame &frame)
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
    data->w[10]=0xA33A;
+power_twi_disable();//
 }
 
 

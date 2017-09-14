@@ -13,10 +13,10 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x25000A  // My MAC
+#define MMAC 0x250005  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 25     //Type of device
-#define MCHANNEL 3
+#define MDEVICE 0x25     //Type of device
+#define MCHANNEL 1
 
 
 /************************* Module specyfic functions **********************/
@@ -124,7 +124,7 @@ void setup()
   trx.myDevice=MDEVICE;
  // trx.NoKnock=true;
  // trx.NoSleep=true;
- // power_timer0_disable();
+  power_timer0_disable();
   setupTimer2();
 }
 

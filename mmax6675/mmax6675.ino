@@ -15,7 +15,7 @@
 #define MMAC 0x210006  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 21     //Type of device
-#define MCHANNEL 2
+#define MCHANNEL 1
 
 
 /************************* Module specyfic functions **********************/

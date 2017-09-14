@@ -113,7 +113,7 @@ void SetupADXL345()
 {
 //  DBGLEDON();
    power_twi_enable(); 
-   power_adc_enable();
+//   power_adc_enable();
      pinMode(intPin1,INPUT_PULLUP);//INT1
      pinMode(intPin2,INPUT_PULLUP);//INT2
 
@@ -169,8 +169,8 @@ void MeasureADXL345()
   if (src!=0) {
           DBGLEDON();
   }
-//  DBGLEDOFF();
-  
+  DBGPINHIGH();
+  DBGLEDOFF();
 //  for(int ii=0;ii<4;ii++){
   int ii=0;
   while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
@@ -182,11 +182,12 @@ void MeasureADXL345()
     if (tabY[ii]<tabYMin) tabYMin=tabY[ii];
     if (tabZ[ii]<tabZMin) tabZMin=tabZ[ii];
   }
+  DBGPINLOW();
  // valueX=sensor.getX();
  // valueY=sensor.getY();
  // valueZ=sensor.getZ();
-          DBGLEDOFF();
-//     power_twi_enable();
+         // DBGLEDOFF();
+     power_twi_disable();
   
 }    
 

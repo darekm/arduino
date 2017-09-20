@@ -194,6 +194,7 @@ void DataACS720(IMFrame &frame)
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
 
+  if ((cpuVinCycle % 8)==0){
     SetupADC();
     cpuVin=internalVcc();
     cpuTemp=internalTemp();

@@ -12,9 +12,10 @@
 /******************************** Configuration *************************************/
 
 
-#define MMAC 0x230003  // My MAC
+#define MMAC 0x230006  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 23     //Type of device
+#define MCHANNEL 1
 
 /************************* Module specyfic functions **********************/
 
@@ -80,13 +81,13 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();   PrepareData();  break;
-    case STOPBROADCAST:  trx.Knock();     break;
+    case STARTBROADCAST:  trx.Knock();    break;
+    case STOPBROADCAST:  PrepareData();     break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
-    case CRONHOUR : delaySleepT2(10000);break;
+  //  case CRONHOUR : delaySleepT2(1000);break;
     case IMTimer::IDDLESTAGE : {
 
        DBGINFO("***IDDLE DATA");
@@ -118,17 +119,19 @@ void setup()
   wdt_disable();
   INITDBG();
   DBGINFO(F("*****start"));
-  ERRLEDINIT();   ERRLEDOFF();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
+  DBGLEDON();
   interrupts();
   delay(1000);
+  DBGLEDOFF();
    wdt_enable(WDTO_8S);
 //   disableADCB();
 // SetupMHMC();
 
   trx.myMAC=MMAC;
+  trx.myChannel=MCHANNEL;
  
   trx.Init(buffer);
   trx.myDevice=MDEVICE;

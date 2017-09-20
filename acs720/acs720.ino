@@ -21,10 +21,10 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x220038 // My MAC
+#define MMAC 0x220032 // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 22     //Type of device
-
+#define MCHANNEL 1
 
 
 
@@ -173,6 +173,7 @@ void setup()
     wdt_enable(WDTO_8S);
  // trx.startMAC=MMAC;
   trx.myMAC=MMAC;
+  trx.myChannel=MCHANNEL;
          SetupACS720();
 //  trx.NoRadio=true;
   trx.Init(buf3);
@@ -193,10 +194,10 @@ void loop()
     
   byte xstage;
   do{
-   DBGPINLOW();
+ //  DBGPINLOW();
      xstage=trx.timer.WaitStage();
      stageloop(xstage);
-  DBGPINHIGH();
+//  DBGPINHIGH();
   }while( xstage!=IMTimer::PERIOD);
 
 

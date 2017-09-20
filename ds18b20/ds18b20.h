@@ -83,6 +83,7 @@ void DataDS18B20(IMFrame &frame)
  //  Vin=internalVcc();
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
+   data->w[10]=0xA33A;
 }
 
 

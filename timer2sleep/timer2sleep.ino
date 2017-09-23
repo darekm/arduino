@@ -24,6 +24,7 @@
 #define MMAC 0x200001  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 7     //Type of device
+#define MCHANNEL 3
 
 
 
@@ -54,6 +55,31 @@ Transceiver trx;
 
 
 int COUNTER=0;
+uint16_t cpuVin;
+uint16_t cpuTemp;
+uint16_t cpuVinCycle=0;
+
+
+void DataVCC(IMFrame &frame)
+{   
+  if (cpuVinCycle % 8==0){ 
+    SetupADC();
+    cpuVin=internalVcc();
+    cpuTemp=internalTemp();
+    cpuTemp=internalTemp();
+    ShutOffADC();
+    power_adc_disable();
+  }
+   cpuVinCycle++;
+  
+   IMFrameData *data =frame.Data();
+//   bool ex=sensors.getAddress(deviceAddress, 0);
+   data->w[6]=trx.Connected();
+ //  Vin=internalVcc();
+   data->w[1]=cpuTemp;
+   data->w[0]=cpuVin;
+   data->w[10]=0xA33A;
+}
 
 
 void DataFlash()
@@ -64,10 +90,10 @@ void DataFlash()
   ShutOffADC();
   DBGPINLOW(); 
      // ERRFLASH();
-      delaySleepT2(1000);
+ //     delaySleepT2(1000);
       DBGPINHIGH();
      power_spi_enable(); 
-     power_timer0_enable();
+//     power_timer0_enable();
 }    
 void SendDataFlood()
 {
@@ -92,42 +118,23 @@ void SendDataFlood()
 
 void SendData()
 {
-/*   if (trx.Connected())
-   {
-      if (trx.CycleData())
-      {
+      if (trx.CycleData()) {
+        DBGLEDON();
+        trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
-        long mm=millis();
-//        DataDS18B20(frame);
-        DBGINFO(" :");
-        DBGINFO(millis()-mm);
+//        DataVCC(frame);
         
-
-        DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
-        ERRFLASH();
-      } else{
-         trx.printCycle();
-
-
-      }
-
-   } else {
-     trx.ListenBroadcast();
-   }
-
-*/
+        DBGLEDOFF();
+      }  
 }
 
 
 
 void ReceiveData()
 {
-//  static IMFrame rxFrame;
-//ERRLEDON();
-//  DBGINFO(" Receive ");
     while(trx.GetData()){ 
   //    if(trx.GetFrame(rxFrame))
       if (trx.Parse())
@@ -139,18 +146,9 @@ void ReceiveData()
       }
       DBGINFO("\r\n");
     }
-//ERRLEDOFF();
 
 }
 
-void PrintStatus()
-{
-  DBGINFO("\r\n");
-  DBGINFO(" Status ");
-//  trx.printStatus();
-  DBGINFO("\r\n");
-
-}
 
 
 void stageloop(byte stage)
@@ -161,11 +159,11 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST: DBGPINLOW(); trx.ListenBroadcast();   break;
+    case STARTBROADCAST:  trx.Knock();   break;
 //    case STOPBROADCAST: digitalWrite(5,HIGH); trx.StopListenBroadcast();      break;
 //    case STOPBROADCAST:  trx.Knock();      break;
     case STOPBROADCAST:    DBGPINHIGH();  break;
-    case STARTDATA: DataFlash(); break;
+    case STARTDATA: SendData(); break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
@@ -182,8 +180,6 @@ void stageloop(byte stage)
     break;
   }
 
- //  DBGINFO("@@\r\n");
-
 }
 
 
@@ -191,18 +187,18 @@ void stageloop(byte stage)
 
 
 void setup()
-{
-  for (byte i=0; i<20; i++) {    //make all pins inputs with pullups enabled
-        pinMode(i, OUTPUT);
-        digitalWrite(i,LOW);
-   }
-
-  pinMode(DBGPIN,INPUT);
-  pinMode(DBGCLOCK,INPUT);
-  pinMode(DBGPIN,OUTPUT);
+{ 
+   resetPin();
+ 
+  pinMode(10,OUTPUT);
+  digitalWrite(10,HIGH);
+  #ifdef DBGCLOCK
   pinMode(DBGCLOCK,OUTPUT);
+  digitalWrite(DBGCLOCK,HIGH);
+  #endif  
   wdt_disable();
   INITDBG();
+  setupTimer2();
  // digitalWrite(DBGPIN,HIGH);
   DBGINFO("SETUP");
  // digitalWrite(DBGPIN,LOW);
@@ -211,13 +207,13 @@ void setup()
   
   DBGINFO("_");
  // setupTimer2();
-  digitalWrite(DBGPIN,HIGH);
+ // digitalWrite(DBGPIN,HIGH);
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
-  ERRLEDINIT();
-  ERRLEDOFF();
-  //  wdt_enable(WDTO_8S);
+
+ 
+   wdt_enable(WDTO_8S);
   disableADCB();
   power_timer0_enable();
   DBGPINLOW();
@@ -225,12 +221,15 @@ void setup()
 //  randomSeed(analogRead(0)+internalrandom());
 
   trx.myMAC=MMAC;
+  trx.myChannel=MCHANNEL;
       DBGINFO2(trx.myMAC,HEX);
-  trx.NoRadio=true;
+//  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
-  power_timer0_disable();
-
+    DBGLEDON();
+    delaySleepT2(400);
+    DBGLEDOFF();
+ 
  // trx.timer.onStage=stageloop;
 //  trx.DisableWatchdog();
 #if DBGLVL >=1  
@@ -314,6 +313,7 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
    DBGINFO("\r\n");
    }
 */
+  power_timer0_disable();
   setupTimer2();
 }
 
@@ -332,7 +332,7 @@ void loop()
   DBGINFO("\r\nLOOP");
   DBGINFO(incTimer2());
   DBGINFO(millisT2());
-    
+  wdt_reset();  
   byte xstage;
   do{
 

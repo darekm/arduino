@@ -10,10 +10,10 @@
 /******************************** Configuration *************************************/
 
 // Data wire is plugged into pin 2 on the Arduino
-#define MMAC 0x270001  // My MAC
+#define MMAC 0x270003  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 27     //Type of device
-#define MCHANNEL 3
+#define MDEVICE 0x27     //Type of device
+#define MCHANNEL 1
 
 
 /************************* Module specyfic functions **********************/
@@ -79,7 +79,7 @@ void stageloop(byte stage)
   switch (stage)
   {
     case STARTBROADCAST: trx.Knock();      break;
-    case STOPBROADCAST:   PrepareData();    break;
+    case STOPBROADCAST:  trx.StopListenBroadcast(); PrepareData();    break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;

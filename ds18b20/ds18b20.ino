@@ -83,7 +83,7 @@ void stageloop(byte stage)
   switch (stage)
   {
     case STARTBROADCAST: trx.Knock();      break;
-    case STOPBROADCAST:    PrepareData();    break;
+    case STOPBROADCAST:    trx.StopListenBroadcast();PrepareData();    break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -110,8 +110,11 @@ void stageloop(byte stage)
 void setup()
 {
   resetPin();
+    #ifdef DBGCLOCK
+
   pinMode(DBGCLOCK,OUTPUT);
   digitalWrite(DBGCLOCK ,HIGH);
+  #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   DBGPINHIGH();

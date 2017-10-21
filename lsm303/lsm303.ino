@@ -14,8 +14,8 @@
 // Data wire is plugged into pin 2 on the Arduino
 
 #define MMAC 0x260010  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 26     //Type of device
+#define ServerMAC 0xA0000  // Server  MAC
+#define MDEVICE 0x26     //Type of device
 #define MCHANNEL 3
 
 
@@ -34,23 +34,20 @@ IMBuffer    buffer;
 void PrepareData()
 {
   if (trx.CycleData())    {
-   PrepareLSM303();
-  
-
-      }
+     PrepareLSM303();
+  }
 }  
 
 void SendData()
 {
-      if (trx.CycleData()) {
-        trx.Wakeup();
-        static IMFrame frame;
-        frame.Reset();
-        DataLSM303(frame);
+     if (trx.CycleData()) {
+         trx.Wakeup();
+         static IMFrame frame;
+         frame.Reset();
+         DataLSM303(frame);
          trx.SendData(frame);
          trx.Transmit();
-       }
- 
+     } 
 }
 
 
@@ -76,7 +73,7 @@ void stageloop(byte stage)
   switch (stage)
   {
     case STARTBROADCAST:  trx.Knock();     break;
-    case STOPBROADCAST:  PrepareData();     break;
+    case STOPBROADCAST: trx.StopListenBroadcast(); PrepareData();     break;
  //   case STARTDATA: SendData();  break;
  //   case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -118,6 +115,7 @@ void setup()
   trx.startMAC=0;
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;
+  trx.serverMAC=ServerMAC;
 //  trx.NoRadio=true;
   
  

@@ -10,11 +10,10 @@
 #include "imeprom.h"
 
 /******************************** Configuration *************************************/
-
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x250011  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
+#define MMAC 0x250005  // My MAC
+#define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x25     //Type of device
 #define MCHANNEL 1
 
@@ -57,7 +56,6 @@ void SendData()
 
 void ReceiveData()
 {
-// DBGLEDON();
  while (trx.GetData())
       {
         if (trx.Parse())
@@ -65,8 +63,6 @@ void ReceiveData()
           DBGINFO(" rxGET ");
         }
       }
-     DBGINFO("\r\n");
-  //  DBGLEDOFF();  
 }
 
 
@@ -76,7 +72,7 @@ void stageloop(byte stage)
   switch (stage)
   {
     case STARTBROADCAST:  trx.Knock();     break;
-    case STOPBROADCAST:  PrepareData();     break;
+    case STOPBROADCAST:  trx.StopListenBroadcast();PrepareData();     break;
     case STARTDATA: SendData();  break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -118,7 +114,7 @@ void setup()
   trx.startMAC=0;
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;
-  
+  trx.serverMAC=ServerMAC;
  
   trx.Init(buffer);
   trx.myDevice=MDEVICE;

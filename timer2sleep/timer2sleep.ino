@@ -78,7 +78,7 @@ void DataVCC(IMFrame &frame)
  //  Vin=internalVcc();
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
-   data->w[10]=0xA33A;
+   data->w[10]=0xA33B;
 }
 
 
@@ -123,7 +123,7 @@ void SendData()
         trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
-//        DataVCC(frame);
+        DataVCC(frame);
         
         trx.SendData(frame);
         trx.Transmit();
@@ -159,12 +159,12 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.Knock();   break;
+    case STARTBROADCAST:  DBGPINHIGH();trx.Knock();   break;
 //    case STOPBROADCAST: digitalWrite(5,HIGH); trx.StopListenBroadcast();      break;
 //    case STOPBROADCAST:  trx.Knock();      break;
-    case STOPBROADCAST:    DBGPINHIGH();  break;
+    case STOPBROADCAST:    DBGPINLOW();SendData(); trx.StopListenBroadcast(); break;
     case STARTDATA: SendData(); break;
-    case STOPDATA:   trx.StopListen();      break;
+    case STOPDATA: SendData();  trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
     case IMTimer::IDDLESTAGE : {
@@ -315,6 +315,8 @@ DBGINFO("\r\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") ;
 */
   power_timer0_disable();
   setupTimer2();
+ //   TCCR2B=0x2;
+
 }
 
 void loop()

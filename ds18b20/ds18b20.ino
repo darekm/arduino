@@ -11,8 +11,8 @@
 // Data wire is plugged into pin 2 on the Arduino
 #define ONE_WIRE_BUS 2
 #define MMAC 0x170000  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 7     //Type of device
+#define ServerMAC 0xA0000  // Server  MAC
+#define MDEVICE 0x17     //Type of device
 #define MCHANNEL 1
 
 /************************* Module specyfic functions **********************/
@@ -133,6 +133,7 @@ void setup()
   trx.myMAC=MMAC;
   trx.startMAC=0;
   trx.myMAC+=ad;
+  trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.Init(buffer);
   trx.myDevice=MDEVICE;

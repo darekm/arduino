@@ -20,7 +20,7 @@
 // Setup a oneWire instance to communicate with ANY OneWire devices
 
 
-
+#define SHT31_ADDR    0x45  //  breakboard =0x44
 // Set oneWire reference to Dallas Temperature sensor.
 SHT31 sensor;
 
@@ -41,7 +41,7 @@ power_timer1_disable();
 ACSR=0;
    ADCSRA = 0;                        // disable A/D comparator
    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
-  sensor.begin();
+  sensor.begin(SHT31_ADDR);
   
   
   return  sensor.readStatus();

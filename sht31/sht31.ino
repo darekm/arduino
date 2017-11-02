@@ -9,10 +9,10 @@
 /******************************** Configuration *************************************/
 #define REQUIRESALARMS 0
 // Data wire is plugged into pin 2 on the Arduino
-#define MMAC 0x260001  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
+#define MMAC 0x260005  // My MAC
+#define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x26     //Type of device
-#define MCHANNEL 3
+#define MCHANNEL 1
 
 /************************* Module specyfic functions **********************/
 
@@ -77,14 +77,10 @@ void PrintStatus()
 
 void stageloop(byte stage)
 {
-//   if (stage== STARTBROADCAST){
-//    DBGINFO("stageloop=");  DBGINFO(millis());
-//    DBGINFO(":");  DBGINFO(stage);
-//  }
   switch (stage)
   {
     case STARTBROADCAST: trx.Knock();      break;
-    case STOPBROADCAST:    PrepareData();    break;
+    case STOPBROADCAST:   trx.StopListenBroadcast(); PrepareData();    break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -101,7 +97,6 @@ void stageloop(byte stage)
     default:
     break;
   }
-//   DBGINFO("@@\r\n");
 }
 
 
@@ -111,14 +106,15 @@ void stageloop(byte stage)
 void setup()
 {
   resetPin();
-  pinMode(DBGCLOCK,OUTPUT);
-  digitalWrite(DBGCLOCK ,HIGH);
+  #ifdef DBGCLOCK
+    pinMode(DBGCLOCK,OUTPUT);
+    digitalWrite(DBGCLOCK ,HIGH);
+  #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   DBGPINHIGH();
   DBGPINLOW();
   INITDBG();
-  DBGINFO(F("*****start"));
   setupTimer2();
   power_timer0_enable();
   SetupADC();
@@ -131,6 +127,7 @@ void setup()
   trx.myMAC=MMAC;
   trx.startMAC=0;
  // trx.myMAC+=ad;
+  trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
@@ -178,14 +175,9 @@ void setup()
 void loop()
 {
   wdt_reset();
-//  PrintStatus(); 
   byte xstage;
   do{
      xstage=trx.timer.WaitStage();
-    // DBGPINLOW();
      stageloop(xstage);
-   // DBGPINHIGH();
   }while( xstage!=IMTimer::PERIOD);
-
-
 }

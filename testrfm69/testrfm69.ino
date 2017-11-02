@@ -22,9 +22,9 @@
 /******************************** Configuration *************************************/
 
 #define MMAC 0x130020  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
+#define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 3     //Type of device
-
+#define MCHANNEL 3
 
 
 
@@ -83,6 +83,7 @@ void SendData()
 //   {
       if (trx.CycleData())
       {
+        DBGLEDON();
    //    digitalWrite(pinLED,HIGH);
     trx.Wakeup();
         static IMFrame frame;
@@ -103,8 +104,8 @@ void SendData()
 //        DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
-             digitalWrite(pinLED,LOW);
-
+        DBGLEDOFF();
+         
 //        ERRFLASH();
   //    } else{
    //      trx.printCycle();
@@ -159,9 +160,9 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST: DBGPINHIGH();trx.ListenBroadcast();DBGPINLOW();DBGPINHIGH(); trx.ListenBroadcast();  DBGPINLOW(); break;
+    case STARTBROADCAST: DBGPINHIGH();trx.Knock();DBGPINLOW();DBGPINHIGH(); DBGPINLOW(); break;
 //    case STOPBROADCAST:  trx.StopListenBroadcast();      break;
-    case STOPBROADCAST: DBGPINHIGH();DBGPINLOW(); trx.Knock();DBGPINHIGH();DBGPINLOW();      break;
+    case STOPBROADCAST: DBGPINHIGH();DBGPINLOW(); trx.StopListenBroadcast();DBGPINHIGH();DBGPINLOW();      break;
     case STARTDATA:DBGPINHIGH(); SendData();/*trx.ListenData(); */ break;
     case STOPDATA:  DBGPINLOW(); trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -224,10 +225,17 @@ void setup()
   DBGLEDOFF();
   trx.myMAC=MMAC;
   trx.startMAC=MMAC;
+  trx.serverMAC=ServerMAC;
+  trx.myChannel=MCHANNEL;
       DBGINFO2(trx.myMAC,HEX);
 //  trx.NoRadio=true;
   trx.Init(buf3);
   trx.myDevice=MDEVICE;
+  #if DBGLED>=1
+    DBGLEDON();
+    delaySleepT2(500);
+    DBGLEDOFF();
+  #endif
   power_timer0_disable();
    
       //  trx.TimerSetup();

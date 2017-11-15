@@ -20,15 +20,15 @@
 // Setup a oneWire instance to communicate with ANY OneWire devices
 
 
-#define SHT31_ADDR    0x45  //  breakboard =0x44
+
 // Set oneWire reference to Dallas Temperature sensor.
 SHT31 sensor;
 
-
+#define SHT31_ADDR    0x45  //  breakboard =0x44
 
 uint16_t cpuVin;
 uint16_t cpuTemp;
-uint16_t cpuVinCycle=0;
+uint16_t cpuVinCycle=1;
 
 uint16_t SetupSHT31()
 {
@@ -62,8 +62,11 @@ void DataSHT31(IMFrame &frame)
     SetupADC();
     cpuVin=internalVcc();
     cpuTemp=internalTemp();
-    cpuTemp=internalTemp();
-    ShutOffADC();
+  //  cpuTemp=internalTemp();
+  //  ShutOffADC();
+  ACSR=0;
+   ADCSRA = 0;                        // disable A/D comparator
+
     power_adc_disable();
   }
    cpuVinCycle++;

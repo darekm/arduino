@@ -73,11 +73,13 @@ void PrepareMHMC()
 void DataMHMC(IMFrame &frame)
 {   
  //  power_adc_enable();
-  if (cpuVinCycle % 4==0){
+  if (cpuVinCycle % 8==0){
     
   //  SetupADC();
-  //  cpuVin=internalVcc();
+    cpuVin=internalVcc();
   //  ShutOffADC();
+  ACSR = 48;                        // disable A/D comparator
+     power_adc_enable();
   }
   // power_adc_enable();
   //  DIDR0 = ~(0x10 ); //ADC4D,

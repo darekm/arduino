@@ -12,9 +12,9 @@
 /******************************** Configuration *************************************/
 
 
-#define MMAC 0x230006  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 23     //Type of device
+#define MMAC 0x230005  // My MAC
+#define ServerMAC 0xA0000  // Server  MAC
+#define MDEVICE 0x23     //Type of device
 #define MCHANNEL 1
 
 /************************* Module specyfic functions **********************/

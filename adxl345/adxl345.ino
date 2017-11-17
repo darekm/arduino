@@ -12,7 +12,7 @@
 /******************************** Configuration *************************************/
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x250005  // My MAC
+#define MMAC 0x250010  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x25     //Type of device
 #define MCHANNEL 1
@@ -41,7 +41,7 @@ void PrepareData()
 
 void SendData()
 {
-      if (trx.CycleData()) {
+     if (trx.CycleData()) {
         trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
@@ -68,7 +68,7 @@ void ReceiveData()
 
 
 void stageloop(byte stage)
-{
+{ 
   switch (stage)
   {
     case STARTBROADCAST:  trx.Knock();     break;

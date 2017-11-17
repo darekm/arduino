@@ -1,7 +1,7 @@
 // 
 //    FILE:
 // VERSION: 0.1.00
-// PURPOSE: MAX30100heartrate logger  for imwave
+// PURPOSE: ADXL345 logger  for imwave
 //
 //
 // HISTORY:
@@ -20,14 +20,12 @@
 
 int intPin1 = 2;//D2  WATERMARK
 int intPin2 = 5;//D5 DATA READY - DISABLE dbgpin
-int CS = 5;//D5
+//int CS = 5;//D5
 
 
-#define MAXTAB 33
+#define MAXTAB 23
 //ADXL345 sensor;
 Adafruit_ADXL345_Unified sensor;
-//uint8_t maxValueIndex[5]; //wait for 5 measurements
-//uint8_t maxValuePointer;
 
  
 int valueX;
@@ -121,9 +119,20 @@ void SetupADXL345()
  // sensor.init();
 //  pinMode(CS,OUTPUT);
 //   digitalWrite(CS,HIGH);
+DBGLEDON(); 
+
+do{
+ delaySleepT2(500);
+DBGLEDOFF(); 
   if (! sensor.begin()) 
-     DBGLEDON(); 
+     DBGLEDON();
+    else break;
+    
     ;
+    
+}while(true);
+DBGLEDOFF(); 
+
  sensor.writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
   setupFIFO();
  startPulse();
@@ -131,19 +140,8 @@ void SetupADXL345()
 
 
 void computeMeasure(){
-  //         DBGLEDON();
-    for(int i=0;i<15;i++){
-  // DBGPINLOW();
-           
-//   DBGPINHIGH();
-        
-    }
-    
-    
-      //    DBGLEDOFF();
      
     SendDataAll();
-//      DBGPINLOW();
 }
 
 
@@ -164,17 +162,19 @@ void MeasureADXL345()
     //computeMeasure();
  //   SendDataAll();
    //   DBGPINLOW();
-   DBGLEDON();
+//   DBGLEDON();
     uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
   if (src!=0) {
-          DBGLEDON();
+//          DBGLEDON();
   }
   DBGPINHIGH();
-  DBGLEDOFF();
+//  DBGLEDOFF();
 //  for(int ii=0;ii<4;ii++){
   int ii=0;
   while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
     sensor.readXYZ(&tabX[ii],&tabY[ii],&tabZ[ii]);
+    ii++;
+    if (ii>=MAXTAB) break;
     if (tabX[ii]>tabXMax) tabXMax=tabX[ii];
     if (tabY[ii]>tabYMax) tabYMax=tabY[ii];
     if (tabZ[ii]>tabZMax) tabZMax=tabZ[ii];
@@ -183,12 +183,7 @@ void MeasureADXL345()
     if (tabZ[ii]<tabZMin) tabZMin=tabZ[ii];
   }
   DBGPINLOW();
- // valueX=sensor.getX();
- // valueY=sensor.getY();
- // valueZ=sensor.getZ();
-         // DBGLEDOFF();
-     power_twi_disable();
-  
+     power_twi_disable();  
 }    
 
 void PrepareADXL345()
@@ -205,16 +200,8 @@ void PrepareADXL345()
  //     startMeassure();
 
 //     pointer=1;
-  DBGLEDON();
+//  DBGLEDON();
   //       power_twi_enable(); 
-// sensor.readXYZ(&valueX,&valueY,&valueZ);
-//  valueX=sensor.getX();
-//  valueY=sensor.getY();
-//  valueZ=sensor.getZ();
-  valueX=tabXMax;
-  valueY=tabYMax;
-  valueZ=tabZMax;
-   DBGLEDOFF();
 
  //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
 // DBGLEDOFF();
@@ -227,7 +214,8 @@ void PrepareADXL345()
 
 void DataADXL345(IMFrame &frame)
 {  
-  if (cpuVinCycle % 8==0){
+   DBGLEDON();
+  if (cpuVinCycle % 8==10){
     
     SetupADC();
     cpuVin=internalVcc();
@@ -242,9 +230,6 @@ void DataADXL345(IMFrame &frame)
    cpuVinCycle++;
   
    IMFrameData *data =frame.Data();
-       	DBGINFO("temp: ");
-    for(byte i=0;i<15;i++){
-    }
 
         // data->w[2]=hh;
     data->w[3]=(uint16_t)tabXMax;
@@ -265,12 +250,10 @@ void DataADXL345(IMFrame &frame)
   //  data->w[2]=maxValueCurr-maxValueLast;
       
   //  }
-   // int x= 15;
-    //data->w[3]=x;
-//    data->w[0]=dataIndex;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
    data->w[1]=cpuTemp;
+   DBGLEDOFF();
       
  //  scale.power_down();
  // power_adc_disable();  

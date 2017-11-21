@@ -13,9 +13,9 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x260010  // My MAC
+#define MMAC 0x280002  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
-#define MDEVICE 0x26     //Type of device
+#define MDEVICE 0x28     //Type of device
 #define MCHANNEL 3
 
 
@@ -74,8 +74,8 @@ void stageloop(byte stage)
   {
     case STARTBROADCAST:  trx.Knock();     break;
     case STOPBROADCAST: trx.StopListenBroadcast(); PrepareData();     break;
- //   case STARTDATA: SendData();  break;
- //   case STOPDATA:   trx.StopListen();      break;
+    case STARTDATA: SendData();  break;
+    case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
     case MEASUREDATA: MeasureLSM303();break;
@@ -90,17 +90,17 @@ void stageloop(byte stage)
     break;
     default:
     break;
-  }
-   
+  }   
 }
-
-
-
 
 
 void setup()
 {
   resetPin();
+  #ifdef DBGCLOCK
+   pinMode(DBGCLOCK,OUTPUT);
+   digitalWrite(DBGCLOCK ,HIGH);
+  #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   INITDBG();
@@ -108,7 +108,7 @@ void setup()
   power_timer0_enable();
   SetupADC();
   interrupts();
-  delay(100);
+  delay(10);
   wdt_enable(WDTO_8S);
   SetupLSM303();
   // disableADCB();

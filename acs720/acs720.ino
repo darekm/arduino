@@ -21,8 +21,8 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x220032 // My MAC
-#define ServerMAC 0xA000  // Server  MAC
+#define MMAC 0x220031 // My MAC
+#define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 22     //Type of device
 #define MCHANNEL 1
 
@@ -57,10 +57,7 @@ IMBuffer    buf3;
 void PrepareData(){
       if (trx.CycleData())
       {
-  
- // digitalWrite(pinLED,HIGH);
-  MeasureACS720();
-//  digitalWrite(pinLED,LOW);
+        MeasureACS720();
       }
 }
 
@@ -82,17 +79,9 @@ void SendData()
    //     data->w[8]=0xA;
         data->w[10]=0xA;
         
-      DBGINFO("data:");
-      DBGINFO(data->w[0]);
-      DBGINFO(":");
-      DBGINFO(data->w[1]);
-      DBGINFO("\r\n");
-
-//        DBGINFO("SendData ");
         trx.SendData(frame);
         trx.Transmit();
        }
-
 }
 
 
@@ -106,8 +95,6 @@ void ReceiveData()
       //    DBGINFO(" rxGET ");
         }
       }
-      DBGINFO("RD\r\n");
-
 }
 
 void PrintStatus()
@@ -125,7 +112,7 @@ void stageloop(byte stage)
   switch (stage)
   {
     case STARTBROADCAST:  trx.Knock();  break;
-    case STOPBROADCAST:   PrepareData();      break;
+    case STOPBROADCAST:   trx.StopListenBroadcast();PrepareData();      break;
     case STARTDATA: SendData(); break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA :DBGPINHIGH(); ReceiveData();DBGPINLOW();break;
@@ -143,9 +130,6 @@ void stageloop(byte stage)
     default:
     break;
   }
-
-   DBGINFO("@@\r\n");
-
 }
 
 
@@ -163,16 +147,13 @@ void setup()
   power_timer0_enable();
   SetupADC();
  //  setupTimer2();
-  //  wdt_enable(WDTO_8S);
-//   power_timer0_disable();
-//  disableADCB();
-//  digitalWrite(4,LOW);
    interrupts ();
    delay(500);
    disableADCB();
     wdt_enable(WDTO_8S);
  // trx.startMAC=MMAC;
   trx.myMAC=MMAC;
+  trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
          SetupACS720();
 //  trx.NoRadio=true;
@@ -188,9 +169,6 @@ void setup()
 void loop()
 {
   wdt_reset();
-//  PrintStatus();
-  DBGINFO("\r\n");
-  DBGINFO("LOOP");
     
   byte xstage;
   do{
@@ -199,6 +177,4 @@ void loop()
      stageloop(xstage);
 //  DBGPINHIGH();
   }while( xstage!=IMTimer::PERIOD);
-
-
 }

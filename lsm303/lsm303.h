@@ -17,25 +17,25 @@
 
 int intPin1 = 2;//D2  INT2 WATERMARK
 int intPin2 = 5;//D5 INT 1 DATA READY - DISABLE dbgpin
-int intCS = 4;//D5
+//int intCS = 4;//D5
 
 
-#define MAXTAB 33
+#define MAXTAB 3
 LSM303 sensor;
 
  
-int valueX;
-int valueY;
-int valueZ;
 int tabX[MAXTAB];
 int tabY[MAXTAB];
 int tabZ[MAXTAB];
-int tabYMax;
-int tabZMax;
-int tabXMax;
-int tabZMin;
-int tabYMin;
+int16_t tabXMax;
+int16_t tabYMax;
+int16_t tabZMax;
+int16_t tabMGX;
+int16_t tabMGY;
+int16_t tabMGZ;
 int tabXMin;
+int tabYMin;
+int tabZMin;
 uint16_t cpuVinCycle=0;
 
 uint16_t cpuVin;
@@ -117,9 +117,9 @@ void setupInertialPCB(){
  //   sensor.writeReg(LSM303::CTRL3, 0x02);//threshold
      sensor.writeReg(LSM303::CTRL1, 0x27);
 
- ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x46);//stream
+ ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x47);//stream +threshold
 ww();    sensor.writeReg(LSM303::CTRL3, 0x04);//thr int1
-ww();    sensor.writeReg(LSM303::CTRL4, 0x08);//dataready int2 
+ww();    sensor.writeReg(LSM303::CTRL4, 0x01);//dataready int2 
    //   sensor.writeReg(LSM303::CTRL5, 0x6D);//threshold
 
 }
@@ -146,9 +146,9 @@ void SetupLSM303()
    power_adc_enable();
      pinMode(intPin1,INPUT_PULLUP);//INT1
      pinMode(intPin2,INPUT_PULLUP);//INT2
-    pinMode(intCS,OUTPUT);
+//    pinMode(intCS,OUTPUT);
     //INT2
-digitalWrite(intCS,HIGH);
+//digitalWrite(intCS,HIGH);
 // Wire.begin();
   ww();sensor.testDevice();
   ww(); sensor.init(sensor.device_D,LSM303::sa0_high);
@@ -213,13 +213,17 @@ void ReadLSM303(){
   {
 //digitalWrite(intCS,HIGH);
 DBGLEDON();
-    sensor.readAcc();
-    ComputeMax();
-    DBGLEDOFF();
+    if (sensor.readAcc()==6){
+       ComputeMax();
+      DBGLEDOFF();
+    }
 //digitalWrite(intCS,LOW);
   }  
 
-//   sensor.readMag(); 
+   sensor.readMag(); 
+   tabMGX=sensor.m.x;
+   tabMGY=sensor.m.y;
+   tabMGZ=sensor.m.z;
 }
 void computeMeasure(){
   //         DBGLEDON();
@@ -245,31 +249,11 @@ void MeasureLSM303()
 
   }
   */
-// DBGLEDOFF();
-
-//    SendDataAll();
-    //computeMeasure();
- //   SendDataAll();
-   //   DBGPINLOW();
-  // DBGLEDON();
- //   uint8_t src = sensor.readRegister( ADXL345_REG_INT_SOURCE);
-//  DBGLEDOFF();
   
 //  for(int ii=0;ii<4;ii++){
   int ii=0;
  // while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
  //   sensor.readXYZ(&tabX[ii],&tabY[ii],&tabZ[ii]);
-/* {
-    if (tabX[ii]>tabXMax) tabXMax=tabX[ii];
-    if (tabY[ii]>tabYMax) tabYMax=tabY[ii];
-    if (tabZ[ii]>tabZMax) tabZMax=tabZ[ii];
-    if (tabX[ii]<tabXMin) tabXMin=tabX[ii];
-    if (tabY[ii]<tabYMin) tabYMin=tabY[ii];
-    if (tabZ[ii]<tabZMin) tabZMin=tabZ[ii];
-  }
- */// valueX=sensor.getX();
- // valueY=sensor.getY();
- // valueZ=sensor.getZ();
 //          DBGLEDOFF();
 //     power_twi_enable();
   
@@ -295,30 +279,10 @@ ReadLSM303();
 //    sensor.writeReg(LSM303::CTRL0, 0x80);//threshold
   }
   */
- // sensor.readReg(LSM303::IG_SRC1);
- // sensor.readReg(LSM303::IG_SRC2);
-//  sensor.readReg(LSM303::STATUS_M);
- // sensor.readReg(LSM303::FIFO_SRC);
-
-   
- // digitalWrite(intCS,LOW);
-
- //   DIDR0 = ~(0x10 ); //ADC4D,
- //  startPulse();
- //     startMeassure();
 
 //     pointer=1;
 //  DBGLEDON();
   //       power_twi_enable(); 
-// sensor.readXYZ(&valueX,&valueY,&valueZ);
-//  valueX=sensor.getX();
-//  valueY=sensor.getY();
-//  valueZ=sensor.getZ();
- // valueX=tabXMax;
- // valueY=tabYMax;
- // valueZ=tabZMax;
-//  sensor.init();
- //  DBGLEDOFF();
 
 
 
@@ -337,10 +301,7 @@ void DataLSM303(IMFrame &frame)
  // pinMode(A4, INPUT);
    cpuVinCycle++;  
    IMFrameData *data =frame.Data();
-       	DBGINFO("temp: ");
-    for(byte i=0;i<15;i++){
-    }
-
+  
         // data->w[2]=hh;
     data->w[3]=(uint16_t)tabXMax;
     data->w[4]=(uint16_t)tabYMax;
@@ -348,6 +309,9 @@ void DataLSM303(IMFrame &frame)
     data->w[6]=(uint16_t)tabXMin;
     data->w[7]=(uint16_t)tabYMin;
     data->w[8]=(uint16_t)tabZMin;
+    data->w[9]=(uint16_t)tabMGX;
+    data->w[10]=(uint16_t)tabMGY;
+    data->w[11]=(uint16_t)tabMGZ;
   tabXMax=-30000;
   tabYMax=-30000;
   tabZMax=-30000;
@@ -355,15 +319,7 @@ void DataLSM303(IMFrame &frame)
   tabYMin=30000;
   tabZMin=30000;
 
- //   data->w[7]=cpuVinCycle;
- //   data->w[3]=maxValueCurr;
-  //  data->w[2]=maxValueCurr-maxValueLast;
       
-  //  }
-   // int x= 15;
-    //data->w[3]=x;
-//    data->w[0]=dataIndex;
- //  Vin=internalVcc();
    data->w[0]=cpuVin;
    data->w[1]=cpuTemp;
       

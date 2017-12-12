@@ -113,6 +113,8 @@ DBGLEDON();
     if (cpuVinCycle % 4==0){
    //  SetupADC();
      cpuVin=internalVcc();
+     cpuTemp=internalTemp();
+     cpuTemp=internalTemp();
      ResetupADC();
     // ShutOffADC();
   }
@@ -134,6 +136,7 @@ void DataSOIL(IMFrame &frame)
     data->w[4]=cpuVinCycle;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
+   data->w[1]=cpuTemp;
    // digitalWrite(SOIL_VCC,LOW);
    // DBGLEDOFF();
 }

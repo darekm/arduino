@@ -10,8 +10,8 @@
 /******************************** Configuration *************************************/
 
 // Data wire is plugged into pin 2 on the Arduino
-#define MMAC 0x270003  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
+#define MMAC 0x270002  // My MAC
+#define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x27     //Type of device
 #define MCHANNEL 1
 
@@ -42,13 +42,10 @@ void PrepareData()
 void SendData()
 {
       if (trx.CycleData()) {
-        DBGPINHIGH();
         trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
         DataSOIL(frame);
-        DBGPINLOW();
-        DBGINFO("SendData ");
         trx.SendData(frame);
          trx.Transmit();
        }
@@ -72,10 +69,6 @@ void ReceiveData()
 
 void stageloop(byte stage)
 {
-//   if (stage== STARTBROADCAST){
-//    DBGINFO("stageloop=");  DBGINFO(millis());
-//    DBGINFO(":");  DBGINFO(stage);
-//  }
   switch (stage)
   {
     case STARTBROADCAST: trx.Knock();      break;
@@ -97,7 +90,6 @@ void stageloop(byte stage)
     default:
     break;
   }
-//   DBGINFO("@@\r\n");
 }
 
 
@@ -112,7 +104,6 @@ void setup()
   INITDBG();
   wdt_disable();
   INITDBG();
-  DBGINFO(F("*****start"));
   setupTimer2();
   power_timer0_enable();
   SetupADC();
@@ -124,7 +115,7 @@ void setup()
 
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;
- 
+  trx.serverMAC=ServerMAC;
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
   power_timer0_disable();

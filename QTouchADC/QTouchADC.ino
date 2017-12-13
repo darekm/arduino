@@ -10,7 +10,7 @@ int probe_val; // store the resulting touch measurement
 const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 15, 17, 21, 25, 30, 36, 43, 51, 61, 73, 87, 104, 125, 149, 178, 213, 255}; // this is an exponential series to model the perception of the LED brightness by the human eye
 
 #define TPIN1 1
-#define TPIN2 0 // this is currently only used as a supply of Vcc to charge the s&h cap
+#define TPINSS 0 // this is currently only used as a supply of Vcc to charge the s&h cap
 
 #define CHARGE_DELAY  5 // time it takes for the capacitor to get charged/discharged in microseconds
 #define TRANSFER_DELAY  5 // time it takes for the capacitors to exchange charge
@@ -98,6 +98,9 @@ int ADCTouchRead(byte ADCChannel, int samples)
  
 void setup() {
   analogWrite(9, 100);
+  analogWrite(6, 100);
+  digitalWrite(1, HIGH);
+//  digitalWrite(7, 100);
   delay(300);
   //  ref1=ADCTouchRead(A1,30);
  //   ref2=ADCTouchRead(A0,30);
@@ -105,30 +108,37 @@ void setup() {
   touch_setup();
 }
 
-void loop() {
-  unsigned long time;
-  time= micros();
-  
-  // 4 measurements are taken and averaged to improve noise immunity
+int touch_read(uint8_t pin){
+  adc1= 0; // clear the averaging variables for the next run
+  adc2= 0;
   for (int i=0; i<4; i++) {
     // first measurement: charge touch probe, discharge ADC s&h cap, connect the two, measure the volage
-    adc1+= touch_probe(TPIN1, TPIN2, false); // accumulate the results for the averaging
+    adc1+= touch_probe(pin, TPINSS, false); // accumulate the results for the averaging
 
     // second measurement:discharge touch probe, charge ADC s&h cap, connect the two, measure the volage
-   adc2+= touch_probe(TPIN1, TPIN2, true); // accumulate the results for the averaging
+   adc2+= touch_probe(pin, TPINSS, true); // accumulate the results for the averaging
 //    adc1+=ADCTouchRead(A1,3);
  //   adc2+=ADCTouchRead(A0,3);
   //  adc1-=ref1;
  //   adc2-=ref2;
   }
+  // 4 measurements are taken and averaged to improve noise immunity
  // adc1>>=2; // divide the accumulated measurements by 16
 //  adc2>>=2;
+   return (adc1-adc2); // the value of adc1 (probe charged) gets higher when the probe ist touched, the value of adc2 (s&h charged) gets lower when the probe ist touched, so, it has to be be subtracted to amplify the detection accuracy
+
+}
+
+void loop() {
+  unsigned long time;
+  time= micros();
+  
 
   time= micros() - time;
  
   // resulting raw touch value
-  probe_val= adc1-adc2; // the value of adc1 (probe charged) gets higher when the probe ist touched, the value of adc2 (s&h charged) gets lower when the probe ist touched, so, it has to be be subtracted to amplify the detection accuracy
-  
+ // probe_val= adc1-adc2; // the value of adc1 (probe charged) gets higher when the probe ist touched, the value of adc2 (s&h charged) gets lower when the probe ist touched, so, it has to be be subtracted to amplify the detection accuracy
+  probe_val=touch_read(TPIN1);
   // calculate the index to the LED fading table
   int16_t idx= (probe_val-TOUCH_VALUE_BASELINE); // offset probe_val by value of untouched probe
   if(idx<0) idx= 0; // limit the index!!!
@@ -139,9 +149,13 @@ void loop() {
   
   // fade the LED
   analogWrite(9, ledFadeTable[idx]);
-  
-  adc1= 0; // clear the averaging variables for the next run
-  adc2= 0;
+  analogWrite(7, ledFadeTable[idx]);
+   analogWrite(6, ledFadeTable[idx]);
+ digitalWrite(2,HIGH); 
+ digitalWrite(7,HIGH); 
   delay(10); // take 100 measurements per second
+  digitalWrite(2,LOW);
+   digitalWrite(7,LOW); 
+
 }
  

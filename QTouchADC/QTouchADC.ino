@@ -10,12 +10,14 @@ int probe_val; // store the resulting touch measurement
 const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 15, 17, 21, 25, 30, 36, 43, 51, 61, 73, 87, 104, 125, 149, 178, 213, 255}; // this is an exponential series to model the perception of the LED brightness by the human eye
 
 #define TPIN1 1
+#define TPIN2 2
+#define TPIN3 3
 #define TPINSS 0 // this is currently only used as a supply of Vcc to charge the s&h cap
 
 #define CHARGE_DELAY  5 // time it takes for the capacitor to get charged/discharged in microseconds
 #define TRANSFER_DELAY  5 // time it takes for the capacitors to exchange charge
 #define TOUCH_VALUE_BASELINE -65 // this is the value my setup measures when the probe is not touched. For your setup this might be different. In order for the LED to fade correctly, you will have to adjust this value
-#define TOUCH_VALUE_SCALE 3 // this is also used for the LED fading. The value should be chosen such that the value measured when the probe is fully touched minus TOUCH_VALUE_BASELINE is scaled to 31, e.g. untouched_val= 333, touched_val= 488, difference= 155, divide by 5 to get 31.
+#define TOUCH_VALUE_SCALE 4 // this is also used for the LED fading. The value should be chosen such that the value measured when the probe is fully touched minus TOUCH_VALUE_BASELINE is scaled to 31, e.g. untouched_val= 333, touched_val= 488, difference= 155, divide by 5 to get 31.
 
 void touch_setup() {
   // prepare the ADC unit for one-shot measurements
@@ -99,7 +101,7 @@ int ADCTouchRead(byte ADCChannel, int samples)
 void setup() {
   analogWrite(9, 100);
   analogWrite(6, 100);
-  digitalWrite(1, HIGH);
+  analogWrite(1, 50);
 //  digitalWrite(7, 100);
   delay(300);
   //  ref1=ADCTouchRead(A1,30);
@@ -108,7 +110,7 @@ void setup() {
   touch_setup();
 }
 
-int touch_read(uint8_t pin){
+int touch_read(uint8_t pin, int ashift){
   adc1= 0; // clear the averaging variables for the next run
   adc2= 0;
   for (int i=0; i<4; i++) {
@@ -125,8 +127,11 @@ int touch_read(uint8_t pin){
   // 4 measurements are taken and averaged to improve noise immunity
  // adc1>>=2; // divide the accumulated measurements by 16
 //  adc2>>=2;
-   return (adc1-adc2); // the value of adc1 (probe charged) gets higher when the probe ist touched, the value of adc2 (s&h charged) gets lower when the probe ist touched, so, it has to be be subtracted to amplify the detection accuracy
-
+    int16_t add= (adc1-adc2); // the value of adc1 (probe charged) gets higher when the probe ist touched, the value of adc2 (s&h charged) gets lower when the probe ist touched, so, it has to be be subtracted to amplify the detection accuracy
+    int16_t idx= (add-TOUCH_VALUE_BASELINE-ashift); // offset probe_val by value of untouched probe
+    if(idx<0) idx= 0; // limit the index!!!
+    idx/= TOUCH_VALUE_SCALE; // scale the index
+    return idx;
 }
 
 void loop() {
@@ -138,24 +143,27 @@ void loop() {
  
   // resulting raw touch value
  // probe_val= adc1-adc2; // the value of adc1 (probe charged) gets higher when the probe ist touched, the value of adc2 (s&h charged) gets lower when the probe ist touched, so, it has to be be subtracted to amplify the detection accuracy
-  probe_val=touch_read(TPIN1);
+  int idx1=touch_read(TPIN1,40);
+  int idx2=touch_read(TPIN2,0);
+  int idx3=touch_read(TPIN3,200);
   // calculate the index to the LED fading table
-  int16_t idx= (probe_val-TOUCH_VALUE_BASELINE); // offset probe_val by value of untouched probe
-  if(idx<0) idx= 0; // limit the index!!!
-  idx/= TOUCH_VALUE_SCALE; // scale the index
-  if(idx>31) idx= 31; // limit the index!!!
+  if(idx1>31) idx1= 31; // limit the index!!!
+  if(idx2>31) idx2= 31; // limit the index!!!
+  if(idx3>31) idx3= 31; // limit the index!!!
 
   // print some info to the serial
   
   // fade the LED
-  analogWrite(9, ledFadeTable[idx]);
-  analogWrite(7, ledFadeTable[idx]);
-   analogWrite(6, ledFadeTable[idx]);
- digitalWrite(2,HIGH); 
- digitalWrite(7,HIGH); 
+  analogWrite(9, ledFadeTable[idx3]);
+  //analogWrite(7, ledFadeTable[idx]);
+   analogWrite(6, ledFadeTable[idx1]);
+   digitalWrite(1,idx2>10);
+    digitalWrite(7,idx3>10); 
+ 
+// digitalWrite(7,HIGH); 
   delay(10); // take 100 measurements per second
-  digitalWrite(2,LOW);
-   digitalWrite(7,LOW); 
+ // digitalWrite(2,LOW);
+  // digitalWrite(7,LOW); 
 
 }
  

@@ -18,6 +18,9 @@ uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 
+#define LEDB1 6
+#define LEDB2 1
+#define LEDB3 7
 
 
 
@@ -27,33 +30,33 @@ uint16_t cpuVinCycle=0;
 
 void SetupSwitch()
 {
-  analogWrite(9, 100);
-  analogWrite(6, 100);
-  analogWrite(1, 50);
-//  digitalWrite(7, 100);
+ // analogWrite(9, 100);
+ // analogWrite(LEDB1, 100);
+  digitalWrite(LEDB2, HIGH);
+  digitalWrite(LEDB3, HIGH);
+  digitalWrite(5, HIGH);
   delay(300);
 
 }
 
-int idx1,idx2;
+int idx1,idx2,idx3;
 void LoopSwitch() {
-   idx1++;
-   idx2+=11;
+ //  idx1++;
+//   idx2+=11;
    if (idx1>100) idx1=0;
    if (idx2>100) idx2=0;
   // fade the LED
 //  analogWrite(9, idx2);
   //analogWrite(7, ledFadeTable[idx]);
-   analogWrite(6, idx1);
-   digitalWrite(1,idx2>50);
-   digitalWrite(7,idx1>50);
+ //  analogWrite(LEDB1, idx1);
+   digitalWrite(LEDB2,idx2>50);
+   digitalWrite(LEDB3,idx1>50);
 }
 
 
 void PrepareSwitch()
 {
 //  IMTimer::doneMeasure();
-//   sensors.requestTemperatures();
   LoopSwitch();
 }  
 

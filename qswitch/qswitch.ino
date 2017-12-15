@@ -21,12 +21,15 @@ Transceiver trx;
 IMBuffer    buffer;
 
 int COUNTER=0;
+byte SWtoggle;
+t_Time SwitchTime;
 
 #include "qswitch.h"
 
 void PrepareData()
 {
   IMTimer::doneMeasure();
+  PrepareSwitch();
       if (trx.CycleData())
       {
       //  PrepareQtouch();
@@ -64,6 +67,20 @@ void SendData()
         trx.Transmit();
       }
 }
+void StepData(void){
+  if ((millisTNow()-SwitchTime)>50 ){
+    SwitchTime=millisTNow();
+    IMTimer::doneMeasure();
+  idx3++;
+  idx1+=6;
+  idx2+=5;
+      SWtoggle = ~SWtoggle;
+ //   digitalWrite(DBGCLOCK,HIGH);
+//    digitalWrite(DBGCLOCK,LOW);
+    digitalWrite(5,SWtoggle);
+  } 
+
+} 
 
 byte OrderData(uint16_t a){
 //  DBGLEDON();
@@ -88,10 +105,11 @@ void ReceiveData()
 
 void MeasureData()
 {
-  IMTimer::doneMeasure();
+//  IMTimer::doneMeasure();
  // LoopQtouch();
   DBGLEDON();
  SendDataFlood();
+  PrepareSwitch();
   DBGLEDOFF();
 }
 
@@ -127,11 +145,13 @@ void stageloop(byte stage)
 void setup()
 {
   resetPin();
+//  setMaxStepTimer(91);
   #ifdef DBGCLOCK
 
   pinMode(DBGCLOCK,OUTPUT);
-  digitalWrite(DBGCLOCK ,HIGH);
+  digitalWrite(DBGCLOCK ,HIGH); 
   #endif
+  pinMode(5, OUTPUT);
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   DBGPINHIGH();
@@ -154,7 +174,7 @@ void setup()
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
   trx.funOrder=&OrderData;
-  
+  trx.setTimerFunction(&StepData);
   trx.NoSleep=true;
 
 #if DBGLED>=1

@@ -6,7 +6,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x480001  // My MAC
+#define MMAC 0x480014  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x48     //Type of device
 #define MCHANNEL 2
@@ -28,12 +28,15 @@ t_Time SwitchTime;
 
 void PrepareData()
 {
+    digitalWrite(LEDB3,HIGH);
   IMTimer::doneMeasure();
   PrepareSwitch();
       if (trx.CycleData())
       {
       //  PrepareQtouch();
       }
+//    digitalWrite(LEDB3,LOW);
+
 }
 void SendDataFlood()
 {
@@ -66,14 +69,15 @@ void SendData()
         trx.SendData(frame);
         trx.Transmit();
       }
+      digitalWrite(LEDB3,LOW);
 }
 void StepData(void){
   if ((millisTNow()-SwitchTime)>50 ){
     SwitchTime=millisTNow();
-    IMTimer::doneMeasure();
-  idx3++;
-  idx1+=6;
-  idx2+=5;
+//    IMTimer::doneMeasure();
+     idx3++;
+     idx1+=6;
+     idx2+=5;
       SWtoggle = ~SWtoggle;
  //   digitalWrite(DBGCLOCK,HIGH);
 //    digitalWrite(DBGCLOCK,LOW);
@@ -83,34 +87,88 @@ void StepData(void){
 } 
 
 byte OrderData(uint16_t a){
-//  DBGLEDON();
+  
+  switch(a){
+    case 10:
+      digitalWrite(2,HIGH);
+    break;
+    case 11:
+      digitalWrite(2,LOW);
+    break;
+    case 20:
+      digitalWrite(5,HIGH);
+    break;
+    case 21:
+      digitalWrite(5,LOW);
+    break;
+    case 30:
+//      analogWrite(4,0);
+        digitalWrite(A4,HIGH);
+    break;
+    case 31:
+//      analogWrite(4,255);
+        digitalWrite(A4,LOW);
+    break;
+    case 40:
+//      analogWrite(5,0);
+        digitalWrite(A5,HIGH);
+    break;
+    case 41:
+//      analogWrite(5,255);
+        digitalWrite(A5,LOW);
+    break;
+    default:
+      DBGLEDON();
+    
+  }
+  //DBGLEDON();
+  /*if (a==1){
+       DBGLEDON();
+  }
+  if(a==2){
+    digitalWrite(2,HIGH);
+  }
+  if(a==3){
+    digitalWrite(2,LOW);
+  }
+  */
+    //digitalWrite(LEDB3,HIGH);
+//  if (a==4)
+ //   digitalWrite(LEDB3,HIGH);
   return 1;
 }  
 
 void ReceiveData()
 {
-    //    DBGLEDON();
+      //  DBGLEDON();
 
       while (trx.GetData())
       {
         if (trx.Parse())
         {
+          //DBGLEDON();
           DBGINFO(" rxGET ");
         }
       }
-      //      DBGLEDOFF();
+            DBGLEDOFF();
 
 }
 
 
 void MeasureData()
 {
-//  IMTimer::doneMeasure();
+
+  //  IMTimer::doneMeasure();
  // LoopQtouch();
-  DBGLEDON();
- SendDataFlood();
+ // if (trx.Connected()){
+//  DBGLEDON();
+//    digitalWrite(LEDB3,HIGH);
+// SendDataFlood();
   PrepareSwitch();
-  DBGLEDOFF();
+      digitalWrite(LEDB3,LOW);
+
+ // DBGLEDOFF();
+ // }
 }
 
 void stageloop(byte stage)
@@ -205,10 +263,14 @@ void setup()
 
 void loop()
 {
+//  digitalWrite(LEDB2, HIGH);
   wdt_reset();
+//  digitalWrite(LEDB2, LOW);
   byte xstage;
   do{
      xstage=trx.timer.WaitStage();
+ //     digitalWrite(LEDB3,HIGH);
      stageloop(xstage);
+ //     digitalWrite(LEDB3,LOW);
   }while( xstage!=IMTimer::PERIOD);
 }

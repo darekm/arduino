@@ -30,12 +30,19 @@ uint16_t cpuVinCycle=0;
 
 void SetupSwitch()
 {
- // analogWrite(9, 100);
+ pinMode(LEDB2, OUTPUT);
+  pinMode(2, OUTPUT); //pin D2
+  pinMode(5, OUTPUT); //pin D5
+  pinMode(A4,OUTPUT); //SDA
+  pinMode(A5,OUTPUT);//SCL
+  pinMode(LEDB3, OUTPUT);
+  // analogWrite(9, 100);
  // analogWrite(LEDB1, 100);
   digitalWrite(LEDB2, HIGH);
-  digitalWrite(LEDB3, HIGH);
+  //digitalWrite(LEDB3, HIGH);
   digitalWrite(5, HIGH);
   delay(300);
+  digitalWrite(LEDB2, LOW);
 
 }
 
@@ -49,14 +56,13 @@ void LoopSwitch() {
 //  analogWrite(9, idx2);
   //analogWrite(7, ledFadeTable[idx]);
  //  analogWrite(LEDB1, idx1);
-   digitalWrite(LEDB2,idx2>50);
-   digitalWrite(LEDB3,idx1>50);
+ //  digitalWrite(LEDB2,idx2>50);
+  // digitalWrite(LEDB3,idx1>50);
 }
 
 
 void PrepareSwitch()
 {
-//  IMTimer::doneMeasure();
   LoopSwitch();
 }  
 

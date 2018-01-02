@@ -140,7 +140,6 @@ byte OrderData(uint16_t a){
 
 void ReceiveData()
 {
-      //  DBGLEDON();
 
       while (trx.GetData())
       {
@@ -150,8 +149,6 @@ void ReceiveData()
           DBGINFO(" rxGET ");
         }
       }
-            DBGLEDOFF();
-
 }
 
 
@@ -235,37 +232,13 @@ void setup()
   trx.setTimerFunction(&StepData);
   trx.NoSleep=true;
 
-#if DBGLED>=1
-  if (ad>0){
-    DBGLEDON();
-    delaySleepT2(300);
-    DBGLEDOFF();
-    DBGINFO(F("TEMPERARUEEE\r\n"));
-   } else{
-    DBGLEDON();
-    delay(200);
-    DBGLEDOFF();
-    delay(200);
-    DBGLEDON();
-    delay(200);
-    DBGLEDOFF();
-    delay(200);
-    DBGLEDON();
-    delay(200);
-//    DBGLEDOFF();
-    reboot();
-
-  }
-#endif
   power_timer0_disable();
   setupTimer2();
 }
 
 void loop()
 {
-//  digitalWrite(LEDB2, HIGH);
   wdt_reset();
-//  digitalWrite(LEDB2, LOW);
   byte xstage;
   do{
      xstage=trx.timer.WaitStage();

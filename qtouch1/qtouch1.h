@@ -23,6 +23,7 @@ const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12
 
 //int ref2,ref1;
 int idx1,idx2,idx3;
+int shift1,shift2,shift3;
 byte idxbool,IDXBOOL;
 #define TPIN1 1
 #define TPIN2 2
@@ -36,10 +37,6 @@ imTouch touch;
 
 
 
-t_Time funtest(){
-  t_Time x=1000+millisTNow() % 5;
-  return( x-22000) %3000;
-}
 
 
 void SetupQtouch()
@@ -47,9 +44,9 @@ void SetupQtouch()
   pinMode(LEDB2, OUTPUT);
  pinMode(LEDB3, OUTPUT);
 // analogWrite(9, 100);
-  analogWrite(LEDB1, 100);
+//  analogWrite(LEDB1, 100);
 //  digitalWrite(7, 100);
-  if (funtest()>0){
+ // if (funtest()>0){
   digitalWrite(LEDB2, HIGH);
   delay(300);
    digitalWrite(LEDB2, LOW);
@@ -57,33 +54,39 @@ void SetupQtouch()
    digitalWrite(LEDB2, HIGH);
   delay(300);
    digitalWrite(LEDB2, LOW);
-  }
+ // }
   //  ref1=ADCTouchRead(A1,30);
  //   ref2=ADCTouchRead(A0,30);
 
   touch.setup();
   IDXBOOL=0;
+    shift1=touch.check(TPIN1);
+   shift2=touch.check(TPIN2);
+   shift3=touch.check(TPIN3);
+
 }
 
 void LoopQtouch() {
-   idx1=touch.read(TPIN1,40);
-   idx2=touch.read(TPIN2,50);
-   idx3=touch.read(TPIN3,250);
+   idx1=touch.read(TPIN1,shift1);
+   idx2=touch.read(TPIN2,shift2);
+   idx3=touch.read(TPIN3,shift3);
   // calculate the index to the LED fading table
   if(idx1>31) idx1= 31; // limit the index!!!
-  if(idx2>31) idx2= 31; // limit the index!!!
+//  if(idx2>31) idx2= 31; // limit the index!!!
   //if(idx3>31) idx3= 31; // limit the index!!!
-  bool ib2=idx2>20;
+  bool ib1=idx1>10;
+  bool ib2=idx2>10;
   bool ib3=idx3>10;
   // fade the LED
 //  analogWrite(9, ledFadeTable[idx3]);
   //analogWrite(7, ledFadeTable[idx]);
-   analogWrite(LEDB1, ledFadeTable[idx1]);
+ //  analogWrite(LEDB1, ledFadeTable[idx1]);
+   digitalWrite(LEDB1, ib1);
    digitalWrite(LEDB2,ib2);
    digitalWrite(LEDB3,ib3);
    bool change=false;
    idxbool=0;
-   if (idx1>20) idxbool+=1;
+   if (ib1) idxbool+=1;
    if (ib2) idxbool+=2;
    if (ib3) idxbool+=4;
    if (idxbool!=IDXBOOL)

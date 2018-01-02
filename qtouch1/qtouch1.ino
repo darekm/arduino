@@ -6,7 +6,6 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define ONE_WIRE_BUS 2
 #define MMAC 0x470000  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x8     //Type of device
@@ -27,11 +26,11 @@ t_Time SwitchTime;
 
 void PrepareData()
 {
-  IMTimer::doneMeasure();
+//  IMTimer::doneMeasure();
       if (trx.CycleData())
       {
        // DBGLEDON();
-        PrepareQtouch();
+  //      PrepareQtouch();
       //  DBGLEDOFF();
       }
 }  
@@ -40,15 +39,13 @@ void SendData()
 {
       if (trx.CycleData()) {
       //  trx.Wakeup();
-      DBGLEDON();
-          static IMFrame frame;
-        frame.Reset();
-        DataQtouch(frame);
-        DBGINFO("SendData ");
-        trx.Wakeup();
-        trx.SendData(frame);
-        trx.Transmit();
-     DBGLEDOFF();
+      //    static IMFrame frame;
+     //   frame.Reset();
+     //   DataQtouch(frame);
+     //   DBGINFO("SendData ");
+     //   trx.Wakeup();
+   //     trx.SendData(frame);
+     //   trx.Transmit();
          }
 }
 
@@ -59,6 +56,7 @@ byte OrderData(uint16_t a){
 
 void ReceiveData()
 { 
+//      DBGLEDON();
       while (trx.GetData())
       {
         if (trx.Parse())
@@ -66,6 +64,7 @@ void ReceiveData()
           DBGINFO(" rxGET ");
         }
       }
+//      DBGLEDOFF();
 }
 
 
@@ -87,16 +86,27 @@ void StepData(void){
 
 void MeasureData()
 {
-  IMTimer::doneMeasure();
-  LoopQtouch();
+ // IMTimer::doneMeasure();
+ // LoopQtouch();
+       
+    DBGLEDON();
+          static IMFrame frame;
+        frame.Reset();
+        DataQtouch(frame);
+        DBGINFO("SendData ");
+        trx.Wakeup();
+        trx.SendData(frame);
+        trx.Transmit();
+     DBGLEDOFF();
+
 }
 
 void stageloop(byte stage)
 {
   switch (stage)
   {
-    case STARTBROADCAST: trx.Knock();      break;
-    case STOPBROADCAST:    trx.StopListenBroadcast();PrepareData();    break;
+    case STARTBROADCAST: trx.Knock();    break;
+    case STOPBROADCAST:       trx.StopListenBroadcast();PrepareData();    break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -123,6 +133,7 @@ void stageloop(byte stage)
 void setup()
 {
   resetPin();
+  setMaxStepTimer(91);
   #ifdef DBGCLOCK
 
   pinMode(DBGCLOCK,OUTPUT);
@@ -147,8 +158,9 @@ void setup()
   trx.myChannel=MCHANNEL;
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
-  trx.funOrder=&OrderData;
-  
+  trx.setTimerFunction(&StepData);
+ // trx.funOrder=&OrderData;
+  trx.NoSleep=true;
   power_timer0_disable();
   setupTimer2();
 }

@@ -8,8 +8,8 @@
 #include "imtouchlib.h"
 #define CHARGE_DELAY  5 // time it takes for the capacitor to get charged/discharged in microseconds
 #define TRANSFER_DELAY  5 // time it takes for the capacitors to exchange charge
-#define TOUCH_VALUE_BASELINE -65 // this is the value my setup measures when the probe is not touched. For your setup this might be different. In order for the LED to fade correctly, you will have to adjust this value
-#define TOUCH_VALUE_SCALE 4 // this is also used for the LED fading. The value should be chosen such that the value measured when the probe is fully touched minus TOUCH_VALUE_BASELINE is scaled to 31, e.g. untouched_val= 333, touched_val= 488, difference= 155, divide by 5 to get 31.
+#define TOUCH_VALUE_BASELINE -6 // this is the value my setup measures when the probe is not touched. For your setup this might be different. In order for the LED to fade correctly, you will have to adjust this value
+#define TOUCH_VALUE_SCALE 2 // this is also used for the LED fading. The value should be chosen such that the value measured when the probe is fully touched minus TOUCH_VALUE_BASELINE is scaled to 31, e.g. untouched_val= 333, touched_val= 488, difference= 155, divide by 5 to get 31.
 
 // ADC constants
 #define ADMUX_MASK  0b00001111 // mask the mux bits in the ADMUX register
@@ -58,11 +58,16 @@ uint16_t imTouch::probe(uint8_t pin, uint8_t partner, bool dir) {
 }
 
 
-int imTouch::read(uint8_t pin, int ashift){
+int imTouch::read(uint8_t pin, int aShift){
+ int16_t xv=check(pin);
+ return compute(xv,aShift);
+}
+
+int imTouch::check(uint8_t pin){
   unsigned int adc1, adc2; // store the avarage of the charge resp. discharge measurement
   adc1= 0; // clear the averaging variables for the next run
   adc2= 0;
-  for (int i=0; i<4; i++) {
+  for (int i=0; i<5; i++) {
     // first measurement: charge touch probe, discharge ADC s&h cap, connect the two, measure the volage
     adc1+= probe(pin, TPINSS, false); // accumulate the results for the averaging
 
@@ -72,13 +77,15 @@ int imTouch::read(uint8_t pin, int ashift){
   // 4 measurements are taken and averaged to improve noise immunity
  // adc1>>=2; // divide the accumulated measurements by 16
 //  adc2>>=2;
-    int16_t add= (adc1-adc2); // the value of adc1 (probe charged) gets higher when the probe ist touched, the value of adc2 (s&h charged) gets lower when the probe ist touched, so, it has to be be subtracted to amplify the detection accuracy
-    int16_t idx= (add-TOUCH_VALUE_BASELINE-ashift); // offset probe_val by value of untouched probe
-    if(idx<0) idx= 0; // limit the index!!!
-    idx/= TOUCH_VALUE_SCALE; // scale the index
-    return idx;
+    return (adc1-adc2); // the value of adc1 (probe charged) gets higher when the probe ist touched, the value of adc2 (s&h charged) gets lower when the probe ist touched, so, it has to be be subtracted to amplify the detection accuracy
 }
 
+int imTouch::compute(int aValue, int aShift){
+    int16_t idx= (aValue-aShift); // offset probe_val by value of untouched probe
+   // if(idx<0) idx= 0; // limit the index!!!
+   // idx/= TOUCH_VALUE_SCALE; // scale the index
+    return idx;
+}
 
 
 

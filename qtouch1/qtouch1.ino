@@ -9,7 +9,7 @@
 #define MMAC 0x470000  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x8     //Type of device
-#define MCHANNEL 2
+#define MCHANNEL 3
 
 /************************* Module specyfic functions **********************/
 
@@ -71,7 +71,9 @@ void ReceiveData()
 void StepData(void){
   if ((millisTNow()-SwitchTime)>50 ){
     SwitchTime=millisTNow();
+//    DBGLEDON();
   LoopQtouch();
+ //   DBGLEDOFF();
   //  IMTimer::doneMeasure();
     // idx3++;
     // idx1+=6;

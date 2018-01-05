@@ -74,24 +74,24 @@ void LoopQtouch() {
   if(idx1>31) idx1= 31; // limit the index!!!
 //  if(idx2>31) idx2= 31; // limit the index!!!
   //if(idx3>31) idx3= 31; // limit the index!!!
-  bool ib1=idx1>10;
-  bool ib2=idx2>10;
-  bool ib3=idx3>10;
+  bool ib1=idx1>9;
+  bool ib2=idx2>9;
+  bool ib3=idx3>9;
   // fade the LED
 //  analogWrite(9, ledFadeTable[idx3]);
   //analogWrite(7, ledFadeTable[idx]);
  //  analogWrite(LEDB1, ledFadeTable[idx1]);
-   digitalWrite(LEDB1, ib1);
-   digitalWrite(LEDB2,ib2);
-   digitalWrite(LEDB3,ib3);
    bool change=false;
    idxbool=0;
    if (ib1) idxbool+=1;
    if (ib2) idxbool+=2;
    if (ib3) idxbool+=4;
-   if (idxbool!=IDXBOOL)
+   if (idxbool!=IDXBOOL){
       IMTimer::doneMeasure();
- 
+   digitalWrite(LEDB1, ib1);
+   digitalWrite(LEDB2,ib2);
+   digitalWrite(LEDB3,ib3);
+   } 
 }
 
 

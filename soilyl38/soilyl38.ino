@@ -42,10 +42,10 @@ void PrepareData()
 void SendData()
 {
       if (trx.CycleData()) {
-        trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
         DataSOIL(frame);
+        trx.Wakeup();
         trx.SendData(frame);
          trx.Transmit();
        }
@@ -102,13 +102,10 @@ void setup()
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   INITDBG();
-  wdt_disable();
-  INITDBG();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
   interrupts();
-  delay(100);
    wdt_enable(WDTO_8S);
    disableADCB();
  SetupSOIL();

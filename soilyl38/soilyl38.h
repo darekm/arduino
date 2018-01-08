@@ -23,7 +23,8 @@ uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 volatile uint16_t adcReading;
 volatile boolean adcDone;
-uint16_t soilData;
+uint16_t soilData1;
+uint16_t soilData2;
 ISR (ADC_vect)
   {
      uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH
@@ -98,6 +99,18 @@ void PrepareSOIL()
   digitalWrite(SOIL_VCC,HIGH);
 DBGLEDON();
  SetupADC();
+     if (cpuVinCycle % 8==0){
+   //  SetupADC();
+     cpuVin=internalVcc();
+     cpuVin=internalVcc();
+     cpuVin=internalVcc();
+     cpuTemp=internalTemp();
+     cpuTemp=internalTemp();
+//     ResetupADC();
+    // ShutOffADC();
+  }
+     ResetupADC();
+
 // ADMUX = bit (REFS0) | bit (REFS1);
 //  digitalWrite(SOIL_VCC,HIGH);
     delaySleepT2(1);
@@ -105,19 +118,12 @@ DBGLEDON();
    delaySleepT2(1);
    delaySleepT2(1);
    delaySleepT2(1);
+   soilData1=rawAnalog();
    delaySleepT2(1);
-   soilData=rawAnalog();
+   soilData2=rawAnalog();
   digitalWrite(SOIL_VCC,LOW);
     setSleepModeT2();
     
-    if (cpuVinCycle % 4==0){
-   //  SetupADC();
-     cpuVin=internalVcc();
-     cpuTemp=internalTemp();
-     cpuTemp=internalTemp();
-     ResetupADC();
-    // ShutOffADC();
-  }
   
   ShutOffADC();
   
@@ -132,7 +138,8 @@ void DataSOIL(IMFrame &frame)
    IMFrameData *data =frame.Data();
  //  DBGLEDON(); 
 
-    data->w[2]=soilData;
+    data->w[2]=soilData1;
+    data->w[3]=soilData2;
     data->w[4]=cpuVinCycle;
  //  Vin=internalVcc();
    data->w[0]=cpuVin;

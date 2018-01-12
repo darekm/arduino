@@ -40,21 +40,23 @@ void PrepareData()
 void SendData()
 {
       if (trx.CycleData()) {
-        trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
         DataDS18B20(frame);
         DBGINFO("SendData ");
+        trx.Wakeup();
         trx.SendData(frame);
         trx.Transmit();
       }
 }
 
-
+byte OrderData(uint16_t a){
+  DBGLEDON();
+  return 1;
+}  
 
 void ReceiveData()
 {
-  
       while (trx.GetData())
       {
         if (trx.Parse())
@@ -62,7 +64,6 @@ void ReceiveData()
           DBGINFO(" rxGET ");
         }
       }
-       DBGINFO("\r\n");
 }
 
 void PrintStatus()
@@ -126,7 +127,7 @@ void setup()
   SetupADC();
   wdt_enable(WDTO_8S);
   interrupts();
-  delay(300);
+  delay(200);
   IMMAC ad=SetupDS18B20();
    disableADCB();
 
@@ -135,8 +136,9 @@ void setup()
   trx.myMAC+=ad;
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
-  trx.Init(buffer);
   trx.myDevice=MDEVICE;
+  trx.funOrder=&OrderData;
+  trx.Init(buffer);
 //  trx.timer.onStage=stageloop;
 //    pciSetup(9);
 #if DBGPIN>111
@@ -169,7 +171,6 @@ void setup()
     delay(200);
     DBGLEDON();
     delay(200);
-    DBGLEDOFF();
     reboot();
 
   }

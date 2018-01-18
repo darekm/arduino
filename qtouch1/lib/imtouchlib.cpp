@@ -21,7 +21,8 @@ imTouch::imTouch() {
 
 
 void imTouch::setup() {
-  // prepare the ADC unit for one-shot measurements
+ power_adc_enable(); // ADC converter
+     // prepare the ADC unit for one-shot measurements
   // see the atmega328 datasheet for explanations of the registers and values
   ADMUX = 0b01000000; // Vcc as voltage reference (bits76), right adjustment (bit5), use ADC0 as input (bits3210)
   ADCSRA = 0b11000100; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
@@ -74,6 +75,7 @@ int imTouch::check(uint8_t pin){
     // second measurement:discharge touch probe, charge ADC s&h cap, connect the two, measure the volage
    adc2+= probe(pin, TPINSS, true); // accumulate the results for the averaging
   }
+  adc1+=1024;
   // 4 measurements are taken and averaged to improve noise immunity
  // adc1>>=2; // divide the accumulated measurements by 16
 //  adc2>>=2;

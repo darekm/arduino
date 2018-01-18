@@ -7,7 +7,8 @@
 #ifndef imTouchlib_h
 #define imTouchlib_h
 
- #include "Arduino.h"
+#include "Arduino.h"
+#include <avr/power.h>
 
 
 class imTouch {

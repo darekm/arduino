@@ -9,7 +9,7 @@
 #define MMAC 0x470000  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x8     //Type of device
-#define MCHANNEL 3
+#define MCHANNEL 2
 
 /************************* Module specyfic functions **********************/
 
@@ -38,14 +38,15 @@ void PrepareData()
 void SendData()
 {
       if (trx.CycleData()) {
-      //  trx.Wakeup();
-      //    static IMFrame frame;
-     //   frame.Reset();
-     //   DataQtouch(frame);
-     //   DBGINFO("SendData ");
-     //   trx.Wakeup();
-   //     trx.SendData(frame);
-     //   trx.Transmit();
+  DBGLEDON();
+         static IMFrame frame;
+        frame.Reset();
+        DataQtouch(frame);
+        DBGINFO("SendData ");
+        trx.Wakeup();
+        trx.SendData(frame);
+        trx.Transmit();
+  DBGLEDOFF();
          }
 }
 
@@ -86,12 +87,24 @@ void StepData(void){
 
 } 
 
+void HourData()
+{
+          static IMFrame frame;
+        frame.Reset();
+        MeasureVCC();
+        DataQtouch(frame);
+        frame.Data()->w[1]=99;
+        trx.Wakeup();
+        trx.SendData(frame);
+        trx.Transmit();
+}
+
 void MeasureData()
 {
  // IMTimer::doneMeasure();
  // LoopQtouch();
        
-    DBGLEDON();
+//    DBGLEDON();
           static IMFrame frame;
         frame.Reset();
         DataQtouch(frame);
@@ -99,7 +112,7 @@ void MeasureData()
         trx.Wakeup();
         trx.SendData(frame);
         trx.Transmit();
-     DBGLEDOFF();
+  //   DBGLEDOFF();
 
 }
 
@@ -114,6 +127,7 @@ void stageloop(byte stage)
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
     case MEASUREDATA: MeasureData();
+    case CRONHOUR: MeasureData();
     case IMTimer::IDDLESTAGE : {
 
        DBGINFO("***IDDLE DATA");
@@ -135,7 +149,7 @@ void stageloop(byte stage)
 void setup()
 {
   resetPin();
-  setMaxStepTimer(91);
+//  setMaxStepTimer(91);
   #ifdef DBGCLOCK
 
   pinMode(DBGCLOCK,OUTPUT);
@@ -143,8 +157,6 @@ void setup()
   #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
-  DBGPINHIGH();
-  DBGPINLOW();
   INITDBG();
   setupTimer2();
   power_timer0_enable();
@@ -158,10 +170,11 @@ void setup()
   trx.startMAC=0;
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
-  trx.Init(buffer);
   trx.myDevice=MDEVICE;
+  trx.Init(buffer);
   trx.setTimerFunction(&StepData);
  // trx.funOrder=&OrderData;
+  
   trx.NoSleep=true;
   power_timer0_disable();
   setupTimer2();

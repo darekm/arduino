@@ -1,9 +1,15 @@
+
+#define LOG_OUT 0 // use the log output function
+#define OCTAVE 1 // use the log output function
+#define FHT_N 64 // set to 256 point fht
+
 #include <imframe.h>
 #include <imatmega.h>
 #include <SPI.h>
 #include <EEPROM.h>
 #include <Wire.h>
 #include "LSM303D.h"
+#include <FHT.h>
 
 
 #include "imdebug.h"
@@ -13,7 +19,7 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x280007  // My MAC
+#define MMAC 0x2A0001  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x28     //Type of device
 #define MCHANNEL 2
@@ -29,7 +35,7 @@
 Transceiver trx;
 IMBuffer    buffer;
 
-#include "lsm303.h"
+#include "lsm303fht.h"
 
 void PrepareData()
 {
@@ -40,7 +46,8 @@ void PrepareData()
 
 void SendData()
 {
-     if (trx.CycleData()) {
+  return;
+  if (trx.CycleData()) {
          trx.Wakeup();
          static IMFrame frame;
          frame.Reset();

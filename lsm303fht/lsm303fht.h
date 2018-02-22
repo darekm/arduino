@@ -1,7 +1,7 @@
 // 
 //    FILE:
 // VERSION: 0.1.00
-// PURPOSE: LSM303D acc and magnetic logger  for imwave
+// PURPOSE: LSM303D acc with FHT transformate logger  for imwave
 //
 //
 // HISTORY:
@@ -21,7 +21,6 @@ int intPin2 = 5;//D5 INT 1 DATA READY - DISABLE dbgpin
 //int intCS = 4;//D5
 
 
-#define MAXTAB 3
 LSM303 sensor;
 
  
@@ -37,16 +36,12 @@ void interruptMax(){//interrupt function
 }
 
 void startPulse(){ //run settings for heart rate
-  //  attachInterrupt(0,interruptMax,FALLING);  //D2 -> INT1
     attachInterrupt(0,interruptMax,RISING);  //D2 -> INT1
-}
-void stopPulse(){
-     detachInterrupt(0);    
 }
 
 
 void ww(){
-    delaySleepT2(10);
+//    delaySleepT2(5);
 }    
 
 
@@ -60,36 +55,29 @@ void DataLSM303(IMFrame &frame)
      ShutOffADC();
   }
   cpuVinCycle++;  
- // IMFrameData *data =frame.Data();
+  IMFrameData *data =frame.Data();
 
-  for (byte i=0;i<6;i++){
-        frame.Body[i]=fht_oct_out[i];
+  for (byte i=0;i<20;i++){
+        frame.Body[i]=fht_lin_out8[i];
+  }
+  for (byte i=0;i<9;i++){
+
+//   data->w[i]=fht_log_out[i];
   }    
+
     // data->w[0]=cpuVin;
   //  data->w[1]=cpuTemp;
 }
   
 
 
-void setupInertial(){
-//    sensor.writeReg(LSM303::IG_CFG1, 0x20);//threshold
- ww();   sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
-//    sensor.writeReg(LSM303::CTRL4, 0x01);//threshold
- //   sensor.writeReg(LSM303::CTRL3, 0x02);//threshold
-     sensor.writeReg(LSM303::CTRL1, 0x27);
-
- ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x46);//stream
-ww();    sensor.writeReg(LSM303::CTRL4, 0x02);//thr int2
-   //   sensor.writeReg(LSM303::CTRL5, 0x6D);//threshold
-
-}
 
 void setupInertialPCB(){
 //    sensor.writeReg(LSM303::IG_CFG1, 0x20);//threshold
  ww();   sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
 //    sensor.writeReg(LSM303::CTRL4, 0x01);//threshold
  //   sensor.writeReg(LSM303::CTRL3, 0x02);//threshold
-     sensor.writeReg(LSM303::CTRL1, 0x27);
+     sensor.writeReg(LSM303::CTRL1, 0x47);//3=12.5Hz  4=25Hz
 
  ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x47);//stream +threshold
 ww();    sensor.writeReg(LSM303::CTRL3, 0x04);//thr int1
@@ -104,25 +92,18 @@ void setupFIFO(){
     sensor.writeReg(LSM303::CTRL4, 0x01);//thr int2
 //     sensor.writeReg(LSM303::CTRL3, 0x01);//FIFO EMPTY in1
      sensor.writeReg(LSM303::INT_CTRL_M, 0x00);//FIFO EMPTY in1
-   
 }
 void SetupLSM303()
 {
   do{
-    delaySleepT2(200);
+    delaySleepT2(100);
    DBGLEDOFF();
   power_twi_enable(); 
    power_adc_enable();
      pinMode(intPin1,INPUT_PULLUP);//INT1
      pinMode(intPin2,INPUT_PULLUP);//INT2
-//    pinMode(intCS,OUTPUT);
-    //INT2
-//digitalWrite(intCS,HIGH);
-// Wire.begin();
   ww();sensor.testDevice();
   ww(); sensor.init(sensor.device_D,LSM303::sa0_high);
-//  pinMode(CS,OUTPUT);
-//   digitalWrite(CS,HIGH);
   ww();
   if ( sensor.testDevice()) {
   //   DBGLEDOFF();
@@ -136,9 +117,7 @@ void SetupLSM303()
     break; 
   } else{
     DBGLEDON();
-  }   
-    ;
-
+  }  ;
   }while(true);
   
      DBGLEDON();
@@ -148,10 +127,7 @@ void SetupLSM303()
  ww();   sensor.writeReg(LSM303::IG_CFG1, 0x3F);//threshold
   ww();  sensor.writeReg(LSM303::IG_CFG2, 0x00);//threshold
  ww(); sensor.enableDefault();
- //sensor.writeRegister(ADXL345_REG_POWER_CTL, 0x08);  
- // setupFIFO();
   ww(); setupInertialPCB();
-//  setupFIFO();
 //  setupClick();
   ww();sensor.testDevice();
     delaySleepT2(300);
@@ -164,8 +140,8 @@ void ComputeFFT(){
   fht_window(); // window the data for better frequency response
     fht_reorder(); // reorder the data before doing the fht
     fht_run(); // process the data in the fht
-  //  fht_mag_log(); // take the output of the fht
-    fht_mag_octave(); // take the output of the fht
+    fht_mag_lin(); // take the output of the fht
+  //  fht_mag_octave(); // take the output of the fht
 }
 void SendDataFFT(){
          trx.Wakeup();
@@ -175,11 +151,14 @@ void SendDataFFT(){
          DataLSM303(frame);
          trx.SendData(frame);
          trx.Transmit();
-
 }
 
 void AddData(){
-    fht_input[dataCount]=sensor.a.x;
+  //  fht_input[dataCount]=sensor.a.x;
+    fht_input[dataCount]=160;
+    if (dataCout>48) 
+      fht_input[dataCount]=1000;
+    
     ++dataCount;
 
     if (dataCount  >=FHT_N )  {

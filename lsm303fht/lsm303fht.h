@@ -41,7 +41,7 @@ void startPulse(){ //run settings for heart rate
 
 
 void ww(){
-//    delaySleepT2(5);
+    delaySleepT2(10);
 }    
 
 
@@ -58,11 +58,12 @@ void DataLSM303(IMFrame &frame)
   IMFrameData *data =frame.Data();
 
   for (byte i=0;i<20;i++){
-        frame.Body[i]=fht_lin_out8[i];
+        frame.Body[i+2]=fht_lin_out8[i];
   }
-  for (byte i=0;i<9;i++){
+  data->w[0]=cpuVin;
+  for (byte i=1;i<9;i++){
 
-//   data->w[i]=fht_log_out[i];
+//   data->w[i]=fht_input[i];
   }    
 
     // data->w[0]=cpuVin;
@@ -140,7 +141,7 @@ void ComputeFFT(){
   fht_window(); // window the data for better frequency response
     fht_reorder(); // reorder the data before doing the fht
     fht_run(); // process the data in the fht
-    fht_mag_lin(); // take the output of the fht
+    fht_mag_lin8(); // take the output of the fht
   //  fht_mag_octave(); // take the output of the fht
 }
 void SendDataFFT(){
@@ -154,10 +155,10 @@ void SendDataFFT(){
 }
 
 void AddData(){
-  //  fht_input[dataCount]=sensor.a.x;
-    fht_input[dataCount]=160;
-    if (dataCout>48) 
-      fht_input[dataCount]=1000;
+    fht_input[dataCount]=sensor.a.x;
+  //  fht_input[dataCount]=-160;
+  //  if (dataCount>48) 
+  //    fht_input[dataCount]=31000;
     
     ++dataCount;
 
@@ -171,6 +172,7 @@ DBGLEDON();
 }
 
 void ReadLSM303(){
+  power_twi_enable(); 
   byte ffx=sensor.readReg(LSM303::FIFO_SRC);
   byte ff=ffx & 0x1F;
  // byte ff=4;  
@@ -184,6 +186,7 @@ void ReadLSM303(){
   }  
 
    sensor.readMag(); 
+  power_twi_disable(); 
 }
 void computeMeasure(){
   //         DBGLEDON();

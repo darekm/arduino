@@ -1,6 +1,6 @@
 
 #define LOG_OUT 0 // use the log output function
-#define LIN_OUT8 0 // use the log output function
+#define LIN_OUT8 1 // use the log output function
 #define OCTAVE 0 // use the log output function
 #define FHT_N 64 // set to 256 point fht
 #define SCALE 256
@@ -119,7 +119,7 @@ void setup()
   delay(10);
   wdt_enable(WDTO_8S);
   SetupLSM303();
-  // disableADCB();
+   disableADCB();
   trx.startMAC=0;
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;

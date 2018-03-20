@@ -72,6 +72,18 @@ modded 7.7.14 - fixed progmem for new avr-gcc (thanks to forum user kirill9617)
 
 #include <avr/pgmspace.h>
 
+#ifdef __GNUC__
+#ifndef GCC_VERSION
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#endif
+#if GCC_VERSION < 40602 // Test for GCC < 4.6.2
+#ifdef PROGMEM
+#undef PROGMEM
+#define PROGMEM __attribute__((section(".progmem.data"))) // Workaround for http://gcc.gnu.org/bugzilla/show_bug.cgi?id=34734#c4
+#endif
+#endif
+#endif
+
 extern const int16_t __attribute__((used)) _cas_constants[] PROGMEM = {
 #if (FHT_N ==  256)
   #include <cas_lookup_256.inc>

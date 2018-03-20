@@ -162,8 +162,8 @@ class LSM303
 
     vector<int16_t> a; // accelerometer readings
     vector<int16_t> m; // magnetometer readings
-    vector<int16_t> m_max; // maximum magnetometer values, used for calibration
-    vector<int16_t> m_min; // minimum magnetometer values, used for calibration
+//    vector<int16_t> m_max; // maximum magnetometer values, used for calibration
+//    vector<int16_t> m_min; // minimum magnetometer values, used for calibration
 
     byte last_status; // status of last I2C transmission
 
@@ -182,7 +182,7 @@ class LSM303
     void writeReg(byte reg, byte value);
     byte readReg(int reg);
 
-    void readAcc(void);
+    byte readAcc(void);
     void readMag(void);
     void read(void);
 

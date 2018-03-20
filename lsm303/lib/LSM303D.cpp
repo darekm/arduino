@@ -8,7 +8,7 @@
 // and sets the last bit correctly based on reads and writes
 #define D_SA0_HIGH_ADDRESS                0b0011101
 #define D_SA0_LOW_ADDRESS                 0b0011110
-#define DLM_DLH_ACC_SA0_LOW_ADDRESS       0b0011000
+// #define DLM_DLH_ACC_SA0_LOW_ADDRESS       0b0011000
 
 #define TEST_REG_ERROR -1
 
@@ -25,8 +25,8 @@ LSM303::LSM303(void)
   for your particular unit. The Heading example demonstrates how to
   adjust these values in your own sketch.
   */
-  m_min = (LSM303::vector<int16_t>){-32767, -32767, -32767};
-  m_max = (LSM303::vector<int16_t>){+32767, +32767, +32767};
+//  m_min = (LSM303::vector<int16_t>){-32767, -32767, -32767};
+//  m_max = (LSM303::vector<int16_t>){+32767, +32767, +32767};
 
   _device = device_auto;
 
@@ -86,7 +86,7 @@ bool LSM303::init(deviceType device, sa0State sa0)
     // make sure device and SA0 were successfully detected; otherwise, indicate failure
     if (device == device_auto || sa0 == sa0_auto)
     {
-      return false;
+//      return false;
     }
   }
   
@@ -121,17 +121,17 @@ the registers it writes to.
 void LSM303::enableDefault(void)
 {
 
-  if (_device == device_D)
+//  if (_device == device_D)
   {
     // Accelerometer
 
     // 0x00 = 0b00000000
     // AFS = 0 (+/- 2 g full scale)
-    writeReg(CTRL2, 0x40);
+    writeReg(CTRL2, 0x00);
 
     // 0x57 = 0b01010111
     // AODR = 0101 (50 Hz ODR); AZEN = AYEN = AXEN = 1 (all axes enabled)
-    writeReg(CTRL1, 0x47);
+    writeReg(CTRL1, 0x57);
 
     // Magnetometer
 
@@ -147,9 +147,7 @@ void LSM303::enableDefault(void)
     // MLP = 0 (low power mode off); MD = 00 (continuous-conversion mode)
     writeReg(CTRL7, 0x00);
   }
-  else
-  {
-  }
+//  else  {  }
 }
 
 // Writes an accelerometer register
@@ -236,7 +234,7 @@ byte LSM303::readReg(int reg)
 }
 
 // Reads the 3 accelerometer channels and stores them in vector a
-void LSM303::readAcc(void)
+byte LSM303::readAcc(void)
 {
   Wire.beginTransmission(acc_address);
   // assert the MSB of the address to get the accelerometer
@@ -244,7 +242,7 @@ void LSM303::readAcc(void)
   Wire.write(OUT_X_L_A | (1 << 7));
   last_status = Wire.endTransmission();
   Wire.requestFrom(acc_address, (byte)6);
-     byte _buff[6];
+     byte _buff[8];
 
   int i = 0;
     while(Wire.available())         // device may send less than requested (abnormal)
@@ -254,7 +252,7 @@ void LSM303::readAcc(void)
         if (i>=6) break;
     }
     if(i != 6){
-       i=-i;
+       i=0;
     }
 
    /*
@@ -281,10 +279,13 @@ void LSM303::readAcc(void)
   a.y = (int16_t)(yha << 8 | yla);
   a.z = (int16_t)(zha << 8 | zla);
   */
+
   a.x = (int16_t)(_buff[1] << 8 | _buff[0]);
   a.y = (int16_t)(_buff[3] << 8 | _buff[2]);
   a.z = (int16_t)(_buff[5] << 8 | _buff[4]);
-
+ // a.x=_buff[0]+_buff[1];
+ // a.y=_buff[3];
+  return i;
 }
 
 // Reads the 3 magnetometer channels and stores them in vector m

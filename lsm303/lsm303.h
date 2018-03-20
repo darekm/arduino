@@ -41,7 +41,10 @@ uint16_t cpuVinCycle=0;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 
-
+float dttt;
+float dvx,dvx0,ddx,ddx0;
+float dvy,dvy0;
+float dvz,dvz0;
 
 
 void interruptMax(){//interrupt function
@@ -190,7 +193,7 @@ void SetupLSM303()
 // ww();
     delaySleepT2(500);
     DBGLEDOFF();
-  
+dttt=0.1;  
  startPulse();
 }
 
@@ -201,8 +204,14 @@ void ComputeMax(){
     if (sensor.a.x<tabXMin) tabXMin=sensor.a.x;
     if (sensor.a.y<tabYMin) tabYMin=sensor.a.y;
     if (sensor.a.z<tabZMin) tabZMin=sensor.a.z;
-
 }
+
+void ComputeDist(){
+  float ax=sensor.a.x * 0.001;
+  dvx=dvx0+ax*dttt;
+  
+  ddx=ddx+dvx*dttt;
+}  
 
 void ReadLSM303(){
 
@@ -215,6 +224,7 @@ void ReadLSM303(){
 DBGLEDON();
     if (sensor.readAcc()==6){
        ComputeMax();
+       ComputeDist();
       DBGLEDOFF();
     }
 //digitalWrite(intCS,LOW);
@@ -311,7 +321,9 @@ void DataLSM303(IMFrame &frame)
     data->w[8]=(uint16_t)tabZMin;
     data->w[9]=(uint16_t)tabMGX;
     data->w[10]=(uint16_t)tabMGY;
-    data->w[11]=(uint16_t)tabMGZ;
+//    data->w[11]=(uint16_t)tabMGZ;
+     data->w[11]=round((ddx-ddx0)*1000);
+     ddx0=ddx;
   tabXMax=-30000;
   tabYMax=-30000;
   tabZMax=-30000;

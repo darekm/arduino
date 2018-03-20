@@ -16,8 +16,8 @@
 #include <FHT.h>
 
 
-int intPin1 = 2;//D2  INT2 WATERMARK
-int intPin2 = 5;//D5 INT 1 DATA READY - DISABLE dbgpin
+byte intPin1 = 2;//D2  INT2 WATERMARK
+byte intPin2 = 5;//D5 INT 1 DATA READY - DISABLE dbgpin
 //int intCS = 4;//D5
 
 
@@ -29,6 +29,8 @@ byte cpuVinCycle=0;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 byte dataCount=0;
+byte stepLSM=0;
+byte  maxLSM=0xFF; 
 
 
 void interruptMax(){//interrupt function
@@ -65,9 +67,6 @@ void DataLSM303(IMFrame &frame)
 
 //   data->w[i]=fht_input[i];
   }    
-
-    // data->w[0]=cpuVin;
-  //  data->w[1]=cpuTemp;
 }
   
 
@@ -128,6 +127,8 @@ void SetupLSM303()
  ww();   sensor.writeReg(LSM303::IG_CFG1, 0x3F);//threshold
   ww();  sensor.writeReg(LSM303::IG_CFG2, 0x00);//threshold
  ww(); sensor.enableDefault();
+ww();    sensor.writeReg(LSM303::CTRL5, 0x00);//magnetic power down 
+//ww();    sensor.writeReg(LSM303::CTRL7, 0x04);//magnetic power down 
   ww(); setupInertialPCB();
 //  setupClick();
   ww();sensor.testDevice();

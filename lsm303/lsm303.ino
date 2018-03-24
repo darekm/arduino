@@ -34,6 +34,8 @@ IMBuffer    buffer;
 void PrepareData()
 {
   if (trx.CycleData())    {
+       CheckModeLSM(trx.myMode);
+        EnableLSM();
      PrepareLSM303();
   }
 }  
@@ -110,8 +112,9 @@ void setup()
   interrupts();
   delay(10);
   wdt_enable(WDTO_8S);
+//  disableADCB();
   SetupLSM303();
-  // disableADCB();
+  disableADCB();
   trx.startMAC=0;
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;

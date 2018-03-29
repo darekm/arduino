@@ -41,11 +41,7 @@ uint16_t cpuVinCycle=0;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 
-float dttt;
-//float dvx,dvx0,ddx,ddx0;
-//float dvy,dvy0;
-//float dvz,dvz0;
-//byte dataCount=0;
+//float dttt;
 byte stepLSM=0;
 byte  maxLSM=0xF0;
 bool enabledLSM =false;
@@ -76,7 +72,6 @@ DBGLEDOFF();
 enabledLSM=false;
 DBGLEDON();
 DBGLEDOFF();
-
 }
 
 void EnableLSM(){
@@ -193,9 +188,9 @@ void SetupLSM303()
     delaySleepT2(200);
    DBGLEDOFF();
   power_twi_enable(); 
-   power_adc_enable();
-     pinMode(intPin1,INPUT_PULLUP);//INT1
-     pinMode(intPin2,INPUT_PULLUP);//INT2
+//   power_adc_enable();
+     pinMode(intPin1,INPUT);//INT1
+     pinMode(intPin2,INPUT);//INT2
 //    pinMode(intCS,OUTPUT);
     //INT2
 //digitalWrite(intCS,HIGH);

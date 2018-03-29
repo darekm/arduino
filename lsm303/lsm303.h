@@ -42,13 +42,13 @@ uint16_t cpuVin;
 uint16_t cpuTemp;
 
 float dttt;
-float dvx,dvx0,ddx,ddx0;
+//float dvx,dvx0,ddx,ddx0;
 //float dvy,dvy0;
 //float dvz,dvz0;
 //byte dataCount=0;
 byte stepLSM=0;
 byte  maxLSM=0xF0;
-
+bool enabledLSM =false;
 
 
 void interruptMax(){//interrupt function
@@ -70,17 +70,31 @@ void ww(){
 
 
 void DisableLSM(){
-  ww();     sensor.writeReg(LSM303::CTRL1, 0x01);//0 - PWR down
+DBGLEDOFF();
+  ww();     sensor.writeReg(LSM303::CTRL1, 0x00);//0 - PWR down
   ww();    sensor.writeReg(LSM303::CTRL7, 0x03);//magnetic power down
+enabledLSM=false;
+DBGLEDON();
+DBGLEDOFF();
 
 }
 
 void EnableLSM(){
-  if (stepLSM>0){
-     stepLSM=0;
-  } else {
-     ww();      sensor.writeReg(LSM303::CTRL1, 0x27);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
-  ww();    sensor.writeReg(LSM303::CTRL7, 0x03);//magnetic power up LOWPOWER
+//  if (stepLSM>0){
+//     stepLSM=0;
+//  } else {
+  if (!enabledLSM){
+ //   stepLSM=0;
+   power_twi_enable();
+ DBGLEDOFF();
+ DBGLEDON();
+ enabledLSM=true;
+ DBGLEDOFF();
+    ww();      sensor.writeReg(LSM303::CTRL1, 0x47);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
+      DBGLEDON();
+  ww();    sensor.writeReg(LSM303::CTRL7, 0x24);//magnetic power up LOWPOWER  +filter
+power_twi_disable();
+      DBGLEDOFF();
   }
 }
 
@@ -121,8 +135,7 @@ void SendDataAll()
                DBGLEDON();
   trx.Wakeup();
           trx.SendData(frame);
-         
-              DBGLEDOFF();
+               DBGLEDOFF();
 }
 
 
@@ -152,13 +165,15 @@ ww();    sensor.writeReg(LSM303::CTRL4, 0x02);//thr int2
 void setupInertialPCB(){
 //    sensor.writeReg(LSM303::IG_CFG1, 0x20);//threshold
  ww();   sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
-//    sensor.writeReg(LSM303::CTRL4, 0x01);//threshold
- //   sensor.writeReg(LSM303::CTRL3, 0x02);//threshold
 //     sensor.writeReg(LSM303::CTRL1, 0x27);//ACC rate
 
- ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x47);//stream +threshold
+ ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x4F);//stream +threshold
+ww();    sensor.writeReg(LSM303::CTRL2, 0xD0);//alias filter
 ww();    sensor.writeReg(LSM303::CTRL3, 0x04);//thr int1
 ww();    sensor.writeReg(LSM303::CTRL4, 0x01);//dataready int2 
+
+   ww();      sensor.writeReg(LSM303::CTRL1, 0x47);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
+ 
 }
 
 
@@ -170,9 +185,6 @@ void setupFIFO(){
      sensor.writeReg(LSM303::INT_CTRL_M, 0x00);//FIFO EMPTY in1
    
 //    sensor.writeReg(sensor.CTRL4, 0x06);//data ready
-  // sensor.writeRegister(ADXL345_REG_INT_ENABLE, 0x82);  //ENABLE int DATA READY & WATERMARK
- //  sensor.writeRegister(ADXL345_REG_INT_MAP, 0x80);  
- //  sensor.writeRegister(ADXL345_REG_FIFO_CTL, 0x57);  
 }
 void SetupLSM303()
 {
@@ -187,7 +199,6 @@ void SetupLSM303()
 //    pinMode(intCS,OUTPUT);
     //INT2
 //digitalWrite(intCS,HIGH);
-// Wire.begin();
   ww();sensor.testDevice();
   ww(); sensor.init(sensor.device_D,LSM303::sa0_high);
 //  pinMode(CS,OUTPUT);
@@ -208,8 +219,6 @@ void SetupLSM303()
   }   
     ;
 
-//    digitalWrite(intCS,LOW);
-//    DBGLEDOFF();
   }while(true);  
   
      DBGLEDON();
@@ -225,7 +234,6 @@ void SetupLSM303()
 //  setupClick();
   ww();sensor.testDevice();
   EnableLSM();
-// ww();
     delaySleepT2(300);
     DBGLEDOFF();
 //dttt=0.1;  
@@ -241,12 +249,6 @@ void ComputeMax(){
     if (sensor.a.z<tabZMin) tabZMin=sensor.a.z;
 }
 
-void ComputeDist(){
-  float ax=sensor.a.x * 0.001;
-  dvx=dvx0+ax*dttt;
-  
-  ddx=ddx+dvx*dttt;
-}  
 
 void ReadLSM303(){
   power_twi_enable();
@@ -255,20 +257,22 @@ void ReadLSM303(){
  // byte ff=4;  
   for (int8_t i=ff ; i>=0; i--)
   {
-DBGLEDON();
+//DBGLEDON();
     if (sensor.readAcc()==6){
+      
        ComputeMax();
    //    ComputeDist();
-      DBGLEDOFF();
     }
+//      DBGLEDOFF();
   }  
 
    sensor.readMag(); 
    tabMGX=sensor.m.x;
    tabMGY=sensor.m.y;
    tabMGZ=sensor.m.z;
-   power_twi_disable();
+//      DBGLEDOFF();
    CheckDisableLSM();
+   power_twi_disable();
 }
 
 void computeMeasure(){

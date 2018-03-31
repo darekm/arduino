@@ -1,3 +1,5 @@
+#include <SoftwareSerial.h>
+
 // 
 //    FILE:
 // VERSION: 0.1.00
@@ -21,21 +23,115 @@ uint16_t cpuVinCycle=0;
 
 const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 15, 17, 21, 25, 30, 36, 43, 51, 61, 73, 87, 104, 125, 149, 178, 213, 255}; // this is an exponential series to model the perception of the LED brightness by the human eye
 
-//int ref2,ref1;
-int idx1,idx2,idx3,mm;
+int idx1,idx2,mm;
 int shift1,shift2;
 byte idxbool=0,IDXBOOL=0,idxmm,fromm;
 bool ib1,ib2,ib3;
-#define TPIN1 1
+#define TPIN1 A0
 #define TPIN2 2
-#define TPIN3 3
+
 #define LEDB1 6
 #define LEDB2 1
-#define LEDB3 7
 
 
-imTouch touch;
 
+//imTouch touch;
+
+
+
+int martinread(byte ADCChannel, int samples=200)
+{
+ ADCSRA = 0b11000101; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
+ 	long _value = 0;
+	for(int _counter = 0; _counter < samples; _counter ++)
+	{
+		// set the analog pin as an input pin with a pullup resistor
+		// this will start charging the capacitive element attached to that pin
+		pinMode(ADCChannel, INPUT_PULLUP);
+		
+		// connect the ADC input and the internal sample and hold capacitor to ground to discharge it
+		ADMUX |=   0b11111;
+		// start the conversion
+		ADCSRA |= (1 << ADSC);
+
+		// ADSC is cleared when the conversion finishes
+		while((ADCSRA & (1 << ADSC)));
+
+		pinMode(ADCChannel, INPUT);
+		_value += analogRead(ADCChannel);
+	}
+	return _value / samples;
+}
+
+int  senseadctwice(void) {
+  /*
+      Capacitive sensing using charge sharing between 
+      the S/H capacitor and an external sensing pad
+      
+      ATMega 328P
+      Float/ref  Analog0  = PC0
+      Sense an  Analog1 = PC1
+  */  
+#define PC0 0
+#define PC1 1
+  int dat1,dat2;
+  
+  // Precharge Low
+  PORTC = _BV(PC0);    // S/H Charge Vdd (Analog0), Cext (Analog1) gnd
+  DDRC = _BV(PC1)|_BV(PC0);
+   ADMUX  =_BV(REFS0)|0x0f;
+  delayMicroseconds(2);
+  ADMUX  =_BV(REFS0)|0x00;  // Charge S/H cap from Analog0
+  
+  delayMicroseconds(8);
+  DDRC  &=~(_BV(PC1));  // float input
+              // additional delay due to ADC logic
+
+  ADMUX  =_BV(REFS0)|0x01; // Read Cext from Analog1
+  ADCSRA  |=_BV(ADSC); // Start conversion
+  
+  while (!(ADCSRA&_BV(ADIF)));    
+  ADCSRA  |=_BV(ADIF); // Clear ADIF
+
+  dat1=ADC;
+
+  // Precharge High
+  ADMUX  =_BV(REFS0)|0x00;  // Charge S/H cap from Analog0
+  
+  PORTC = _BV(PC1);    // S/H Charge gnd (Analog0), Cext (Analog1) Vdd
+  DDRC = _BV(PC1)|_BV(PC0);
+  delayMicroseconds(8);
+
+  DDRC  &=~(_BV(PC1));
+  PORTC =0;      // pull up off
+            // additional delay due to ADC logic
+
+  ADMUX  =_BV(REFS0)|0x01; // Read Cext from Analog1
+  ADCSRA  |=_BV(ADSC); // Start conversion
+
+  
+  while (!(ADCSRA&_BV(ADIF)));
+  ADCSRA  |=_BV(ADIF); // Clear ADIF
+
+  dat2=ADC;
+
+  return (dat2-dat1)*10;
+}
+
+int sense(byte ADCChannel, int samples=20)
+{
+   ADMUX  =_BV(REFS0)|0x0f;
+//  ADCSRA  =_BV(ADEN)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // Enable ADC, Set prescaler to 128
+
+ ADCSRA = 0b11000101; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
+ 	long _value = 0;
+	for(int _counter = 0; _counter < samples; _counter ++)
+	{
+            _value+=senseadctwice();
+
+         }
+	return _value / samples;
+}
 
 
 
@@ -48,27 +144,28 @@ void SetupQtouch()
 //  analogWrite(LEDB1, 100);
 //  digitalWrite(7, 100);
  // if (funtest()>0){
-  digitalWrite(LEDB2, HIGH);
-  delay(300);
-   digitalWrite(LEDB2, LOW);
+//  digitalWrite(LEDB2, HIGH);
+//  delay(300);
+ //  digitalWrite(LEDB2, LOW);
   delay(600);
  // }
   //  ref1=ADCTouchRead(A1,30);
  //   ref2=ADCTouchRead(A0,30);
 
-  touch.setup();
+//  touch.setup();
   IDXBOOL=0;
   shift1=0;
-  shift2=0;
-  shift3=0;
   ib1=false;
   ib2=false;
   ib3=false;
   for (int i=0;i<4;i++){
   delay(200);
-    shift1+=touch.check(TPIN1);
+   // shift1+=touch.check(TPIN1);
+//   shift1+=martinread(TPIN1);
+  shift1+=sense(TPIN1);
   }  
    shift1/=4;
+   shift1-=10;
    mm=11;
    idxmm=0;
    cpuTemp=2;
@@ -96,22 +193,29 @@ void offSwitch(){
 
 void LoopQtouch() {
  power_adc_enable(); // ADC converter
-     touch.setup();
-   idx1=touch.check(TPIN1);
+//     touch.setup();
+  // idx1=touch.check(TPIN1)-shift1;
+//     idx1=touch.read(TPIN1,shift1);
+//     idx1/=2;
+ // idx1=martinread(TPIN1)-shift1;
+  idx1=sense(TPIN1)-shift1;
+  idx1/=6;
+  
 //   idx2=touch.check(TPIN2);
 //   idx3=touch.check(TPIN3);
    
   // calculate the index to the LED fading table
-//  if(idx1>31) idx1= 31; // limit the index!!!
+ if(idx1>200) idx1= 200; // limit the index!!!
 //  if(idx2>31) idx2= 31; // limit the index!!!
   //if(idx3>31) idx3= 31; // limit the index!!!
   
     ib1=(idx1-shift1)>(ib1?5:mm);
-   ib2=(idx2-shift2)>(ib2?5:mm);
-   ib3=(idx3-shift3)>(ib3?7:mm);
+ //  ib2=(idx2-shift2)>(ib2?5:mm);
+ //  ib3=(idx3-shift3)>(ib3?7:mm);
   
   // fade the LED
-    analogWrite(9, ledFadeTable[idx1]);
+    analogWrite(9, idx1);
+  //  analogWrite(9, ledFadeTable[idx1]);
   //analogWrite(7, ledFadeTable[idx]);
  //  analogWrite(LEDB1, ledFadeTable[idx1]);
    bool change=false;
@@ -119,14 +223,16 @@ void LoopQtouch() {
    if (ib1) idxbool+=1;
   // if (ib2) idxbool+=2;
   // if (ib3) idxbool+=4;
-   ShutOffADC();
-    power_adc_disable();
+//   ShutOffADC();
+    setSleepModeT2();
+
+ //   power_adc_disable();
 
    if (idxbool!=IDXBOOL){
       IMTimer::doneMeasure();
       idxmm=0;
       fromm=2;
-      lightSwitch();
+//      lightSwitch();
    } else{
      idxmm++;
      if (idxmm>32){
@@ -134,8 +240,7 @@ void LoopQtouch() {
   //      if (ib2) idx2-=mm;
   //      if (ib3) idx3-=mm;
           
-        computeShift();
-        //offSwitch();
+//        computeShift();
      }  
    } 
 }
@@ -145,7 +250,6 @@ void PrepareQtouch()
 {
   fromm--;
  // IMTimer::doneMeasure();
-//   sensors.requestTemperatures();
 }  
 
 
@@ -162,7 +266,7 @@ void MeasureVCC(){
 void DataQtouch(IMFrame &frame)
 {   
   if (cpuVinCycle % 8==0){
-      MeasureVCC();
+//      MeasureVCC();
   }
   
    cpuVinCycle++;

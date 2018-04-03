@@ -23,7 +23,8 @@ uint16_t cpuVinCycle=0;
 
 const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 15, 17, 21, 25, 30, 36, 43, 51, 61, 73, 87, 104, 125, 149, 178, 213, 255}; // this is an exponential series to model the perception of the LED brightness by the human eye
 
-int idx1,idx2,mm;
+int idx1,idx2,idx3,mm;
+int idMax,idMin;
 int shift1,shift2;
 byte idxbool=0,IDXBOOL=0,idxmm,fromm;
 bool ib1,ib2,ib3;
@@ -153,7 +154,9 @@ void SetupQtouch()
  //   ref2=ADCTouchRead(A0,30);
 
 //  touch.setup();
-  IDXBOOL=0;
+ SetupADC();
+ DBGLEDON();
+ IDXBOOL=0;
   shift1=0;
   ib1=false;
   ib2=false;
@@ -180,7 +183,7 @@ void computeShift(){
 }
 
 void lightSwitch(){
-   digitalWrite(LEDB1, ib1);
+//   digitalWrite(LEDB1, ib1);
  //  digitalWrite(LEDB2,ib2);
  //  digitalWrite(LEDB3,ib3);
 }
@@ -198,9 +201,14 @@ void LoopQtouch() {
 //     idx1=touch.read(TPIN1,shift1);
 //     idx1/=2;
  // idx1=martinread(TPIN1)-shift1;
-  idx1=sense(TPIN1)-shift1;
-  idx1/=6;
-  
+ 
+ idx3=idx2;
+ idx2=idx1;
+ idx1=sense(TPIN1)-shift1;
+ if (idMax<idx1)idMax=idx1;
+ if (idMin>idx1)idMin=idx1;
+ //int idx=sqrt32(idx1);
+ int idx=idx1/10;
 //   idx2=touch.check(TPIN2);
 //   idx3=touch.check(TPIN3);
    
@@ -229,7 +237,7 @@ void LoopQtouch() {
  //   power_adc_disable();
 
    if (idxbool!=IDXBOOL){
-      IMTimer::doneMeasure();
+//      IMTimer::doneMeasure();
       idxmm=0;
       fromm=2;
 //      lightSwitch();
@@ -277,8 +285,8 @@ void DataQtouch(IMFrame &frame)
    data->w[0]=cpuVin;
    data->w[2]=idxbool;
    data->w[3]=idx1;
-//   data->w[4]=idx2;
-//   data->w[5]=idx3;
+   data->w[4]=idMin;
+   data->w[5]=idMax;
    data->w[6]=(uint16_t)shift1;
  //  data->w[7]=shift2;
  //  data->w[8]=shift3;

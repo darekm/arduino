@@ -75,7 +75,7 @@ int rawAnalog( void )
 
 void ResetupADC(){
      DIDR0 = ~(0x30 ); //ADC4D,
-     ADMUX  =  (1<< REFS0) | (1<<REFS1)| (5);    // AVcc and select input port
+  ADMUX  =  (1<< REFS0) | (1<<REFS1)| (5);    // AVcc and select input port +A5
 }
 
 void SetupSOIL()
@@ -106,6 +106,8 @@ DBGLEDON();
      cpuVin=internalVcc();
      cpuTemp=internalTemp();
      cpuTemp=internalTemp();
+     ADMUX  =_BV(REFS0)|0x0f;
+    delayMicroseconds(2);
 //     ResetupADC();
     // ShutOffADC();
   }

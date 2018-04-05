@@ -4,9 +4,6 @@
 #include <EEPROM.h>
 //#include <avr/wdt.h>
 #include <SPI.h>
-// Data wire is plugged into pin 2 on the Arduino
-
-
 
 
 
@@ -14,8 +11,6 @@
 
 //#.define DBGLVL 2
 #include "imdebug.h"
-
-
 
 
 
@@ -44,14 +39,6 @@ IMBuffer    buf3;
 
 
 
-
-
-
-
-
-
-
-
 #define pinLED  9
 int COUNTER=0;
 
@@ -70,66 +57,37 @@ void SendDataFlood()
 
         trx.SendData(frame);
 //        trx.Transmit();
-       DBGINFO("\r\n");
-}
-     
-     
+       }
+    
 }
 
 
 void SendData()
 {
-//   if (trx.Connected())
-//   {
       if (trx.CycleData())
       {
         DBGLEDON();
-   //    digitalWrite(pinLED,HIGH);
-    trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
          COUNTER++;
          IMFrameData *data =frame.Data();
-//        long mm=millis();
-//        DataDS18B20(frame);
-//        DBGINFO(" :");
-//        DBGINFO(millis()-mm);
         data->w[0]=100;
         data->w[2]=COUNTER;
         data->w[3]=1;
-        data->w[4]=trx.myMacLo;
+       // data->w[4]=trx.myMacLo;
         data->w[6]=trx.Connected();
         
-
-//        DBGINFO("SendData ");
+         trx.Wakeup();
         trx.SendData(frame);
         trx.Transmit();
-        DBGLEDOFF();
-         
-//        ERRFLASH();
-  //    } else{
-   //      trx.printCycle();
-
-
+        DBGLEDOFF();         
      }
-  //    trx.ListenData();
-
- //  } else {
-  //   trx.ListenBroadcast();
- //  }
-
-
 }
 
 
 
 void ReceiveData()
 {
-//  static IMFrame rxFrame;
-//ERRLEDON();
-//  DBGINFO(" Receive ");
-//DBGPINHIGH();
-//DBGPINLOW();
       while (trx.GetData())
       {
         if (trx.Parse())
@@ -137,27 +95,11 @@ void ReceiveData()
       //    DBGINFO(" rxGET ");
         }
       }
-      
-      DBGINFO("\r\n");
-
-}
-
-void PrintStatus()
-{
-  DBGINFO("\r\n");
-  DBGINFO(" Status ");
-//  trx.printStatus();
-  DBGINFO("\r\n");
-
 }
 
 
 void stageloop(byte stage)
 {
-//   if (stage== STARTBROADCAST){
-//    DBGINFO("stageloop=");  DBGINFO(millisT2());
-//    DBGINFO(":");  DBGINFO(stage);
-//  }
   switch (stage)
   {
     case STARTBROADCAST: DBGPINHIGH();trx.Knock();DBGPINLOW();DBGPINHIGH(); DBGPINLOW(); break;
@@ -191,42 +133,36 @@ void stageloop(byte stage)
 void setup()
 {
    resetPin();
+       #ifdef DBGCLOCK
+
+  pinMode(DBGCLOCK,OUTPUT);
+  digitalWrite(DBGCLOCK ,HIGH);
+  #endif
+
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
-//    pinMode(DBGPIN,INPUT);
-//  pinMode(DBGCLOCK,INPUT);
-//  pinMode(DBGPIN,OUTPUT);
-//  pinMode(DBGCLOCK,OUTPUT);
   
   DBGPINHIGH();
   DBGPINLOW();
-  wdt_disable();
   INITDBG();
-  DBGPINHIGH();
-  DBGINFO("SETUP");
-  DBGPINLOW();
-  DBGLEDON();
-
-//  DBGINFO(freeRam());
-//  DBGINFO(buf3._IM);
   
-  DBGINFO("_");
   setupTimer2();
   DBGPINHIGH();
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
-   //  wdt_enable(WDTO_8S);
+   wdt_enable(WDTO_8S);
    disableADCB();
    power_timer0_enable();
    interrupts ();
-   delay(1000);
+ //  delay(1000);
 //  randomSeed(analogRead(0)+internalrandom());
   DBGLEDOFF();
   trx.myMAC=MMAC;
-  trx.startMAC=MMAC;
+  trx.startMAC=0;
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
+  trx.myDevice=MDEVICE;
       DBGINFO2(trx.myMAC,HEX);
 //  trx.NoRadio=true;
   trx.Init(buf3);
@@ -237,33 +173,20 @@ void setup()
     DBGLEDOFF();
   #endif
   power_timer0_disable();
-   
-      //  trx.TimerSetup();
-    //   DBGINFO("classtest Timer");
- // DBGINFO(IMTimer::ClassTest());
+//  power_all_disable(); 
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
   DBGINFO("ASSR_") ; DBGINFO(ASSR);
   DBGINFO("CLKPR_") ;DBGINFO(CLKPR);
-//  CLKPR = 0x80;    // Tell the AtMega we want to change the system clock
-//  CLKPR = 0x00;    // 1/256 prescaler = 60KHz for a 16MHz crystal
-
-/*  delay(1000);
-  */
- 
  
  setupTimer2();
+
 }
 
 void loop()
 {
   wdt_reset();
-//  PrintStatus();
-//  delay(300);
-  DBGINFO("\r\n");
-  DBGINFO("LOOP");
-    
   byte xstage;
   do{
 
@@ -271,6 +194,5 @@ void loop()
      stageloop(xstage);
 
   }while( xstage!=IMTimer::PERIOD);
-
 
 }

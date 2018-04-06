@@ -6,9 +6,9 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x480000  // My MAC
+#define MMAC 0x450002  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
-#define MDEVICE 0x48     //Type of device
+#define MDEVICE 0x45     //Type of device
 #define MCHANNEL 3
 
 /************************* Module specyfic functions **********************/
@@ -16,7 +16,7 @@
 #include "imtrans.h"
 #include "imtimer.h"
 #include "imbufrfm69.h"
-#include "imtouchlib.h"
+//#include "imtouchlib.h"
 
 Transceiver trx;
 IMBuffer    buffer;
@@ -30,6 +30,7 @@ void PrepareData()
       if (trx.CycleData())
       {
        // DBGLEDON();
+       LoopQtouch();
   //      PrepareQtouch();
       //  DBGLEDOFF();
       }
@@ -149,14 +150,21 @@ void setup()
   #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
+//  pinMode(DBGLED,OUTPUT);
   INITDBG();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
   wdt_enable(WDTO_8S);
   interrupts();
- //  disableADCB();
-  SetupQtouch();
+  disableADCB();
+// ShutOffADC();
+ 
+ //power_all_disable();
+    power_timer2_enable();
+   power_timer0_enable();
+
+     SetupQtouch();
 
   trx.myMAC=MMAC;
   trx.startMAC=0;
@@ -164,10 +172,10 @@ void setup()
   trx.myChannel=MCHANNEL;
   trx.myDevice=MDEVICE;
   trx.Init(buffer);
-  trx.setTimerFunction(&StepData);
+//  trx.setTimerFunction(&StepData);
  // trx.funOrder=&OrderData;
   
-  trx.NoSleep=true;
+ // trx.NoSleep=true;
   power_timer0_disable();
   setupTimer2();
 }

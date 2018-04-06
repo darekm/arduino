@@ -26,6 +26,7 @@ const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12
 int idx1,idx2,idx3,mm;
 int idMax,idMin;
 int shift1,shift2;
+byte ledLimit;
 byte idxbool=0,IDXBOOL=0,idxmm,fromm;
 bool ib1,ib2,ib3;
 #define TPIN1 A0
@@ -73,8 +74,8 @@ int  senseadctwice(void) {
       Float/ref  Analog0  = PC0
       Sense an  Analog1 = PC1
   */  
-#define PC0 0
-#define PC1 1
+#define PC0 1
+#define PC1 0
   int dat1,dat2;
   
   // Precharge Low
@@ -82,13 +83,13 @@ int  senseadctwice(void) {
   DDRC = _BV(PC1)|_BV(PC0);
    ADMUX  =_BV(REFS0)|0x0f;
   delayMicroseconds(2);
-  ADMUX  =_BV(REFS0)|0x00;  // Charge S/H cap from Analog0
+  ADMUX  =_BV(REFS0)|PC0;  // Charge S/H cap from Analog0
   
   delayMicroseconds(8);
   DDRC  &=~(_BV(PC1));  // float input
               // additional delay due to ADC logic
 
-  ADMUX  =_BV(REFS0)|0x01; // Read Cext from Analog1
+  ADMUX  =_BV(REFS0)|PC1; // Read Cext from Analog1
   ADCSRA  |=_BV(ADSC); // Start conversion
   
   while (!(ADCSRA&_BV(ADIF)));    
@@ -97,7 +98,7 @@ int  senseadctwice(void) {
   dat1=ADC;
 
   // Precharge High
-  ADMUX  =_BV(REFS0)|0x00;  // Charge S/H cap from Analog0
+  ADMUX  =_BV(REFS0)|PC0;  // Charge S/H cap from Analog0
   
   PORTC = _BV(PC1);    // S/H Charge gnd (Analog0), Cext (Analog1) Vdd
   DDRC = _BV(PC1)|_BV(PC0);
@@ -107,7 +108,7 @@ int  senseadctwice(void) {
   PORTC =0;      // pull up off
             // additional delay due to ADC logic
 
-  ADMUX  =_BV(REFS0)|0x01; // Read Cext from Analog1
+  ADMUX  =_BV(REFS0)|PC1; // Read Cext from Analog1
   ADCSRA  |=_BV(ADSC); // Start conversion
 
   
@@ -121,9 +122,10 @@ int  senseadctwice(void) {
 
 int sense(byte ADCChannel, int samples=20)
 {
-   ADMUX  =_BV(REFS0)|0x0f;
+  ACSR=48;
+  ADMUX  =_BV(REFS0)|0x0f;
 //  ADCSRA  =_BV(ADEN)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // Enable ADC, Set prescaler to 128
-
+  ADCSRB=0;
  ADCSRA = 0b11000101; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
  	long _value = 0;
 	for(int _counter = 0; _counter < samples; _counter ++)
@@ -140,22 +142,24 @@ int sense(byte ADCChannel, int samples=20)
 void SetupQtouch()
 {
   pinMode(LEDB2, OUTPUT);
-// pinMode(LEDB3, OUTPUT);
-   analogWrite(9, 100);
+// pinMode(LEDB1, OUTPUT);
+ //  analogWrite(LEDB1, 100);
 //  analogWrite(LEDB1, 100);
 //  digitalWrite(7, 100);
  // if (funtest()>0){
 //  digitalWrite(LEDB2, HIGH);
 //  delay(300);
  //  digitalWrite(LEDB2, LOW);
-  delay(600);
+  DBGLEDON();
+  delay(100);
  // }
   //  ref1=ADCTouchRead(A1,30);
  //   ref2=ADCTouchRead(A0,30);
 
 //  touch.setup();
  SetupADC();
- DBGLEDON();
+ DIDR0 = 0x00;
+ //DBGLEDON();
  IDXBOOL=0;
   shift1=0;
   ib1=false;
@@ -172,6 +176,8 @@ void SetupQtouch()
    mm=11;
    idxmm=0;
    cpuTemp=2;
+   ledLimit=0;
+   DBGLEDOFF();
 }
 
 
@@ -195,6 +201,7 @@ void offSwitch(){
 }
 
 void LoopQtouch() {
+  ledLimit+=1;
  power_adc_enable(); // ADC converter
 //     touch.setup();
   // idx1=touch.check(TPIN1)-shift1;
@@ -213,7 +220,8 @@ void LoopQtouch() {
 //   idx3=touch.check(TPIN3);
    
   // calculate the index to the LED fading table
- if(idx1>200) idx1= 200; // limit the index!!!
+ if (idx<0) idx=0;
+ //if(idx>31) idx= 31; // limit the index!!!
 //  if(idx2>31) idx2= 31; // limit the index!!!
   //if(idx3>31) idx3= 31; // limit the index!!!
   
@@ -222,8 +230,13 @@ void LoopQtouch() {
  //  ib3=(idx3-shift3)>(ib3?7:mm);
   
   // fade the LED
-    analogWrite(9, idx1);
-  //  analogWrite(9, ledFadeTable[idx1]);
+  if ((idx)>ledLimit){
+//    DBGLEDON();
+  }else{
+ //   DBGLEDOFF();
+  }
+  //  analogWrite(LEDB1, 60);
+   // analogWrite(9, ledFadeTable[idx]);
   //analogWrite(7, ledFadeTable[idx]);
  //  analogWrite(LEDB1, ledFadeTable[idx1]);
    bool change=false;
@@ -234,8 +247,8 @@ void LoopQtouch() {
 //   ShutOffADC();
     setSleepModeT2();
 
- //   power_adc_disable();
-
+    power_adc_disable();
+    ShutOffADC();
    if (idxbool!=IDXBOOL){
 //      IMTimer::doneMeasure();
       idxmm=0;
@@ -273,8 +286,8 @@ void MeasureVCC(){
 
 void DataQtouch(IMFrame &frame)
 {   
-  if (cpuVinCycle % 8==0){
-//      MeasureVCC();
+  if (cpuVinCycle % 18==2){
+      MeasureVCC();
   }
   
    cpuVinCycle++;
@@ -292,6 +305,8 @@ void DataQtouch(IMFrame &frame)
  //  data->w[8]=shift3;
    data->w[10]=0xB11B;
    IDXBOOL=idxbool;
+   idMax=-30000;
+   idMin=30000;
 }
 
 

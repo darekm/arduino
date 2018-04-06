@@ -115,8 +115,8 @@ DBGLEDON();
 
 // ADMUX = bit (REFS0) | bit (REFS1);
 //  digitalWrite(SOIL_VCC,HIGH);
-    delaySleepT2(1);
-   delaySleepT2(1);
+ //   delaySleepT2(1);
+ //  delaySleepT2(1);
    delaySleepT2(1);
    delaySleepT2(1);
    delaySleepT2(1);

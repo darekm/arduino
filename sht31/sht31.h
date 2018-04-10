@@ -39,7 +39,7 @@ power_twi_enable();//
 power_adc_disable();
 power_timer1_disable();
 ACSR=0;
-   ADCSRA = 0;                        // disable A/D comparator
+  // ADCSRA = 0;                        // disable A/D comparator
    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
   sensor.begin(SHT31_ADDR);
   
@@ -51,6 +51,7 @@ ACSR=0;
 void PrepareSHT31()
 {
   power_twi_enable();
+  ACSR=0;
  // power_adc_enable();
   sensor.start();
 }  
@@ -63,9 +64,9 @@ void DataSHT31(IMFrame &frame)
     cpuVin=internalVcc();
     cpuTemp=internalTemp();
   //  cpuTemp=internalTemp();
-  //  ShutOffADC();
+    ShutOffADC();
   ACSR=0;
-   ADCSRA = 0;                        // disable A/D comparator
+ //  ADCSRA = 0;                        // disable A/D comparator
 
     power_adc_disable();
   }
@@ -85,6 +86,7 @@ void DataSHT31(IMFrame &frame)
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
    data->w[10]=0xA33A;
+   ACSR=(1<<ACD);
 power_twi_disable();//
 }
 

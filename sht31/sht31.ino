@@ -121,7 +121,7 @@ void setup()
   wdt_enable(WDTO_8S);
   interrupts();
   delay(300);
- //  disableADCB();
+   disableADCB();
   uint16_t ad=SetupSHT31();
 
   trx.myMAC=MMAC;

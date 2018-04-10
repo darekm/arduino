@@ -6,7 +6,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x450002  // My MAC
+#define MMAC 0x450005  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x45     //Type of device
 #define MCHANNEL 3
@@ -160,9 +160,7 @@ void setup()
   disableADCB();
 // ShutOffADC();
  
- //power_all_disable();
-    power_timer2_enable();
-   power_timer0_enable();
+  power_timer0_enable();
 
      SetupQtouch();
 

@@ -19,26 +19,39 @@
 uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
+volatile uint16_t adcReading;
 
 
 const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 15, 17, 21, 25, 30, 36, 43, 51, 61, 73, 87, 104, 125, 149, 178, 213, 255}; // this is an exponential series to model the perception of the LED brightness by the human eye
 
-int idx1,idx2,idx3,mm;
+int idx1,idx2,idx3;
 int idMax,idMin;
 int shift1,shift2;
-byte ledLimit;
-byte idxbool=0,IDXBOOL=0,idxmm,fromm;
-bool ib1,ib2,ib3;
+
 #define TPIN1 A0
 #define TPIN2 2
 
 #define LEDB1 6
 #define LEDB2 1
 
+// ADC complete ISR
+ISR (ADC_vect)  {
+     uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH
+  uint8_t high = ADCH; // unlocks both
+//  ADCSRA |= (1 << ADIF);     // Clear ADIF
+  adcReading = (high<<8) | low;
+}  // end of ADC_vect
 
 
 //imTouch touch;
+int adcRead(void){
+  ADCSRA  |=_BV(ADSC); // Start conversion
+  
+  while (!(ADCSRA&_BV(ADIF)));    
+  ADCSRA  |=_BV(ADIF); // Clear ADIF
 
+  return ADC;
+}
 
 
 int martinread(byte ADCChannel, int samples=200)
@@ -65,6 +78,45 @@ int martinread(byte ADCChannel, int samples=200)
 	return _value / samples;
 }
 
+int rawAnalog( void )
+{
+  adcReading=3;
+//  https://forum.arduino.cc/index.php?topic=45949.0
+ // Generate an interrupt when the conversion is finished
+ ADCSRA |= _BV( ADIE );
+ // Enable Noise Reduction Sleep Mode
+ set_sleep_mode( SLEEP_MODE_ADC );
+ sleep_enable();
+
+ // Any interrupt will wake the processor including the millis interrupt so we have to...
+ // Loop until the conversion is finished
+ do
+ {
+   // The following line of code is only important on the second pass.  For the first pass it has no effect.
+   // Ensure interrupts are enabled before sleeping
+   sei();
+   // Sleep (MUST be called immediately after sei)
+   sleep_cpu();
+   // Checking the conversion status has to be done with interrupts disabled to avoid a race condition
+   // Disable interrupts so the while below is performed without interruption
+   cli();
+ }
+ // Conversion finished?  If not, loop.
+ while( ( (ADCSRA & (1<<ADSC)) != 0 ) );
+
+ // No more sleeping
+ sleep_disable();
+ // Enable interrupts
+ sei();
+
+ // The Arduino core does not expect an interrupt when a conversion completes so turn interrupts off
+ ADCSRA &= ~ _BV( ADIE );
+
+ // Return the conversion result
+ return( adcReading );
+}
+
+
 int  senseadctwice(void) {
   /*
       Capacitive sensing using charge sharing between 
@@ -90,13 +142,8 @@ int  senseadctwice(void) {
               // additional delay due to ADC logic
 
   ADMUX  =_BV(REFS0)|PC1; // Read Cext from Analog1
-  ADCSRA  |=_BV(ADSC); // Start conversion
-  
-  while (!(ADCSRA&_BV(ADIF)));    
-  ADCSRA  |=_BV(ADIF); // Clear ADIF
-
-  dat1=ADC;
-
+//  dat1=adcRead();
+   dat1=rawAnalog();
   // Precharge High
   ADMUX  =_BV(REFS0)|PC0;  // Charge S/H cap from Analog0
   
@@ -109,14 +156,15 @@ int  senseadctwice(void) {
             // additional delay due to ADC logic
 
   ADMUX  =_BV(REFS0)|PC1; // Read Cext from Analog1
-  ADCSRA  |=_BV(ADSC); // Start conversion
+//  ADCSRA  |=_BV(ADSC); // Start conversion
 
   
-  while (!(ADCSRA&_BV(ADIF)));
-  ADCSRA  |=_BV(ADIF); // Clear ADIF
+//  while (!(ADCSRA&_BV(ADIF)));
+//  ADCSRA  |=_BV(ADIF); // Clear ADIF
 
-  dat2=ADC;
-
+//  dat2=ADC;
+//  dat2=adcRead();
+  dat2=rawAnalog();
   return (dat2-dat1)*10;
 }
 
@@ -160,11 +208,8 @@ void SetupQtouch()
  SetupADC();
  DIDR0 = 0x00;
  //DBGLEDON();
- IDXBOOL=0;
   shift1=0;
-  ib1=false;
-  ib2=false;
-  ib3=false;
+  sense(TPIN1);
   for (int i=0;i<4;i++){
   delay(200);
    // shift1+=touch.check(TPIN1);
@@ -173,35 +218,16 @@ void SetupQtouch()
   }  
    shift1/=4;
    shift1-=10;
-   mm=11;
-   idxmm=0;
+   
    cpuTemp=2;
-   ledLimit=0;
+   
    DBGLEDOFF();
 }
 
 
-void computeShift(){
-    shift1=(shift1*11+idx1)/12;
- //   shift2=shift2*0.95+idx2*0.05;
- //   shift3=shift3*0.95+idx3*0.05;
-    idxmm=0; 
-}
 
-void lightSwitch(){
-//   digitalWrite(LEDB1, ib1);
- //  digitalWrite(LEDB2,ib2);
- //  digitalWrite(LEDB3,ib3);
-}
-
-void offSwitch(){
-   digitalWrite(LEDB1,LOW);
-//   digitalWrite(LEDB2,LOW);
-//   digitalWrite(LEDB3,LOW);
-}
 
 void LoopQtouch() {
-  ledLimit+=1;
  power_adc_enable(); // ADC converter
 //     touch.setup();
   // idx1=touch.check(TPIN1)-shift1;
@@ -215,62 +241,25 @@ void LoopQtouch() {
  if (idMax<idx1)idMax=idx1;
  if (idMin>idx1)idMin=idx1;
  //int idx=sqrt32(idx1);
- int idx=idx1/10;
 //   idx2=touch.check(TPIN2);
 //   idx3=touch.check(TPIN3);
    
   // calculate the index to the LED fading table
- if (idx<0) idx=0;
- //if(idx>31) idx= 31; // limit the index!!!
-//  if(idx2>31) idx2= 31; // limit the index!!!
-  //if(idx3>31) idx3= 31; // limit the index!!!
   
-    ib1=(idx1-shift1)>(ib1?5:mm);
- //  ib2=(idx2-shift2)>(ib2?5:mm);
- //  ib3=(idx3-shift3)>(ib3?7:mm);
-  
-  // fade the LED
-  if ((idx)>ledLimit){
-//    DBGLEDON();
-  }else{
- //   DBGLEDOFF();
-  }
-  //  analogWrite(LEDB1, 60);
    // analogWrite(9, ledFadeTable[idx]);
   //analogWrite(7, ledFadeTable[idx]);
- //  analogWrite(LEDB1, ledFadeTable[idx1]);
-   bool change=false;
-   idxbool=0;
-   if (ib1) idxbool+=1;
-  // if (ib2) idxbool+=2;
-  // if (ib3) idxbool+=4;
-//   ShutOffADC();
     setSleepModeT2();
 
-    power_adc_disable();
     ShutOffADC();
-   if (idxbool!=IDXBOOL){
-//      IMTimer::doneMeasure();
-      idxmm=0;
-      fromm=2;
-//      lightSwitch();
-   } else{
-     idxmm++;
-     if (idxmm>32){
-        if (ib1) idx1-=mm; 
-  //      if (ib2) idx2-=mm;
-  //      if (ib3) idx3-=mm;
-          
-//        computeShift();
-     }  
-   } 
+    ADMUX=0;
+   // ADCSRB|=ACME;
+    power_adc_disable();
 }
 
 
 void PrepareQtouch()
 {
-  fromm--;
- // IMTimer::doneMeasure();
+  // IMTimer::doneMeasure();
 }  
 
 
@@ -281,6 +270,7 @@ void MeasureVCC(){
     cpuTemp=internalTemp();
     cpuTemp=internalTemp();
     ShutOffADC();
+//    ADMUX=0;
     power_adc_disable();
 }
 
@@ -296,15 +286,14 @@ void DataQtouch(IMFrame &frame)
  //      data->w[2]=hh;
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
-   data->w[2]=idxbool;
-   data->w[3]=idx1;
-   data->w[4]=idMin;
-   data->w[5]=idMax;
+   data->w[2]=0;
+   data->w[3]=(uint16_t)idx1;
+   data->w[4]=(uint16_t)idMin;
+   data->w[5]=(uint16_t)idMax;
    data->w[6]=(uint16_t)shift1;
  //  data->w[7]=shift2;
  //  data->w[8]=shift3;
    data->w[10]=0xB11B;
-   IDXBOOL=idxbool;
    idMax=-30000;
    idMin=30000;
 }

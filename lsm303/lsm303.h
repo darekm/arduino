@@ -24,18 +24,15 @@ int intPin2 = 5;//D5 INT 1 DATA READY - DISABLE dbgpin
 LSM303 sensor;
 
  
-int tabX[MAXTAB];
-int tabY[MAXTAB];
-int tabZ[MAXTAB];
 int16_t tabXMax;
 int16_t tabYMax;
 int16_t tabZMax;
 int16_t tabMGX;
 int16_t tabMGY;
 int16_t tabMGZ;
-int tabXMin;
-int tabYMin;
-int tabZMin;
+int16_t tabXMin;
+int16_t tabYMin;
+int16_t tabZMin;
 uint16_t cpuVinCycle=0;
 
 uint16_t cpuVin;
@@ -86,8 +83,7 @@ void EnableLSM(){
  enabledLSM=true;
  DBGLEDOFF();
     ww();      sensor.writeReg(LSM303::CTRL1, 0x47);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
-      DBGLEDON();
-  ww();    sensor.writeReg(LSM303::CTRL7, 0x24);//magnetic power up LOWPOWER  +filter
+  ww();    sensor.writeReg(LSM303::CTRL7, 0x00);//magnetic power up LOWPOWER  +filter
 power_twi_disable();
       DBGLEDOFF();
   }
@@ -159,11 +155,11 @@ ww();    sensor.writeReg(LSM303::CTRL4, 0x02);//thr int2
 
 void setupInertialPCB(){
 //    sensor.writeReg(LSM303::IG_CFG1, 0x20);//threshold
- ww();   sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
-//     sensor.writeReg(LSM303::CTRL1, 0x27);//ACC rate
+    ww();   sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
+     sensor.writeReg(LSM303::CTRL1, 0x37);//ACC rate
 
  ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x4F);//stream +threshold
-ww();    sensor.writeReg(LSM303::CTRL2, 0xD0);//alias filter
+//ww();    sensor.writeReg(LSM303::CTRL2, 0xD0);//alias filter
 ww();    sensor.writeReg(LSM303::CTRL3, 0x04);//thr int1
 ww();    sensor.writeReg(LSM303::CTRL4, 0x01);//dataready int2 
 
@@ -188,13 +184,13 @@ void SetupLSM303()
     delaySleepT2(200);
    DBGLEDOFF();
   power_twi_enable(); 
-//   power_adc_enable();
+   power_adc_enable();
      pinMode(intPin1,INPUT);//INT1
      pinMode(intPin2,INPUT);//INT2
 //    pinMode(intCS,OUTPUT);
     //INT2
 //digitalWrite(intCS,HIGH);
-  ww();sensor.testDevice();
+//  ww();sensor.testDevice();
   ww(); sensor.init(sensor.device_D,LSM303::sa0_high);
 //  pinMode(CS,OUTPUT);
 //   digitalWrite(CS,HIGH);
@@ -204,8 +200,7 @@ void SetupLSM303()
     break; 
   } else{
     DBGLEDON();
-  }   
-    ;
+  };
   if ( sensor.testDevice()) {
   //   DBGLEDOFF();
     break; 
@@ -216,19 +211,34 @@ void SetupLSM303()
 
   }while(true);  
   
-     DBGLEDON();
- 
- ww();  sensor.writeReg(LSM303::CTRL0, 0xE0);//Fmemory reset
- ww();  sensor.writeReg(LSM303::CTRL0, 0x60);//Fmemory reset
- ww();   sensor.writeReg(LSM303::IG_CFG1, 0x3F);//threshold
-  ww();  sensor.writeReg(LSM303::IG_CFG2, 0x00);//threshold
+  
+// ww();  sensor.writeReg(LSM303::CTRL0, 0xE0);//Fmemory reset
+ ww();  sensor.writeReg(LSM303::CTRL0, 0x60);//Fifo enable
+ ww();  sensor.writeReg(LSM303::CTRL2, 0x02);//self test
+    delaySleepT2(300);
+ ww();  sensor.writeReg(LSM303::CTRL0, 0x60);//Fifo enable
+
+// ww();   sensor.writeReg(LSM303::IG_CFG1, 0x3F);//threshold
+//  ww();  sensor.writeReg(LSM303::IG_CFG2, 0x00);//threshold
  ww(); sensor.enableDefault();
  // setupFIFO();
   ww(); setupInertialPCB();
 //  setupFIFO();
 //  setupClick();
-  ww();sensor.testDevice();
-  EnableLSM();
+  do{
+     DBGLEDON();
+     DBGLEDOFF();
+   if ( sensor.testDevice()) {
+  //   DBGLEDOFF();
+      break; 
+    } else{
+      DBGLEDON();
+    };
+
+  }while(true);  
+
+   DBGLEDON();
+//  EnableLSM();
     delaySleepT2(300);
     DBGLEDOFF();
 //dttt=0.1;  

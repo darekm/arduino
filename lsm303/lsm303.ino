@@ -112,9 +112,9 @@ void setup()
   interrupts();
   delay(10);
   wdt_enable(WDTO_8S);
-//  disableADCB();
-  SetupLSM303();
   disableADCB();
+  SetupLSM303();
+//  disableADCB();
   trx.startMAC=0;
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;

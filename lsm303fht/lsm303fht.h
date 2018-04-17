@@ -77,14 +77,41 @@ void setupInertialPCB(){
  ww();   sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
 //    sensor.writeReg(LSM303::CTRL4, 0x01);//threshold
  //   sensor.writeReg(LSM303::CTRL3, 0x02);//threshold
-     sensor.writeReg(LSM303::CTRL1, 0x47);//3=12.5Hz  4=25Hz
-
+     sensor.writeReg(LSM303::CTRL1, 0x31);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
  ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x47);//stream +threshold
 ww();    sensor.writeReg(LSM303::CTRL3, 0x04);//thr int1
 ww();    sensor.writeReg(LSM303::CTRL4, 0x01);//dataready int2 
    //   sensor.writeReg(LSM303::CTRL5, 0x6D);//threshold
 }
 
+void DisableLSM(){
+  //ww();     sensor.writeReg(LSM303::CTRL1, 0x01);//0 - PWR down
+}  
+
+void EnableLSM(){
+  if (stepLSM>0){
+     stepLSM=0;
+  } else {
+//     ww();      sensor.writeReg(LSM303::CTRL1, 0x31);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
+  }
+}
+
+
+void CheckDisableLSM(){
+   stepLSM++;
+   if (stepLSM>maxLSM) {
+     stepLSM=0;
+     DisableLSM();
+   }
+}
+
+void CheckModeLSM(uint16_t aMode){
+ uint8_t xCycle= aMode & 0xFF;
+ maxLSM=0xFF;
+ if (xCycle>=1){
+   maxLSM=3;
+ }
+} 
 
 void setupFIFO(){
    sensor.writeReg(LSM303::CTRL0, 0x60);//FIFO EMPTY in1
@@ -99,7 +126,7 @@ void SetupLSM303()
     delaySleepT2(100);
    DBGLEDOFF();
   power_twi_enable(); 
-   power_adc_enable();
+//   power_adc_enable();
      pinMode(intPin1,INPUT_PULLUP);//INT1
      pinMode(intPin2,INPUT_PULLUP);//INT2
   ww();sensor.testDevice();
@@ -168,6 +195,7 @@ void AddData(){
 DBGLEDON();
       ComputeFFT();
       SendDataFFT();
+      CheckDisableLSM();
       DBGLEDOFF();
      }
 }

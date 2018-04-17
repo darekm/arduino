@@ -20,10 +20,10 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x2A0004  // My MAC
+#define MMAC 0x2A0005  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x2A     //Type of device
-#define MCHANNEL 1
+#define MCHANNEL 3
 
 
 /************************* Module specyfic functions **********************/
@@ -49,13 +49,16 @@ void SendData()
 {
   return;
   if (trx.CycleData()) {
-         trx.Wakeup();
+      CheckModeLSM(trx.myMode);
+      EnableLSM();
+     //MeasureLSM303();
+  /*       trx.Wakeup();
          static IMFrame frame;
          frame.Reset();
          DataLSM303(frame);
          trx.SendData(frame);
          trx.Transmit();
-     } 
+ */    } 
 }
 
 
@@ -118,8 +121,8 @@ void setup()
   interrupts();
   delay(10);
   wdt_enable(WDTO_8S);
-  SetupLSM303();
    disableADCB();
+  SetupLSM303();
   trx.startMAC=0;
   trx.myMAC=MMAC;
   trx.myChannel=MCHANNEL;

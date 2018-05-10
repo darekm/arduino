@@ -42,6 +42,7 @@ Below are the connections for a typical Arduino.
 */
 void SetupMHMC()
 {
+  SetupADC();
  power_twi_enable();
 
 //SetupADC();
@@ -76,6 +77,7 @@ void DataMHMC(IMFrame &frame)
   if (cpuVinCycle % 8==0){
     
   //  SetupADC();
+    cpuVin=internalVcc();
     cpuVin=internalVcc();
   //  ShutOffADC();
   ACSR = 48;                        // disable A/D comparator

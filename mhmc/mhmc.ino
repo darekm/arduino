@@ -28,32 +28,26 @@
 Transceiver trx;
 IMBuffer    buffer;
 
-#define pinLED 9
+
 void PrepareData()
 {
        if (trx.CycleData())
       {
-        digitalWrite(pinLED,HIGH);
-//  DBGPINHIGH();
-  PrepareMHMC();
-    digitalWrite(pinLED,LOW);
-//  DBGPINLOW();
-      }
-   
+        DBGLEDON();
+        PrepareMHMC();
+        DBGLEDOFF();
+      }   
 }  
 
 void SendData()
 {
       if (trx.CycleData()) {
-        DBGPINHIGH();
-        trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
         DataMHMC(frame);
-        DBGPINLOW();
-        DBGINFO("SendData ");
+        trx.Wakeup();
         trx.SendData(frame);
-         trx.Transmit();
+        trx.Transmit();
        }
  }
 
@@ -68,7 +62,6 @@ void ReceiveData()
           DBGINFO(" rxGET ");
         }
       }
-     DBGINFO("\r\n");
 }
 
 
@@ -82,7 +75,7 @@ void stageloop(byte stage)
   switch (stage)
   {
     case STARTBROADCAST:  trx.Knock();    break;
-    case STOPBROADCAST:  PrepareData();     break;
+    case STOPBROADCAST:  trx.StopListenBroadcast();PrepareData();     break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -114,17 +107,13 @@ void setup()
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   pinMode(DBGPIN ,OUTPUT);
-  DBGPINHIGH();
-  DBGPINLOW();
-  wdt_disable();
   INITDBG();
   DBGINFO(F("*****start"));
   setupTimer2();
   power_timer0_enable();
-  SetupADC();
   DBGLEDON();
   interrupts();
-  delay(1000);
+  delay(300);
   DBGLEDOFF();
    wdt_enable(WDTO_8S);
 //   disableADCB();

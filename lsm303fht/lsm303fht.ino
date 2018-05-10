@@ -1,6 +1,7 @@
 
 #define LOG_OUT 0 // use the log output function
 #define LIN_OUT8 1 // use the log output function
+#define LIN_OUT 1 // use the lin output function
 #define OCTAVE 0 // use the log output function
 #define FHT_N 64 // set to 256 point fht
 #define SCALE 256

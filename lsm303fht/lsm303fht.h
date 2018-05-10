@@ -31,8 +31,8 @@ uint16_t cpuTemp;
 byte dataCount=0;
 byte stepLSM=0;
 byte  maxLSM=0xFF; 
-int sumX=0;
-byte countX=0;
+
+
 void interruptMax(){//interrupt function
   IMTimer::doneMeasure();
 }
@@ -63,9 +63,10 @@ void DataLSM303(IMFrame &frame)
         frame.Body[i+2]=fht_lin_out8[i];
   }
   data->w[0]=cpuVin;
-  for (byte i=1;i<9;i++){
-
-//   data->w[i]=fht_input[i];
+  for (byte i=0;i<9;i++){
+  // data->w[i]=fht_lin_out[i];
+ 
+  // data->w[i]=fht_input[i];
   }    
 }
   
@@ -77,7 +78,7 @@ void setupInertialPCB(){
  ww();   sensor.writeReg(LSM303::IG_THS1, 0x03);//threshold
 //    sensor.writeReg(LSM303::CTRL4, 0x01);//threshold
  //   sensor.writeReg(LSM303::CTRL3, 0x02);//threshold
-     sensor.writeReg(LSM303::CTRL1, 0x61);//6=100Hz 3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
+     sensor.writeReg(LSM303::CTRL1, 0x51);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
  ww(); sensor.writeReg(LSM303::FIFO_CTRL, 0x5F);//stream +threshold
 ww();    sensor.writeReg(LSM303::CTRL3, 0x04);//thr int1
 ww();    sensor.writeReg(LSM303::CTRL4, 0x01);//dataready int2 
@@ -154,9 +155,8 @@ void SetupLSM303()
  ww();   sensor.writeReg(LSM303::IG_CFG1, 0x3F);//threshold
   ww();  sensor.writeReg(LSM303::IG_CFG2, 0x00);//threshold
  ww(); sensor.enableDefault();
-ww();    sensor.writeReg(LSM303::CTRL2, 0xC0);//anti aluas filter 
 ww();    sensor.writeReg(LSM303::CTRL5, 0x00);//magnetic power down 
-ww();    sensor.writeReg(LSM303::CTRL7, 0x04);//magnetic power down 
+//ww();    sensor.writeReg(LSM303::CTRL7, 0x04);//magnetic power down 
   ww(); setupInertialPCB();
 //  setupClick();
   ww();sensor.testDevice();
@@ -170,6 +170,7 @@ void ComputeFFT(){
   fht_window(); // window the data for better frequency response
     fht_reorder(); // reorder the data before doing the fht
     fht_run(); // process the data in the fht
+///     fht_mag_lin(); // take the output of the fht
     fht_mag_lin8(); // take the output of the fht
   //  fht_mag_octave(); // take the output of the fht
 }
@@ -184,13 +185,7 @@ void SendDataFFT(){
 }
 
 void AddData(){
-   
-   sumX=sumX*3+sensor.a.x;
-   sumX/=4;
-   countX++;
-   if ((countX %4)>0 ) return;
-  // sumX=0x7000;
-    fht_input[dataCount]=sumX;
+    fht_input[dataCount]=sensor.a.x;
   //  fht_input[dataCount]=-160;
   //  if (dataCount>48) 
   //    fht_input[dataCount]=31000;
@@ -221,7 +216,7 @@ void ReadLSM303(){
 //digitalWrite(intCS,LOW);
   }  
 
-//   sensor.readMag(); 
+   sensor.readMag(); 
   power_twi_disable(); 
 }
 void computeMeasure(){

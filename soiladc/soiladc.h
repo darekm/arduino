@@ -1,5 +1,3 @@
-#include <SoftwareSerial.h>
-
 // 
 //    FILE:
 // VERSION: 0.1.00
@@ -28,7 +26,7 @@ int idx1,idx2,idx3;
 int idMax,idMin;
 int shift1,shift2;
 
-#define TPIN1 A0
+#define TPIN1 A1
 #define TPIN2 2
 
 #define LEDB1 6
@@ -126,36 +124,37 @@ int  senseadctwice(void) {
       Float/ref  Analog0  = PC0
       Sense an  Analog1 = PC1
   */  
-#define PC0 1
-#define PC1 0
+#define TPC0 0
+#define TPC1 1
+
   int dat1,dat2;
   
   // Precharge Low
-  PORTC = _BV(PC0);    // S/H Charge Vdd (Analog0), Cext (Analog1) gnd
-  DDRC = _BV(PC1)|_BV(PC0);
+  PORTC = _BV(TPC0);    // S/H Charge Vdd (Analog0), Cext (Analog1) gnd
+  DDRC = _BV(TPC1)|_BV(TPC0);
    ADMUX  =_BV(REFS0)|0x0f;
   delayMicroseconds(2);
-  ADMUX  =_BV(REFS0)|PC0;  // Charge S/H cap from Analog0
+  ADMUX  =_BV(REFS0)|TPC0;  // Charge S/H cap from Analog0
   
   delayMicroseconds(8);
-  DDRC  &=~(_BV(PC1));  // float input
+  DDRC  &=~(_BV(TPC1));  // float input
               // additional delay due to ADC logic
 
-  ADMUX  =_BV(REFS0)|PC1; // Read Cext from Analog1
+  ADMUX  =_BV(REFS0)|TPC1; // Read Cext from Analog1
 //  dat1=adcRead();
    dat1=rawAnalog();
   // Precharge High
-  ADMUX  =_BV(REFS0)|PC0;  // Charge S/H cap from Analog0
+  ADMUX  =_BV(REFS0)|TPC0;  // Charge S/H cap from Analog0
   
-  PORTC = _BV(PC1);    // S/H Charge gnd (Analog0), Cext (Analog1) Vdd
-  DDRC = _BV(PC1)|_BV(PC0);
+  PORTC = _BV(TPC1);    // S/H Charge gnd (Analog0), Cext (Analog1) Vdd
+  DDRC = _BV(TPC1)|_BV(TPC0);
   delayMicroseconds(8);
 
-  DDRC  &=~(_BV(PC1));
+  DDRC  &=~(_BV(TPC1));
   PORTC =0;      // pull up off
             // additional delay due to ADC logic
 
-  ADMUX  =_BV(REFS0)|PC1; // Read Cext from Analog1
+  ADMUX  =_BV(REFS0)|TPC1; // Read Cext from Analog1
 //  ADCSRA  |=_BV(ADSC); // Start conversion
 
   

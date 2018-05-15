@@ -13,7 +13,7 @@
 #define MMAC 0x170000  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x17     //Type of device
-#define MCHANNEL 1
+#define MCHANNEL 3
 
 /************************* Module specyfic functions **********************/
 

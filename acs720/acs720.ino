@@ -21,7 +21,7 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x220031 // My MAC
+#define MMAC 0x220032 // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 22     //Type of device
 #define MCHANNEL 1

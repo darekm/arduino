@@ -13,10 +13,10 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x280007  // My MAC
+#define MMAC 0x280004 // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x28     //Type of device
-#define MCHANNEL 2
+#define MCHANNEL 3
 
 
 /************************* Module specyfic functions **********************/
@@ -35,7 +35,7 @@ void PrepareData()
 {
   if (trx.CycleData())    {
        CheckModeLSM(trx.myMode);
-        EnableLSM();
+  //      EnableLSM();
      PrepareLSM303();
   }
 }  

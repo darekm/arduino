@@ -41,7 +41,9 @@ void SetupSwitch()
   digitalWrite(LEDB2, HIGH);
   //digitalWrite(LEDB3, HIGH);
   digitalWrite(5, HIGH);
+  DBGLEDON();
   delay(300);
+  DBGLEDOFF();
   digitalWrite(LEDB2, LOW);
 
 }

@@ -6,7 +6,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x480014  // My MAC
+#define MMAC 0x480018  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x48     //Type of device
 #define MCHANNEL 2
@@ -28,7 +28,7 @@ t_Time SwitchTime;
 
 void PrepareData()
 {
-    digitalWrite(LEDB3,HIGH);
+//    digitalWrite(LEDB3,HIGH);
   IMTimer::doneMeasure();
   PrepareSwitch();
       if (trx.CycleData())
@@ -89,6 +89,7 @@ void StepData(void){
 byte OrderData(uint16_t a){
   
   switch(a){
+    /*
     case 10:
       digitalWrite(2,HIGH);
     break;
@@ -109,11 +110,12 @@ byte OrderData(uint16_t a){
 //      analogWrite(4,255);
         digitalWrite(A4,LOW);
     break;
-    case 40:
+    */
+    case 1:
 //      analogWrite(5,0);
         digitalWrite(A5,HIGH);
     break;
-    case 41:
+    case 11:
 //      analogWrite(5,255);
         digitalWrite(A5,LOW);
     break;
@@ -162,7 +164,7 @@ void MeasureData()
 //    digitalWrite(LEDB3,HIGH);
 // SendDataFlood();
   PrepareSwitch();
-      digitalWrite(LEDB3,LOW);
+//      digitalWrite(LEDB3,LOW);
 
  // DBGLEDOFF();
  // }
@@ -217,19 +219,18 @@ void setup()
   SetupADC();
   wdt_enable(WDTO_8S);
   interrupts();
-  delay(300);
- //  disableADCB();
-   byte ad=1;
+ // delay(300);
+   disableADCB();
   SetupSwitch();
 
   trx.myMAC=MMAC;
   trx.startMAC=0;
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
-  trx.Init(buffer);
   trx.myDevice=MDEVICE;
   trx.funOrder=&OrderData;
-  trx.setTimerFunction(&StepData);
+//  trx.setTimerFunction(&StepData);
+  trx.Init(buffer);
   trx.NoSleep=true;
 
   power_timer0_disable();

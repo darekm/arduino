@@ -118,6 +118,7 @@ void MeasureData()
 
 void stageloop(byte stage)
 {
+  SwitchTime=millisTNow();
   switch (stage)
   {
     case STARTBROADCAST: trx.Knock();    break;
@@ -153,7 +154,7 @@ void setup()
   #ifdef DBGCLOCK
 
   pinMode(DBGCLOCK,OUTPUT);
-  digitalWrite(DBGCLOCK ,HIGH);
+//  digitalWrite(DBGCLOCK ,HIGH);
   #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);

@@ -6,7 +6,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x440006  // My MAC
+#define MMAC 0x440007  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x44     //Type of device
 #define MCHANNEL 3
@@ -19,7 +19,7 @@
 
 Transceiver trx;
 IMBuffer    buffer;
-t_Time SwitchTime;
+//t_Time SwitchTime;
 
 #include "fusesl00.h"
 
@@ -67,15 +67,15 @@ void ReceiveData()
 
 
 void StepData(void){
-  if ((millisTNow()-SwitchTime)>50 ){
-    SwitchTime=millisTNow();
+//  if ((millisTNow()-SwitchTime)>50 ){
+ //   SwitchTime=millisTNow();
 //    DBGLEDON();
 //  LoopSensor();
  //   DBGLEDOFF();
  //   digitalWrite(DBGCLOCK,HIGH);
 //    digitalWrite(DBGCLOCK,LOW);
 //    digitalWrite(5,SWtoggle);
-  } 
+//  } 
 
 } 
 
@@ -92,8 +92,8 @@ void HourData()
 }
 
 void MeasureData()
-{
-          static IMFrame frame;
+{return;
+        static IMFrame frame;
         frame.Reset();
         DataSensor(frame);
         DBGINFO("SendData ");
@@ -143,6 +143,8 @@ void setup()
   #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
+  DBGPINHIGH();
+  DBGPINLOW();
 //  pinMode(DBGLED,OUTPUT);
   INITDBG();
   setupTimer2();
@@ -150,21 +152,22 @@ void setup()
   SetupADC();
   wdt_enable(WDTO_8S);
   interrupts();
-  disableADCB();
+  delay(100);
 // ShutOffADC();
  
-  power_timer0_enable();
+//  power_timer0_enable();
 
-     SetupSensor();
+ // SetupSensor();
+  disableADCB();
 
   trx.myMAC=MMAC;
   trx.startMAC=0;
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.myDevice=MDEVICE;
+  trx.funOrder=&OrderData;
   trx.Init(buffer);
 //  trx.setTimerFunction(&StepData);
- // trx.funOrder=&OrderData;
   
   power_timer0_disable();
   setupTimer2();
@@ -173,7 +176,7 @@ void setup()
 void loop()
 {
   wdt_reset();
-  SwitchTime=millisTNow();
+//  SwitchTime=millisTNow();
   byte xstage;
   do{
      xstage=trx.timer.WaitStage();

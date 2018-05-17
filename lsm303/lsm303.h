@@ -41,6 +41,7 @@ uint16_t cpuTemp;
 //float dttt;
 byte stepLSM=0;
 byte  maxLSM=0xF0;
+byte errorLSM=0;
 bool enabledLSM =false;
 
 
@@ -206,8 +207,7 @@ void SetupLSM303()
     break; 
   } else{
     DBGLEDON();
-  }   
-    ;
+  };
 
   }while(true);  
   
@@ -255,6 +255,18 @@ void ComputeMax(){
 }
 
 
+void ComputeMean(){
+   long x=9;
+   x=tabXMin*x+sensor.a.x;
+   tabXMin=x/10;
+   x=9;
+   x=tabYMin*x+sensor.a.y;
+   tabYMin=x/10;
+  x=9;
+   x=tabZMin*x+sensor.a.z; 
+   tabZMin=x/10;
+}
+
 void ReadLSM303(){
   power_twi_enable();
   byte ffx=sensor.readReg(LSM303::FIFO_SRC);
@@ -265,7 +277,11 @@ void ReadLSM303(){
 //DBGLEDON();
     if (sensor.readAcc()==6){
       
-       ComputeMax();
+       DBGLEDON();
+       ComputeMean();
+
+   //    if (tabXMin==30000)
+   //     ComputeMin();
    //    ComputeDist();
     }
 //      DBGLEDOFF();
@@ -364,13 +380,15 @@ void DataLSM303(IMFrame &frame)
 //     data->w[11]=round((ddx-ddx0)*1000);
 //     ddx0=ddx;
   tabXMax=-30000;
-  tabYMax=-30000;
-  tabZMax=-30000;
-  tabXMin=30000;
-  tabYMin=30000;
-  tabZMin=30000;
-
-      
+  tabYMax=-30003;
+  tabZMax=-30011;
+  //tabXMin=30000;
+ // tabYMin=30000;
+ // tabZMin=30000;
+  if (errorLSM>12) {
+    reboot();
+  }
+  errorLSM=0;      
    data->w[0]=cpuVin;
    data->w[1]=cpuTemp;
 }

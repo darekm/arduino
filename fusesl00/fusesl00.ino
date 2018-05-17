@@ -157,7 +157,7 @@ void setup()
  
 //  power_timer0_enable();
 
- // SetupSensor();
+  SetupSensor();
   disableADCB();
 
   trx.myMAC=MMAC;

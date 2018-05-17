@@ -17,9 +17,8 @@
 
 
 #define pinACS A0
-#define PC0 0
 #define pinVAD A5
-
+#define FPC0 0
 uint16_t Measure[85];
 uint16_t current;
 
@@ -34,8 +33,8 @@ long adcLow;
 long adcHigh;
 
 
-#define ADCVHIGH() PORTC|=(B00100000);//digitalWrite(DBGPIN,HIGH)
-#define ADCVLOW()  PORTC&=~(B00100000);//digitalWrite(DBGPIN,LOW)
+//#define ADCVHIGH() PORTC|=(B00100000);//digitalWrite(DBGPIN,HIGH)
+//#define ADCVLOW()  PORTC&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
 // disassembly
 // http://rcarduino.blogspot.com/2012/09/how-to-view-arduino-assembly.html
@@ -91,6 +90,14 @@ int rawAnalog( void )
  return( adcReading );
 }
 
+
+void fullShutADC(){
+  ShutOffADC();
+  DIDR0 = 0xff;                           // disable all A/D inputs (ADC0-ADC5)
+  ADCSRB|=ACME;
+  power_adc_disable();
+}
+
 void SetupSensor()
 {
   DBGLEDON();
@@ -102,30 +109,26 @@ void SetupSensor()
   //  DIDR0 = ~(0x10 ); //ADC4D,
 
 //  digitalWrite(pinACS,HIGH);
+
   pinMode(pinACS,INPUT);
-  pinMode(pinVAD,OUTPUT);
-//  digitalWrite(pinACS,HIGH);
-//  digitalWrite(pinVAD,HIGH);
- // pinMode(pinACS,OUTPUT);
- // digitalWrite(pinACS,HIGH);
   current=0;
     //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
 
    DBGLEDOFF();
-
+fullShutADC();
 }
 
 void MeasureSensor()
 { 
-     //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
-//TWCR=0;
+  //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
  power_adc_enable(); // ADC converter
   SetupADC();
     ACSR=48;
  //  ADCSRA  =_BV(ADEN)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // Enable ADC, Set prescaler to 128
   ADCSRB=0;
  ADCSRA = 0b11000101; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
-  ADMUX  =_BV(REFS0)|PC0;  // Charge S/H cap from Analog0
+  ADMUX  =_BV(REFS0)|FPC0;  // Charge S/H cap from Analog0
+ DIDR0 = 0x00;
  delayMicroseconds(12);
 
 //  ADCVHIGH();
@@ -142,9 +145,7 @@ void MeasureSensor()
    }
 //  ADCVLOW();
     setSleepModeT2();
-  ShutOffADC();
-  
-  power_adc_disable();
+    fullShutADC();
 }
 
 
@@ -161,7 +162,6 @@ void MeasureVCC(){
 
 void DataSensor(IMFrame &frame)
 {
-//   SetupADC();
   long xSum=0;
   byte xLast =0;
   unsigned long xx=0;
@@ -213,8 +213,9 @@ void DataSensor(IMFrame &frame)
 
 
   if (cpuVinCycle % 18==2){
-      MeasureVCC();
+    //  MeasureVCC();
   }
+  cpuVinCycle++;
 }
 
 

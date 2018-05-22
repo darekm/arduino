@@ -20,11 +20,11 @@ uint16_t cpuVinCycle=0;
 volatile uint16_t adcReading;
 
 
-const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 15, 17, 21, 25, 30, 36, 43, 51, 61, 73, 87, 104, 125, 149, 178, 213, 255}; // this is an exponential series to model the perception of the LED brightness by the human eye
+//const uint16_t ledFadeTable[32] = {0, 1, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 15, 17, 21, 25, 30, 36, 43, 51, 61, 73, 87, 104, 125, 149, 178, 213, 255}; // this is an exponential series to model the perception of the LED brightness by the human eye
 
-int idx1,idx2,idx3;
+int idx1;
 int idMax,idMin;
-int shift1,shift2;
+int shift1;
 
 #define TPIN1 A1
 #define TPIN2 2
@@ -83,7 +83,7 @@ int rawAnalog( void )
  // Generate an interrupt when the conversion is finished
  ADCSRA |= _BV( ADIE );
  // Enable Noise Reduction Sleep Mode
- set_sleep_mode( SLEEP_MODE_ADC );
+// set_sleep_mode( SLEEP_MODE_ADC );
  sleep_enable();
 
  // Any interrupt will wake the processor including the millis interrupt so we have to...
@@ -167,8 +167,9 @@ int  senseadctwice(void) {
   return (dat2-dat1)*10;
 }
 
-int sense(byte ADCChannel, int samples=20)
+int sense(byte ADCChannel, int samples=80)
 {
+ set_sleep_mode( SLEEP_MODE_ADC );
   ACSR=48;
   ADMUX  =_BV(REFS0)|0x0f;
 //  ADCSRA  =_BV(ADEN)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // Enable ADC, Set prescaler to 128
@@ -178,6 +179,7 @@ int sense(byte ADCChannel, int samples=20)
 	for(int _counter = 0; _counter < samples; _counter ++)
 	{
             _value+=senseadctwice();
+            delayMicroseconds(20);
 
          }
 	return _value / samples;
@@ -189,19 +191,9 @@ int sense(byte ADCChannel, int samples=20)
 void SetupQtouch()
 {
   pinMode(LEDB2, OUTPUT);
-// pinMode(LEDB1, OUTPUT);
- //  analogWrite(LEDB1, 100);
-//  analogWrite(LEDB1, 100);
-//  digitalWrite(7, 100);
  // if (funtest()>0){
-//  digitalWrite(LEDB2, HIGH);
-//  delay(300);
- //  digitalWrite(LEDB2, LOW);
   DBGLEDON();
   delay(100);
- // }
-  //  ref1=ADCTouchRead(A1,30);
- //   ref2=ADCTouchRead(A0,30);
 
 //  touch.setup();
  SetupADC();
@@ -217,9 +209,9 @@ void SetupQtouch()
   }  
    shift1/=4;
    shift1-=10;
-   
+   shift1=-200;   
    cpuTemp=2;
-   
+   ShutDownADC();
    DBGLEDOFF();
 }
 
@@ -228,31 +220,22 @@ void SetupQtouch()
 
 void LoopQtouch() {
  power_adc_enable(); // ADC converter
-//     touch.setup();
-  // idx1=touch.check(TPIN1)-shift1;
-//     idx1=touch.read(TPIN1,shift1);
-//     idx1/=2;
- // idx1=martinread(TPIN1)-shift1;
  
- idx3=idx2;
- idx2=idx1;
  idx1=sense(TPIN1)-shift1;
  if (idMax<idx1)idMax=idx1;
  if (idMin>idx1)idMin=idx1;
  //int idx=sqrt32(idx1);
-//   idx2=touch.check(TPIN2);
-//   idx3=touch.check(TPIN3);
    
   // calculate the index to the LED fading table
   
    // analogWrite(9, ledFadeTable[idx]);
   //analogWrite(7, ledFadeTable[idx]);
     setSleepModeT2();
-
-    ShutOffADC();
-    ADMUX=0;
+    ShutDownADC();
+//    ShutOffADC();
+//    ADMUX=0;
    // ADCSRB|=ACME;
-    power_adc_disable();
+//    power_adc_disable();
 }
 
 

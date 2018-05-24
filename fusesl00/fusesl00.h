@@ -16,10 +16,18 @@
 #include "imatmega.h"
 
 
-#define pinACS A0
+#define pinA1 A0
+#define pinA2 A1
+#define pinA3 A2
 #define pinVAD A5
-#define FPC0 0
-uint16_t Measure[85];
+#define FPC1 0
+#define FPC2 1
+#define FPC3 2
+#define fpCount 20
+
+uint16_t Measure1[25];
+uint16_t Measure2[25];
+uint16_t Measure3[25];
 uint16_t current;
 
 
@@ -28,13 +36,10 @@ uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 volatile uint16_t adcReading;
 volatile boolean adcDone;
-long adcMedium;
-long adcLow;
-long adcHigh;
+uint16_t idx1,idx2,idx3;
 
-
-//#define ADCVHIGH() PORTC|=(B00100000);//digitalWrite(DBGPIN,HIGH)
-//#define ADCVLOW()  PORTC&=~(B00100000);//digitalWrite(DBGPIN,LOW)
+#define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
+#define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
 // disassembly
 // http://rcarduino.blogspot.com/2012/09/how-to-view-arduino-assembly.html
@@ -51,12 +56,13 @@ ISR (ADC_vect)
 
 
 
-int rawAnalog( void )
+int rawAnalog( byte aPC )
 {
   adcReading=3;
 //  https://forum.arduino.cc/index.php?topic=45949.0
  // Generate an interrupt when the conversion is finished
  ADCSRA |= _BV( ADIE );
+  ADMUX  =_BV(REFS0)|aPC;  // Charge S/H cap from Analog0
 
  // Enable Noise Reduction Sleep Mode
  set_sleep_mode( SLEEP_MODE_ADC );
@@ -91,12 +97,6 @@ int rawAnalog( void )
 }
 
 
-void fullShutADC(){
-  ShutOffADC();
-  DIDR0 = 0xff;                           // disable all A/D inputs (ADC0-ADC5)
-  ADCSRB|=ACME;
-  power_adc_disable();
-}
 
 void SetupSensor()
 {
@@ -110,12 +110,12 @@ void SetupSensor()
 
 //  digitalWrite(pinACS,HIGH);
 
-  pinMode(pinACS,INPUT);
+  pinMode(pinA1,INPUT);
   current=0;
     //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
 
    DBGLEDOFF();
-fullShutADC();
+   ShutDownADC();
 }
 
 void MeasureSensor()
@@ -127,25 +127,27 @@ void MeasureSensor()
  //  ADCSRA  =_BV(ADEN)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // Enable ADC, Set prescaler to 128
   ADCSRB=0;
  ADCSRA = 0b11000101; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
-  ADMUX  =_BV(REFS0)|FPC0;  // Charge S/H cap from Analog0
+//  ADMUX  =_BV(REFS0)|FPC0;  // Charge S/H cap from Analog0
  DIDR0 = 0x00;
  delayMicroseconds(12);
-
-//  ADCVHIGH();
-   delaySleepT2(1);
-   delaySleepT2(1);
-   for (int8_t i=80; i>=0; i--)  //41cycles ~ 40ms
+  
+ //  delaySleepT2(1);
+//   delaySleepT2(1);
+  ADCVHIGH();
+   for (int8_t i=fpCount; i>=0; i--)  //41cycles ~ 40ms
   {
  //  DBGPINHIGH();
-   Measure[i]=rawAnalog();
+   Measure1[i]=rawAnalog(FPC1);
+   Measure2[i]=rawAnalog(FPC2);
+   Measure3[i]=rawAnalog(FPC3);
  //   DBGPINLOW();
    setSleepModeT2();
    delayT2();
   // delaySleepT2(1);
    }
-//  ADCVLOW();
+  ADCVLOW();
     setSleepModeT2();
-    fullShutADC();
+    ShutDownADC();
 }
 
 
@@ -162,14 +164,15 @@ void MeasureVCC(){
 
 void DataSensor(IMFrame &frame)
 {
-  long xSum=0;
+  long xSum1=0;
+  long xSum2=0;
+  long xSum3=0;
   byte xLast =0;
-  unsigned long xx=0;
-  adcLow=90000;
-  adcHigh=0;
-  for (int8_t i=80; i>=0; i--)
+  for (int8_t i=fpCount; i>=0; i--)
   {
-     xSum+=Measure[i];
+     xSum1+=Measure1[i];
+     xSum2+=Measure2[i];
+     xSum3+=Measure3[i];
 //     if(x>adcHigh) adcHigh=x;
 //     if (x<adcLow) adcLow=x;
    //   xSum+=x;
@@ -177,20 +180,11 @@ void DataSensor(IMFrame &frame)
 //         xx+=(y*y);
       xLast++;
    }
-  adcMedium=xSum/81;
+  idx1=xSum1/fpCount;
+  idx2=xSum2/fpCount;
+  idx3=xSum3/fpCount;
   
-  for (int8_t i=80; i>=0; i--)
-  {
-     long x=Measure[i];
-     if(x>adcHigh) adcHigh=x;
-     if (x<adcLow) adcLow=x;
-   //      xSum+=x;
-      long y=x-adcMedium;
-         xx+=(y*y);
-//      xLast=i;
-   }
- //  xx=xx ;
-  // adcMedium=(adcMedium *9 +xSum/81)/10;
+   // adcMedium=(adcMedium *9 +xSum/81)/10;
 
 
    IMFrameData *data =frame.Data();
@@ -200,20 +194,20 @@ void DataSensor(IMFrame &frame)
    current++;
    xLast+=10;
 //   ShutOffADC();
-   data->w[7]=xx;
-   data->w[6]=xSum;
-   data->w[5]=adcHigh;
-   data->w[4]=adcLow;
-   data->w[3]=adcMedium;
+   
+  
+   data->w[4]=idx3;
+   data->w[3]=idx2;
+   data->w[2]=idx1;
   // data->w[4]=trx.dataw3;
   // data->w[3]=trx.Deviation();
-   data->w[2]=sqrt32(xx);
+  // data->w[2]=sqrt32(xx);
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
 
 
   if (cpuVinCycle % 18==2){
-    //  MeasureVCC();
+      MeasureVCC();
   }
   cpuVinCycle++;
 }

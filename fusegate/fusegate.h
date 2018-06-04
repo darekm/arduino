@@ -23,7 +23,7 @@
 #define FPC1 0
 #define FPC2 1
 #define FPC3 2
-#define fpCount 20
+#define macCount 15
 
 uint16_t current;
 
@@ -32,12 +32,31 @@ uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 uint16_t idx1,idx2,idx3;
+IMMAC macTable[macCount];
+long  macCycle[macCount];
 
 #define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
 #define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
 
+byte findTable(IMMAC mac){
+ byte ii=0;
+// long ic=mac
+ for(byte i=0;i<macCount;i++){
+    if (macTable[i]==mac){
+      return i;
+    }
+    if (macCycle[i]==0){
+      ii=i;
+    }
+ }
+ macTable[ii]=mac;
+ return ii;
+}
 
+void LightOn(){
+   digitalWrite(FPC1,HIGH);
+};
 
 void SetupSensor()
 {
@@ -56,7 +75,8 @@ void SetupSensor()
 }
 
 void MeasureSensor()
-{ 
+{
+
 }
 
 
@@ -70,20 +90,22 @@ void MeasureVCC(){
     power_adc_disable();
 }
 
+bool ParseSensor(IMFrame &frame){
+  IMFrameData *data =frame.Data();
+  byte ii=findTable(data->w[6]);
+  macCycle[ii]=trx.timer.Cycle();
+  if (data->w[2]!=data->w[3]){
+    LightOn();
+  }
+
+}
 void DataSensor(IMFrame &frame)
 {
   long xSum1=0;
   long xSum2=0;
   long xSum3=0;
   byte xLast =0;
-  for (int8_t i=fpCount; i>=0; i--)
-  {
-      xLast++;
-   }
-  idx1=xSum1/fpCount;
-  idx2=xSum2/fpCount;
-  idx3=xSum3/fpCount;
-  
+   
    // adcMedium=(adcMedium *9 +xSum/81)/10;
 
 
@@ -92,7 +114,6 @@ void DataSensor(IMFrame &frame)
 
 //        DBGINFO(ex);
    current++;
-   xLast+=10;
 
   
    data->w[5]=0xACAC;

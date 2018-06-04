@@ -56,13 +56,18 @@ byte OrderData(uint16_t a){
 
 void ReceiveData()
 { 
+        static IMFrame rxFrame;
       while (trx.GetData())
       {
-        if (trx.Parse())
-        {
-          DBGINFO(" rxGET ");
+         if (trx.GetFrame(rxFrame)) {
+           if  (trx.ParseFrame(rxFrame)){
+             if (trx.myShadow(rxFrame){
+                 ParseSensor(rxFrame);
+             }
+           }
+         }
+    //    if (trx.Parse())
         }
-      }
 }
 
 

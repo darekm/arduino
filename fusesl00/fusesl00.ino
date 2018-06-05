@@ -6,7 +6,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x440007  // My MAC
+#define MMAC 0x440013  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x44     //Type of device
 #define MCHANNEL 3
@@ -165,7 +165,6 @@ void setup()
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.myDevice=MDEVICE;
-  trx.funOrder=&OrderData;
   trx.Init(buffer);
 //  trx.setTimerFunction(&StepData);
   

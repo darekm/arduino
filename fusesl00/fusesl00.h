@@ -37,7 +37,9 @@ uint16_t cpuVinCycle=0;
 volatile uint16_t adcReading;
 volatile boolean adcDone;
 uint16_t idx1,idx2,idx3;
-
+uint16_t thresholdFuse;
+uint16_t maskFuse;
+uint16_t currentFuse;
 #define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
 #define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
@@ -97,6 +99,10 @@ int rawAnalog( byte aPC )
 }
 
 
+void InitSensor(){
+  maskFuse=7;
+  thresholdFuse=100;
+}
 
 void SetupSensor()
 {
@@ -104,11 +110,6 @@ void SetupSensor()
   delay(100);
   SetupADC();
 
- // disableADCB();
- // TWCR&=~(1<<TWEN);
-  //  DIDR0 = ~(0x10 ); //ADC4D,
-
-//  digitalWrite(pinACS,HIGH);
 
   pinMode(pinA1,INPUT);
   current=0;
@@ -116,6 +117,7 @@ void SetupSensor()
 
    DBGLEDOFF();
    ShutDownADC();
+   InitSensor;
 }
 
 void MeasureSensor()
@@ -158,7 +160,6 @@ void MeasureVCC(){
     cpuTemp=internalTemp();
     cpuTemp=internalTemp();
     ShutOffADC();
-//    ADMUX=0;
     power_adc_disable();
 }
 
@@ -183,25 +184,22 @@ void DataSensor(IMFrame &frame)
   idx1=xSum1/fpCount;
   idx2=xSum2/fpCount;
   idx3=xSum3/fpCount;
+  currentFuse=0;
+  if (idx1>thresholdFuse) currentFuse|=0x1;
+  if (idx2>thresholdFuse) currentFuse|=0x2;
+  if (idx3>thresholdFuse) currentFuse|=0x4;
   
-   // adcMedium=(adcMedium *9 +xSum/81)/10;
-
-
    IMFrameData *data =frame.Data();
 
 
-//        DBGINFO(ex);
-   current++;
    xLast+=10;
-//   ShutOffADC();
-   
   
-   data->w[4]=idx3;
-   data->w[3]=idx2;
-   data->w[2]=idx1;
-  // data->w[4]=trx.dataw3;
-  // data->w[3]=trx.Deviation();
-  // data->w[2]=sqrt32(xx);
+   data->w[5]=0xADAD;
+   data->w[6]=idx1;
+   data->w[7]=idx2;
+   data->w[8]=idx3;
+   data->w[3]=maskFuse;
+   data->w[2]=currentFuse;
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
 

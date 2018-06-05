@@ -34,10 +34,18 @@ uint16_t cpuVinCycle=0;
 uint16_t idx1,idx2,idx3;
 IMMAC macTable[macCount];
 long  macCycle[macCount];
-
+byte  macFuse[macCount];
+int fusesOn=0;
+int lightOn=0;
 #define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
 #define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
+void resetTable(){
+  for (byte i=0;i<macCount;i++){
+    macTable[i]=0;
+    macFuse[i]=0;
+  }
+}
 
 byte findTable(IMMAC mac){
  byte ii=0;
@@ -48,6 +56,7 @@ byte findTable(IMMAC mac){
     }
     if (macCycle[i]==0){
       ii=i;
+      macFuse[ii]=0;
     }
  }
  macTable[ii]=mac;
@@ -56,6 +65,7 @@ byte findTable(IMMAC mac){
 
 void LightOn(){
    digitalWrite(FPC1,HIGH);
+   fusesOn++;
 };
 
 void SetupSensor()
@@ -68,6 +78,7 @@ void SetupSensor()
   pinMode(pinA1,INPUT);
   pinMode(pinA2,INPUT);
   pinMode(pinA3,INPUT);
+  pinMode(pinA3,INPUT);
   current=0;
 
    DBGLEDOFF();
@@ -76,7 +87,16 @@ void SetupSensor()
 
 void MeasureSensor()
 {
-
+ if (fusesOn) {
+    lightOn=10;
+ } else{
+    lightOn--;
+ }
+ fusesOn=0;
+ if (lightOn<1){
+    lightOn=0;
+    digitalWrite(FPC1,LOW);
+ }
 }
 
 
@@ -96,7 +116,9 @@ bool ParseSensor(IMFrame &frame){
   macCycle[ii]=trx.timer.Cycle();
   if (data->w[2]!=data->w[3]){
     LightOn();
+
   }
+  macFuse[ii]=data->w[2];
 
 }
 void DataSensor(IMFrame &frame)

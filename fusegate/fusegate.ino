@@ -61,7 +61,7 @@ void ReceiveData()
       {
          if (trx.GetFrame(rxFrame)) {
            if  (trx.ParseFrame(rxFrame)){
-             if (trx.myShadow(rxFrame){
+             if (trx.myShadow(rxFrame)){
                  ParseSensor(rxFrame);
              }
            }

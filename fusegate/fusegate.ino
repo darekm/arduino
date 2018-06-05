@@ -1,4 +1,4 @@
-
+#define NODBGCLOCK 1
 #include <imframe.h>
 #include <imatmega.h>
 #include <EEPROM.h>
@@ -38,13 +38,12 @@ void SendData()
 {
       if (trx.CycleData()) {
   DBGLEDON();
-         static IMFrame frame;
-        frame.Reset();
-        DataSensor(frame);
-        DBGINFO("SendData ");
-        trx.Wakeup();
-        trx.SendData(frame);
-        trx.Transmit();
+//         static IMFrame frame;
+//        frame.Reset();
+//        DataSensor(frame);
+//        trx.Wakeup();
+//        trx.SendData(frame);
+//        trx.Transmit();
   DBGLEDOFF();
          }
 }
@@ -66,6 +65,7 @@ void ReceiveData()
              }
            }
          }
+  digitalWrite(LEDB3, LOW);
     //    if (trx.Parse())
         }
 }

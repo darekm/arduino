@@ -9,7 +9,7 @@
 #define MMAC 0x540001  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x54     //Type of device
-#define MCHANNEL 3
+#define MCHANNEL 2
 
 /************************* Module specyfic functions **********************/
 
@@ -37,14 +37,14 @@ void PrepareData()
 void SendData()
 {
       if (trx.CycleData()) {
-  DBGLEDON();
-//         static IMFrame frame;
-//        frame.Reset();
-//        DataSensor(frame);
-//        trx.Wakeup();
-//        trx.SendData(frame);
-//        trx.Transmit();
-  DBGLEDOFF();
+//  DBGLEDON();
+         static IMFrame frame;
+        frame.Reset();
+        DataSensor(frame);
+        trx.Wakeup();
+        trx.SendData(frame);
+        trx.Transmit();
+ // DBGLEDOFF();
          }
 }
 
@@ -148,6 +148,7 @@ void setup()
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.myDevice=MDEVICE;
+  trx.NoConnection=true;
   trx.Init(buffer);
   trx.NoSleep=true;
   trx.shadowId=1;

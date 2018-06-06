@@ -20,9 +20,10 @@
 #define pinA2 A1
 #define pinA3 A2
 #define LEDB1 1
+// LEDb1 1
 #define LEDB2 6
 // DBGCLOCK 6
-#define LEDB3 7
+#define LEDB3 9
 
 #define macCount 15
 
@@ -32,14 +33,12 @@ uint16_t current;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
-uint16_t idx1,idx2,idx3;
+uint16_t idx1=0;
 IMMAC macTable[macCount];
 long  macCycle[macCount];
 byte  macFuse[macCount];
 int fusesOn=0;
 int lightOn=0;
-#define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
-#define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
 void resetTable(){
   for (byte i=0;i<macCount;i++){
@@ -72,27 +71,24 @@ void LightOn(){
 void SetupSensor()
 {
  pinMode(LEDB1, OUTPUT);
-  pinMode(LEDB2, OUTPUT);
  pinMode(LEDB3, OUTPUT);
 // analogWrite(9, 100);
 //  analogWrite(LEDB1, 100);
 //  digitalWrite(7, 100);
  // if (funtest()>0){
   digitalWrite(LEDB1, HIGH);
-  digitalWrite(LEDB2, HIGH);
   digitalWrite(LEDB3, HIGH);
   delay(300);
-   digitalWrite(LEDB2, LOW);
+   digitalWrite(LEDB3, LOW);
   delay(200);
-   digitalWrite(LEDB2, HIGH);
+   digitalWrite(LEDB3, HIGH);
   delay(300);
-   digitalWrite(LEDB2, LOW);
+   digitalWrite(LEDB3, LOW);
   delay(600);
  digitalWrite(LEDB1, LOW);
   digitalWrite(LEDB3, LOW);
  
 
-  DBGLEDON();
   delay(100);
   SetupADC();
 
@@ -100,8 +96,7 @@ void SetupSensor()
   pinMode(pinA1,INPUT);
   pinMode(pinA2,INPUT);
   pinMode(pinA3,INPUT);
-
-   DBGLEDOFF();
+    
    ShutDownADC();
 }
 
@@ -112,6 +107,7 @@ void MeasureSensor()
  } else{
     lightOn--;
  }
+ idx1=fusesOn;
  fusesOn=0;
  if (lightOn<1){
     lightOn=0;
@@ -156,17 +152,14 @@ void DataSensor(IMFrame &frame)
 
 
 //        DBGINFO(ex);
-   current++;
 
   
    data->w[5]=0xACAC;
-   data->w[4]=idx3;
-   data->w[3]=idx2;
    data->w[2]=idx1;
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
 
-
+   idx1=0;
   if (cpuVinCycle % 18==2){
       MeasureVCC();
   }

@@ -19,15 +19,20 @@
 #define pinA1 A0
 #define pinA2 A1
 #define pinA3 A2
+#define pinA4 A3
 #define pinVAD A5
 #define FPC1 0
 #define FPC2 1
 #define FPC3 2
-#define fpCount 20
+#define FPC4 3
+#define fpCount 40
+#define fpDiv 20;
+#define maxCount 45
 
-uint16_t Measure1[25];
-uint16_t Measure2[25];
-uint16_t Measure3[25];
+int16_t Measure1[maxCount];
+int16_t Measure2[maxCount];
+int16_t Measure3[maxCount];
+int16_t Measure4[maxCount];
 uint16_t current;
 
 
@@ -36,17 +41,15 @@ uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 volatile uint16_t adcReading;
 volatile boolean adcDone;
-uint16_t idx1,idx2,idx3;
+uint16_t idx1,idx2,idx3,idx4;
 uint16_t thresholdFuse;
-uint16_t maskFuse;
-uint16_t currentFuse;
+byte maskFuse;
+byte currentFuse;
+byte stepFuse;
 #define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
 #define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
-// disassembly
-// http://rcarduino.blogspot.com/2012/09/how-to-view-arduino-assembly.html
 
-// ADC complete ISR
 ISR (ADC_vect)
   {
      uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH
@@ -54,24 +57,17 @@ ISR (ADC_vect)
 //  ADCSRA |= (1 << ADIF);     // Clear ADIF
   adcReading = (high<<8) | low;
   adcDone = true;
-}  // end of ADC_vect
+}  
 
 
-
-int rawAnalog( byte aPC )
+uint16_t rawAnalogOne( byte aPC )
 {
-  adcReading=3;
-//  https://forum.arduino.cc/index.php?topic=45949.0
- // Generate an interrupt when the conversion is finished
- ADCSRA |= _BV( ADIE );
   ADMUX  =_BV(REFS0)|aPC;  // Charge S/H cap from Analog0
-
- // Enable Noise Reduction Sleep Mode
- set_sleep_mode( SLEEP_MODE_ADC );
+ delayMicroseconds(5);
+ ADCSRA |= _BV( ADIE );
+ 
  sleep_enable();
 
- // Any interrupt will wake the processor including the millis interrupt so we have to...
- // Loop until the conversion is finished
  do
  {
    // The following line of code is only important on the second pass.  For the first pass it has no effect.
@@ -98,50 +94,123 @@ int rawAnalog( byte aPC )
  return( adcReading );
 }
 
+uint16_t rawAnalog(byte aPC){
+  adcReading=3;
+ // Enable Noise Reduction Sleep Mode
+  set_sleep_mode( SLEEP_MODE_ADC );
+  return rawAnalogOne(aPC);
+}
+
+uint16_t rawAnalogDuo(byte aPC1,byte aPC2){
+  adcReading=3;
+ // Enable Noise Reduction Sleep Mode
+  set_sleep_mode( SLEEP_MODE_ADC );
+  int x1= rawAnalogOne(aPC1);
+  int x2= rawAnalogOne(aPC2);
+  x1-=x2;
+ // x1*=x1;
+  return abs(x1);
+}
+
+
 
 void InitSensor(){
-  maskFuse=7;
+  maskFuse=3;
   thresholdFuse=100;
 }
+
+void Compute(){
+  long xSum1=0;
+  long xSum2=0;
+  long xSum3=0;
+  long xSum4=0;
+  byte xLast =0;
+  for (int8_t i=fpCount; i>=0; i--)
+  {
+     xSum1+=Measure1[i];
+     xSum2+=Measure2[i];
+     xSum3+=Measure3[i];
+     xSum4+=Measure4[i];
+//     if(x>adcHigh) adcHigh=x;
+//     if (x<adcLow) adcLow=x;
+   //   xSum+=x;
+//      long y=x-adcMedium;
+//         xx+=(y*y);
+      xLast++;
+   }
+  idx1=xSum1/fpDiv;
+  idx2=xSum2/fpDiv;
+  idx3=xSum3/fpCount;
+  idx4=xSum4/fpCount;
+  if (xSum1>200000L) idx1=0x6666; 
+  if (xSum2>200000L) idx2=0x6666; 
+  if (xSum3>200000L) idx3=0x6666; 
+  if (xSum4>200000L) idx4=0x6666; 
+  uint16_t cFuse=0;
+  if (idx1>thresholdFuse) cFuse|=0x1;
+  if (idx2>thresholdFuse) cFuse|=0x2;
+ // if (idx3>thresholdFuse) cFuse|=0x4;
+  if (cFuse>0){
+      if (currentFuse!=cFuse){
+         currentFuse=cFuse;
+         stepFuse=4;
+      }
+     ADCVHIGH();
+  } else{
+      if (stepFuse>0){  
+     
+        ADCVHIGH();
+        stepFuse--;
+        return;   
+      }
+      currentFuse=cFuse;
+  }  
+}  
 
 void SetupSensor()
 {
   DBGLEDON();
+     ADCVHIGH();
   delay(100);
+     ADCVLOW();
   SetupADC();
 
 
   pinMode(pinA1,INPUT);
-  current=0;
-    //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
+  pinMode(pinA2,INPUT);
+  pinMode(pinA3,INPUT);
+  pinMode(pinA4,INPUT);
 
    DBGLEDOFF();
    ShutDownADC();
-   InitSensor;
+   InitSensor();
 }
 
 void MeasureSensor()
 { 
   //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
- power_adc_enable(); // ADC converter
+  power_adc_enable(); // ADC converter
   SetupADC();
     ACSR=48;
  //  ADCSRA  =_BV(ADEN)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // Enable ADC, Set prescaler to 128
-  ADCSRB=0;
- ADCSRA = 0b11000101; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
+  ADCSRB=0; 
+  ADCSRA = 0b11000101; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
 //  ADMUX  =_BV(REFS0)|FPC0;  // Charge S/H cap from Analog0
- DIDR0 = 0x00;
- delayMicroseconds(12);
+  DIDR0 = 0x00;
+  setSleepModeT2();
+  delayT2();
   
  //  delaySleepT2(1);
 //   delaySleepT2(1);
-  ADCVHIGH();
+   ADCVHIGH();
    for (int8_t i=fpCount; i>=0; i--)  //41cycles ~ 40ms
   {
  //  DBGPINHIGH();
-   Measure1[i]=rawAnalog(FPC1);
-   Measure2[i]=rawAnalog(FPC2);
-   Measure3[i]=rawAnalog(FPC3);
+   Measure4[i]=rawAnalog(FPC1);
+   Measure1[i]=rawAnalogDuo(FPC1,FPC2);
+   Measure2[i]=rawAnalogDuo(FPC1,FPC3);
+   Measure3[i]=rawAnalog(FPC2);
+  // Measure3[i]=rawAnalog(FPC3);
  //   DBGPINLOW();
    setSleepModeT2();
    delayT2();
@@ -150,6 +219,7 @@ void MeasureSensor()
   ADCVLOW();
     setSleepModeT2();
     ShutDownADC();
+   Compute();
 }
 
 
@@ -165,39 +235,12 @@ void MeasureVCC(){
 
 void DataSensor(IMFrame &frame)
 {
-  long xSum1=0;
-  long xSum2=0;
-  long xSum3=0;
-  byte xLast =0;
-  for (int8_t i=fpCount; i>=0; i--)
-  {
-     xSum1+=Measure1[i];
-     xSum2+=Measure2[i];
-     xSum3+=Measure3[i];
-//     if(x>adcHigh) adcHigh=x;
-//     if (x<adcLow) adcLow=x;
-   //   xSum+=x;
-//      long y=x-adcMedium;
-//         xx+=(y*y);
-      xLast++;
-   }
-  idx1=xSum1/fpCount;
-  idx2=xSum2/fpCount;
-  idx3=xSum3/fpCount;
-  currentFuse=0;
-  if (idx1>thresholdFuse) currentFuse|=0x1;
-  if (idx2>thresholdFuse) currentFuse|=0x2;
-  if (idx3>thresholdFuse) currentFuse|=0x4;
-  
    IMFrameData *data =frame.Data();
-
-
-   xLast+=10;
-  
    data->w[5]=0xADAD;
    data->w[6]=idx1;
    data->w[7]=idx2;
    data->w[8]=idx3;
+   data->w[9]=idx4;
    data->w[3]=maskFuse;
    data->w[2]=currentFuse;
    data->w[1]=cpuTemp;

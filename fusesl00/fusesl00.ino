@@ -6,10 +6,10 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x440013  // My MAC
+#define MMAC 0x440017  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x44     //Type of device
-#define MCHANNEL 3
+#define MCHANNEL 2
 
 /************************* Module specyfic functions **********************/
 
@@ -41,7 +41,6 @@ void SendData()
          static IMFrame frame;
         frame.Reset();
         DataSensor(frame);
-        DBGINFO("SendData ");
         trx.Wakeup();
         trx.SendData(frame);
         trx.Transmit();
@@ -165,6 +164,7 @@ void setup()
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.myDevice=MDEVICE;
+  trx.NoConnection=true;
   trx.Init(buffer);
 //  trx.setTimerFunction(&StepData);
   

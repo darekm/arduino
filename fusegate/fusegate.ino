@@ -6,7 +6,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x540001  // My MAC
+#define MMAC 0x540003  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x54     //Type of device
 #define MCHANNEL 2
@@ -65,7 +65,7 @@ void ReceiveData()
              }
            }
          }
-  digitalWrite(LEDB3, LOW);
+ // digitalWrite(LEDB1, LOW);
     //    if (trx.Parse())
         }
 }

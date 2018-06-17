@@ -64,7 +64,7 @@ byte findTable(IMMAC mac){
 }
 
 void LightOn(){
-   digitalWrite(LEDB1,HIGH);
+   digitalWrite(LEDB3,HIGH);
    fusesOn++;
 };
 
@@ -78,13 +78,15 @@ void SetupSensor()
  // if (funtest()>0){
   digitalWrite(LEDB1, HIGH);
   digitalWrite(LEDB3, HIGH);
-  delay(300);
+  delay(100);
    digitalWrite(LEDB3, LOW);
   delay(200);
    digitalWrite(LEDB3, HIGH);
-  delay(300);
+  delay(200);
    digitalWrite(LEDB3, LOW);
-  delay(600);
+  delay(200);
+   digitalWrite(LEDB3, HIGH);
+  delay(200);
  digitalWrite(LEDB1, LOW);
   digitalWrite(LEDB3, LOW);
  
@@ -103,7 +105,7 @@ void SetupSensor()
 void MeasureSensor()
 {
  if (fusesOn) {
-    lightOn=10;
+    lightOn=3;
  } else{
     lightOn--;
  }
@@ -111,7 +113,7 @@ void MeasureSensor()
  fusesOn=0;
  if (lightOn<1){
     lightOn=0;
-    digitalWrite(LEDB1,LOW);
+    digitalWrite(LEDB3,LOW);
  }
 }
 
@@ -129,21 +131,22 @@ void MeasureVCC(){
 bool ParseSensor(IMFrame &frame){
   digitalWrite(LEDB3, HIGH);
   IMFrameData *data =frame.Data();
-  byte ii=findTable(data->w[6]);
+  byte ii=findTable(data->w[9]);
   macCycle[ii]=trx.timer.Cycle();
-  if (data->w[2]!=data->w[3]){
+  if (lightOn==0){
+    digitalWrite(LEDB3, LOW);
+  }  
+ // if (data->w[2]!=data->w[3]){
+  if (data->w[2]!=0){
     LightOn();
 
   }
   macFuse[ii]=data->w[2];
-
+  return true;
 }
 void DataSensor(IMFrame &frame)
 {
-  long xSum1=0;
-  long xSum2=0;
-  long xSum3=0;
-  byte xLast =0;
+  
    
    // adcMedium=(adcMedium *9 +xSum/81)/10;
 

@@ -1,4 +1,3 @@
-
 #include <imframe.h>
 #include <imatmega.h>
 #include <EEPROM.h>
@@ -6,7 +5,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x440017  // My MAC
+#define MMAC 0x440019  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x44     //Type of device
 #define MCHANNEL 2
@@ -37,14 +36,14 @@ void PrepareData()
 void SendData()
 {
       if (trx.CycleData()) {
-  DBGLEDON();
+ // DBGLEDON();
          static IMFrame frame;
         frame.Reset();
         DataSensor(frame);
         trx.Wakeup();
-        trx.SendData(frame);
+        trx.SendMessage(frame);
         trx.Transmit();
-  DBGLEDOFF();
+//  DBGLEDOFF();
          }
 }
 
@@ -65,18 +64,6 @@ void ReceiveData()
 }
 
 
-void StepData(void){
-//  if ((millisTNow()-SwitchTime)>50 ){
- //   SwitchTime=millisTNow();
-//    DBGLEDON();
-//  LoopSensor();
- //   DBGLEDOFF();
- //   digitalWrite(DBGCLOCK,HIGH);
-//    digitalWrite(DBGCLOCK,LOW);
-//    digitalWrite(5,SWtoggle);
-//  } 
-
-} 
 
 void HourData()
 {
@@ -86,7 +73,7 @@ void HourData()
         DataSensor(frame);
         frame.Data()->w[1]=99;
         trx.Wakeup();
-        trx.SendData(frame);
+        trx.SendMessage(frame);
         trx.Transmit();
 }
 
@@ -107,7 +94,7 @@ void stageloop(byte stage)
   {
     case STARTBROADCAST: trx.Knock();    break;
     case STOPBROADCAST:       trx.StopListenBroadcast();PrepareData();    break;
-    case STARTDATA: SendData();  /*SendDataFlood();*/break;
+    case STARTDATA: SendData();  break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
@@ -119,8 +106,6 @@ void stageloop(byte stage)
        ReceiveData();break;
      }
     case IMTimer::PERIOD : 
-  //      ERRFLASH();
-  //     PrintStatus();
     break;
     default:
     break;
@@ -144,14 +129,13 @@ void setup()
   digitalWrite(10,HIGH);
   DBGPINHIGH();
   DBGPINLOW();
-//  pinMode(DBGLED,OUTPUT);
   INITDBG();
   setupTimer2();
   power_timer0_enable();
   SetupADC();
   wdt_enable(WDTO_8S);
   interrupts();
-  delay(100);
+  delay(500);
 // ShutOffADC();
  
 //  power_timer0_enable();
@@ -166,7 +150,7 @@ void setup()
   trx.myDevice=MDEVICE;
   trx.NoConnection=true;
   trx.Init(buffer);
-//  trx.setTimerFunction(&StepData);
+
   
   power_timer0_disable();
   setupTimer2();
@@ -175,7 +159,6 @@ void setup()
 void loop()
 {
   wdt_reset();
-//  SwitchTime=millisTNow();
   byte xstage;
   do{
      xstage=trx.timer.WaitStage();

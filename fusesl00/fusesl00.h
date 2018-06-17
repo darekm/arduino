@@ -1,6 +1,6 @@
 // 
 //    FILE:
-// VERSION: 0.1.00
+// VERSION: 0.2.00
 // PURPOSE: blow fuse monitoring
 //
 //
@@ -20,13 +20,17 @@
 #define pinA2 A1
 #define pinA3 A2
 #define pinA4 A3
+#define pinA5 A4
+#define pinA6 A5
 #define pinVAD A5
 #define FPC1 0
 #define FPC2 1
 #define FPC3 2
 #define FPC4 3
+#define FPC5 4
+#define FPC6 5
 #define fpCount 40
-#define fpDiv 20;
+#define fpDiv 20
 #define maxCount 45
 
 int16_t Measure1[maxCount];
@@ -48,6 +52,8 @@ byte currentFuse;
 byte stepFuse;
 #define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
 #define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
+//#define ADCVHIGH()  DBGLEDON()
+//#define ADCVHIGH()  DBGLEDOFF()
 
 
 ISR (ADC_vect)
@@ -115,8 +121,8 @@ uint16_t rawAnalogDuo(byte aPC1,byte aPC2){
 
 
 void InitSensor(){
-  maskFuse=3;
-  thresholdFuse=100;
+  maskFuse=7;
+  thresholdFuse=50;
 }
 
 void Compute(){
@@ -140,7 +146,7 @@ void Compute(){
    }
   idx1=xSum1/fpDiv;
   idx2=xSum2/fpDiv;
-  idx3=xSum3/fpCount;
+  idx3=xSum3/fpDiv;
   idx4=xSum4/fpCount;
   if (xSum1>200000L) idx1=0x6666; 
   if (xSum2>200000L) idx2=0x6666; 
@@ -149,17 +155,21 @@ void Compute(){
   uint16_t cFuse=0;
   if (idx1>thresholdFuse) cFuse|=0x1;
   if (idx2>thresholdFuse) cFuse|=0x2;
- // if (idx3>thresholdFuse) cFuse|=0x4;
+  if (idx3>thresholdFuse) cFuse|=0x4;
   if (cFuse>0){
       if (currentFuse!=cFuse){
          currentFuse=cFuse;
          stepFuse=4;
       }
      ADCVHIGH();
+     DBGLEDON();
+
   } else{
       if (stepFuse>0){  
      
         ADCVHIGH();
+        DBGLEDON();
+
         stepFuse--;
         return;   
       }
@@ -172,6 +182,19 @@ void SetupSensor()
   DBGLEDON();
      ADCVHIGH();
   delay(100);
+  DBGLEDOFF();
+     ADCVLOW();
+  delay(100);
+  DBGLEDON();
+     ADCVHIGH();
+  delay(100);
+  DBGLEDOFF();
+     ADCVLOW();
+  delay(100);
+    DBGLEDON();
+
+     ADCVHIGH();
+  delay(100);
      ADCVLOW();
   SetupADC();
 
@@ -180,6 +203,8 @@ void SetupSensor()
   pinMode(pinA2,INPUT);
   pinMode(pinA3,INPUT);
   pinMode(pinA4,INPUT);
+  pinMode(pinA5,INPUT);
+  pinMode(pinA6,INPUT);
 
    DBGLEDOFF();
    ShutDownADC();
@@ -202,14 +227,16 @@ void MeasureSensor()
   
  //  delaySleepT2(1);
 //   delaySleepT2(1);
-   ADCVHIGH();
+  ADCVHIGH();
+  DBGLEDON();
    for (int8_t i=fpCount; i>=0; i--)  //41cycles ~ 40ms
   {
  //  DBGPINHIGH();
    Measure4[i]=rawAnalog(FPC1);
    Measure1[i]=rawAnalogDuo(FPC1,FPC2);
-   Measure2[i]=rawAnalogDuo(FPC1,FPC3);
-   Measure3[i]=rawAnalog(FPC2);
+   Measure2[i]=rawAnalogDuo(FPC3,FPC4);
+   Measure3[i]=rawAnalogDuo(FPC5,FPC6);
+   Measure4[i]=rawAnalog(FPC1);
   // Measure3[i]=rawAnalog(FPC3);
  //   DBGPINLOW();
    setSleepModeT2();
@@ -217,6 +244,7 @@ void MeasureSensor()
   // delaySleepT2(1);
    }
   ADCVLOW();
+  DBGLEDOFF();
     setSleepModeT2();
     ShutDownADC();
    Compute();
@@ -246,6 +274,9 @@ void DataSensor(IMFrame &frame)
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
 
+   data->w[10]=trx.myMAC >> 16;
+   data->w[9]=trx.myMAC;
+ //data->w[22]=trx.myMAC;
 
   if (cpuVinCycle % 18==2){
       MeasureVCC();

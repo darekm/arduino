@@ -33,11 +33,13 @@ uint16_t current;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
-uint16_t idx1=0;
 IMMAC macTable[macCount];
 long  macCycle[macCount];
 byte  macFuse[macCount];
-int fusesOn=0;
+uint16_t idx1=0;
+uint16_t idx2=0;
+byte fusesOn=0;
+byte fusesAll=0;
 int lightOn=0;
 
 void resetTable(){
@@ -63,13 +65,10 @@ byte findTable(IMMAC mac){
  return ii;
 }
 
-void LightOn(){
-   digitalWrite(LEDB3,HIGH);
-   fusesOn++;
-};
 
 void SetupSensor()
 {
+  resetTable();
  pinMode(LEDB1, OUTPUT);
  pinMode(LEDB3, OUTPUT);
 // analogWrite(9, 100);
@@ -102,15 +101,23 @@ void SetupSensor()
    ShutDownADC();
 }
 
+
+void LightOn(){
+   digitalWrite(LEDB3,HIGH);
+   fusesOn++;
+};
+
 void MeasureSensor()
 {
  if (fusesOn) {
-    lightOn=3;
+    lightOn=5;
  } else{
     lightOn--;
  }
+ idx2=fusesAll; 
  idx1=fusesOn;
  fusesOn=0;
+ fusesAll=0;
  if (lightOn<1){
     lightOn=0;
     digitalWrite(LEDB3,LOW);
@@ -131,34 +138,29 @@ void MeasureVCC(){
 bool ParseSensor(IMFrame &frame){
   digitalWrite(LEDB3, HIGH);
   IMFrameData *data =frame.Data();
-  byte ii=findTable(data->w[9]);
-  macCycle[ii]=trx.timer.Cycle();
+ // byte ii=findTable(data->w[9]);
+ // macCycle[ii]=trx.timer.Cycle();
   if (lightOn==0){
     digitalWrite(LEDB3, LOW);
   }  
+  fusesAll++;
  // if (data->w[2]!=data->w[3]){
   if (data->w[2]!=0){
     LightOn();
 
   }
-  macFuse[ii]=data->w[2];
+//  macFuse[ii]=data->w[2];
   return true;
 }
 void DataSensor(IMFrame &frame)
 {
-  
-   
-   // adcMedium=(adcMedium *9 +xSum/81)/10;
-
-
    IMFrameData *data =frame.Data();
 
-
-//        DBGINFO(ex);
-
-  
+ 
    data->w[5]=0xACAC;
    data->w[2]=idx1;
+   data->w[3]=idx2;
+   data->w[4]=lightOn;
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
 

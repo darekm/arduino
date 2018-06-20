@@ -26,8 +26,6 @@ int idx1;
 int idMax,idMin;
 int shift1;
 
-#define TPIN1 A1
-#define TPIN2 2
 
 #define LEDB1 6
 #define LEDB2 1
@@ -124,6 +122,8 @@ int  senseadctwice(void) {
       Float/ref  Analog0  = PC0
       Sense an  Analog1 = PC1
   */  
+
+// on knife TPC0=0  TPC1=1  
 #define TPC0 0
 #define TPC1 1
 
@@ -167,8 +167,9 @@ int  senseadctwice(void) {
   return (dat2-dat1)*10;
 }
 
-int sense(byte ADCChannel, int samples=80)
+int sense()
 {
+  byte samples=20;
  set_sleep_mode( SLEEP_MODE_ADC );
   ACSR=48;
   ADMUX  =_BV(REFS0)|0x0f;
@@ -176,13 +177,20 @@ int sense(byte ADCChannel, int samples=80)
   ADCSRB=0;
  ADCSRA = 0b11000101; // enable ADC (bit7), initialize ADC (bit6), no autotrigger (bit5), don't clear int-flag  (bit4), no interrupt (bit3), clock div by 16@16Mhz=1MHz (bit210) ADC should run at 50kHz to 200kHz, 1MHz gives decreased resolution
  	long _value = 0;
-	for(int _counter = 0; _counter < samples; _counter ++)
+	for(byte _counter = 0; _counter < samples; _counter ++)
 	{
-            _value+=senseadctwice();
+           setSleepModeT2();
+            delayT2();
+           set_sleep_mode( SLEEP_MODE_ADC );
+          senseadctwice();
+          delayMicroseconds(20);
+          _value+=senseadctwice();
             delayMicroseconds(20);
-
+           _value+=senseadctwice();
+      //      delayMicroseconds(20);
+ 
          }
-	return _value / samples;
+ 	return _value / (samples*10L);
 }
 
 
@@ -200,16 +208,16 @@ void SetupQtouch()
  DIDR0 = 0x00;
  //DBGLEDON();
   shift1=0;
-  sense(TPIN1);
+  sense();
   for (int i=0;i<4;i++){
   delay(200);
    // shift1+=touch.check(TPIN1);
 //   shift1+=martinread(TPIN1);
-  shift1+=sense(TPIN1);
+  shift1+=sense();
   }  
    shift1/=4;
    shift1-=10;
-   shift1=-200;   
+   shift1=-300;   
    cpuTemp=2;
    ShutDownADC();
    DBGLEDOFF();
@@ -221,7 +229,7 @@ void SetupQtouch()
 void LoopQtouch() {
  power_adc_enable(); // ADC converter
  
- idx1=sense(TPIN1)-shift1;
+ idx1=sense()-shift1;
  if (idMax<idx1)idMax=idx1;
  if (idMin>idx1)idMin=idx1;
  //int idx=sqrt32(idx1);

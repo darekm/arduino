@@ -161,8 +161,6 @@ bool ParseSensor(IMFrame &frame){
   IMFrameData *data =frame.Data();
  // byte ii=findTable(data->w[9]);
  // macCycle[ii]=trx.timer.Cycle();
-  if (lightOn==0){
-    digitalWrite(LEDB3, LOW);
   }  
   fusesAll++;
  // if (data->w[2]!=data->w[3]){

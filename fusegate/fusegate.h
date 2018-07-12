@@ -17,13 +17,15 @@
 
 
 #define pinA1 A0
-#define pinA2 A1
-#define pinA3 A2
-#define LEDB1 1
+//#define pinA2 A1
+//#define pinA3 A2
+#define LEDBG 5
 // LEDb1 1
-#define LEDB2 6
+#define LEDB1 0
+#define LEDB2 1
 // DBGCLOCK 6
-#define LEDB3 9
+#define LEDB3 2
+#define LEDBN 9
 
 #define macCount 15
 #define maximumDec 5
@@ -85,14 +87,15 @@ byte findTable(IMMAC mac){
 void SetupSensor()
 {
   resetTable();
- pinMode(LEDB1, OUTPUT);
+// pinMode(LEDB1, OUTPUT);
  pinMode(LEDB3, OUTPUT);
 // analogWrite(9, 100);
 //  analogWrite(LEDB1, 100);
 //  digitalWrite(7, 100);
  // if (funtest()>0){
-  digitalWrite(LEDB1, HIGH);
+  digitalWrite(LEDBG, HIGH);
   digitalWrite(LEDB3, HIGH);
+  digitalWrite(LEDB1, HIGH);
   delay(100);
    digitalWrite(LEDB3, LOW);
   delay(200);
@@ -102,8 +105,9 @@ void SetupSensor()
   delay(200);
    digitalWrite(LEDB3, HIGH);
   delay(200);
- digitalWrite(LEDB1, LOW);
+ digitalWrite(LEDBG, LOW);
   digitalWrite(LEDB3, LOW);
+  digitalWrite(LEDB1, HIGH);
  
 
   delay(300);
@@ -113,8 +117,19 @@ void SetupSensor()
 
 
 void LightOn(){
+  if (lastFuse>0){
    digitalWrite(LEDB3,HIGH);
+   digitalWrite(LEDB2,HIGH);
+   digitalWrite(LEDB1,HIGH);
+   digitalWrite(LEDBG,LOW);
    fusesOn++;
+   return;
+  }
+   digitalWrite(LEDB3,LOW);
+   digitalWrite(LEDB2,LOW);
+   digitalWrite(LEDB1,LOW);
+   digitalWrite(LEDBG,HIGH);
+  
 };
 
 void MeasureSensor()
@@ -151,7 +166,7 @@ void MeasureVCC(){
 }
 
 bool ParseSensor(IMFrame &frame){
-  digitalWrite(LEDB3, HIGH);
+  digitalWrite(LEDBN, HIGH);
   IMFrameData *data =frame.Data();
  // byte ii=findTable(data->w[9]);
  // macCycle[ii]=trx.timer.Cycle();
@@ -166,6 +181,7 @@ bool ParseSensor(IMFrame &frame){
     LightOn();
   }
 //  macFuse[ii]=data->w[2];
+  digitalWrite(LEDBN, LOW);
   return true;
 }
 void DataSensor(IMFrame &frame)
@@ -179,7 +195,7 @@ void DataSensor(IMFrame &frame)
    data->w[4]=lightOn;
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
-
+   data->w[7]=lastMacBlown;
    idx1=0;
   if (cpuVinCycle % 18==2){
       MeasureVCC();

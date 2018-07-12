@@ -6,7 +6,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x540003  // My MAC
+#define MMAC 0x540005  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x54     //Type of device
 #define MCHANNEL 2
@@ -42,7 +42,7 @@ void SendData()
         frame.Reset();
         DataSensor(frame);
         trx.Wakeup();
-        trx.SendData(frame);
+        trx.SendMessage(frame);
         trx.Transmit();
  // DBGLEDOFF();
          }

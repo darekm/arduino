@@ -106,15 +106,9 @@ void SetupSensor()
   digitalWrite(LEDB3, LOW);
  
 
-  delay(100);
-  SetupADC();
+  delay(300);
 
 
-  pinMode(pinA1,INPUT);
-  pinMode(pinA2,INPUT);
-  pinMode(pinA3,INPUT);
-    
-   ShutDownADC();
 }
 
 

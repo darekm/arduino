@@ -26,6 +26,7 @@
 #define LEDB3 9
 
 #define macCount 15
+#define maximumDec 5
 
 uint16_t current;
 
@@ -33,9 +34,12 @@ uint16_t current;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
+byte lastFuse=0;
 IMMAC macTable[macCount];
-long  macCycle[macCount];
+IMMAC lastMacBlown=0;
+uint16_t  macCycle[macCount];
 byte  macFuse[macCount];
+byte  macDec[macCount];
 uint16_t idx1=0;
 uint16_t idx2=0;
 byte fusesOn=0;
@@ -46,9 +50,20 @@ void resetTable(){
   for (byte i=0;i<macCount;i++){
     macTable[i]=0;
     macFuse[i]=0;
+    macDec[i]=0;
   }
 }
 
+bool decTable(){
+  bool bb=false;
+  for (byte i=0;i<macCount;i++){
+    if (macDec[i]>0){
+      macDec[i]--;
+      bb=true;
+    }
+  }
+  return bb;
+}
 byte findTable(IMMAC mac){
  byte ii=0;
 // long ic=mac
@@ -59,6 +74,7 @@ byte findTable(IMMAC mac){
     if (macCycle[i]==0){
       ii=i;
       macFuse[ii]=0;
+      macDec[ii]=2;
     }
  }
  macTable[ii]=mac;
@@ -118,10 +134,15 @@ void MeasureSensor()
  idx1=fusesOn;
  fusesOn=0;
  fusesAll=0;
+ if (decTable())
+     lightOn++;
  if (lightOn<1){
     lightOn=0;
-    digitalWrite(LEDB3,LOW);
+    lastFuse=0;
+    LightOn();
+//    digitalWrite(LEDB3,LOW);
  }
+ 
 }
 
 
@@ -146,8 +167,11 @@ bool ParseSensor(IMFrame &frame){
   fusesAll++;
  // if (data->w[2]!=data->w[3]){
   if (data->w[2]!=0){
+    
+    macDec[ii]=maximumDec;
+    lastMacBlown=data->w[9];
+    lastFuse=data->w[2];
     LightOn();
-
   }
 //  macFuse[ii]=data->w[2];
   return true;

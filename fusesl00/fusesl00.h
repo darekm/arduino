@@ -233,9 +233,12 @@ void MeasureSensor()
   {
  //  DBGPINHIGH();
    Measure4[i]=rawAnalog(FPC1);
-   Measure1[i]=rawAnalogDuo(FPC1,FPC2);
-   Measure2[i]=rawAnalogDuo(FPC3,FPC4);
-   Measure3[i]=rawAnalogDuo(FPC5,FPC6);
+   //Measure1[i]=rawAnalogDuo(FPC1,FPC2);
+   //Measure2[i]=rawAnalogDuo(FPC3,FPC4);
+   //Measure3[i]=rawAnalogDuo(FPC5,FPC6);
+   Measure1[i]=rawAnalogDuo(FPC1,FPC4);
+   Measure2[i]=rawAnalogDuo(FPC2,FPC5);
+   Measure3[i]=rawAnalogDuo(FPC3,FPC6);
    Measure4[i]=rawAnalog(FPC1);
   // Measure3[i]=rawAnalog(FPC3);
  //   DBGPINLOW();

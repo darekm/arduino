@@ -19,13 +19,14 @@
 #define pinA1 A0
 //#define pinA2 A1
 //#define pinA3 A2
-#define LEDBG 5
+#define LEDBG 6
 // LEDb1 1
-#define LEDB1 0
-#define LEDB2 1
+#define LEDB1 1
+#define LEDB2 2
 // DBGCLOCK 6
-#define LEDB3 2
+#define LEDB3 5
 #define LEDBN 9
+#define LEDRELAY 8
 
 #define macCount 15
 #define maximumDec 5
@@ -95,6 +96,7 @@ void SetupSensor()
  // if (funtest()>0){
   digitalWrite(LEDBG, HIGH);
   digitalWrite(LEDB3, HIGH);
+  digitalWrite(LEDB2, HIGH);
   digitalWrite(LEDB1, HIGH);
   delay(100);
    digitalWrite(LEDB3, LOW);
@@ -107,8 +109,23 @@ void SetupSensor()
   delay(200);
  digitalWrite(LEDBG, LOW);
   digitalWrite(LEDB3, LOW);
+  digitalWrite(LEDB2, HIGH);
   digitalWrite(LEDB1, HIGH);
- 
+  
+  
+ // pinMode(LEDRELAY, INPUT_PULLUP);
+ // digitalWrite(LEDRELAY, HIGH);
+ // delay(500);
+
+ // digitalWrite(LEDRELAY, LOW);
+
+ // delay(300);
+
+ // pinMode(LEDRELAY, INPUT_PULLUP);
+ // digitalWrite(LEDRELAY, HIGH);
+ // delay(500);
+
+ // digitalWrite(LEDRELAY, LOW);
 
   delay(300);
 
@@ -121,21 +138,29 @@ void LightOn(){
    digitalWrite(LEDB3,HIGH);
    digitalWrite(LEDB2,HIGH);
    digitalWrite(LEDB1,HIGH);
+ // pinMode(LEDRELAY, INPUT_PULLUP);
+   digitalWrite(LEDRELAY,HIGH);
    digitalWrite(LEDBG,LOW);
-   fusesOn++;
    return;
   }
    digitalWrite(LEDB3,LOW);
    digitalWrite(LEDB2,LOW);
    digitalWrite(LEDB1,LOW);
    digitalWrite(LEDBG,HIGH);
-  
+   digitalWrite(LEDRELAY,LOW);
+ 
 };
 
 void MeasureSensor()
 {
+ // lastFuse++;
+ // if (lastFuse>1)
+ //   lastFuse=0;
+ // LightOn();   
+ 
+   
  if (fusesOn) {
-    lightOn=5;
+    lightOn=3;
  } else{
     lightOn--;
  }
@@ -143,14 +168,15 @@ void MeasureSensor()
  idx1=fusesOn;
  fusesOn=0;
  fusesAll=0;
- if (decTable())
-     lightOn++;
+ //if (decTable())
+ //    lightOn++;
  if (lightOn<1){
     lightOn=0;
     lastFuse=0;
-    LightOn();
-//    digitalWrite(LEDB3,LOW);
  }
+ LightOn();
+//    digitalWrite(LEDB3,LOW);
+ 
  
 }
 
@@ -168,9 +194,8 @@ void MeasureVCC(){
 bool ParseSensor(IMFrame &frame){
   digitalWrite(LEDBN, HIGH);
   IMFrameData *data =frame.Data();
- // byte ii=findTable(data->w[9]);
- // macCycle[ii]=trx.timer.Cycle();
-  }  
+  byte ii=findTable(data->w[9]);
+  macCycle[ii]=trx.timer.Cycle();
   fusesAll++;
  // if (data->w[2]!=data->w[3]){
   if (data->w[2]!=0){
@@ -178,6 +203,7 @@ bool ParseSensor(IMFrame &frame){
     macDec[ii]=maximumDec;
     lastMacBlown=data->w[9];
     lastFuse=data->w[2];
+    fusesOn++;
     LightOn();
   }
 //  macFuse[ii]=data->w[2];
@@ -190,7 +216,8 @@ void DataSensor(IMFrame &frame)
 
  
    data->w[5]=0xACAC;
-   data->w[2]=idx1;
+   data->w[2]=0x0;//no false signal
+   data->w[6]=idx1;
    data->w[3]=idx2;
    data->w[4]=lightOn;
    data->w[1]=cpuTemp;

@@ -23,6 +23,8 @@
 #define pinA5 A4
 #define pinA6 A5
 #define pinVAD A5
+#define ledRED 0
+#define ledGREEN 1
 #define FPC1 0
 #define FPC2 1
 #define FPC3 2
@@ -50,10 +52,8 @@ uint16_t thresholdFuse;
 byte maskFuse;
 byte currentFuse;
 byte stepFuse;
-#define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
-#define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
-//#define ADCVHIGH()  DBGLEDON()
-//#define ADCVHIGH()  DBGLEDOFF()
+//#define ADCVHIGH() PORTD|=(B00100000);//digitalWrite(DBGPIN,HIGH)
+//#define ADCVLOW()  PORTD&=~(B00100000);//digitalWrite(DBGPIN,LOW)
 
 
 ISR (ADC_vect)
@@ -65,7 +65,14 @@ ISR (ADC_vect)
   adcDone = true;
 }  
 
-
+void ADCVHIGH(){
+  digitalWrite(ledRED,HIGH);
+  digitalWrite(ledGREEN,LOW);
+}
+void ADCVLOW(){
+  digitalWrite(ledRED,LOW);
+  digitalWrite(ledGREEN,HIGH);
+}
 uint16_t rawAnalogOne( byte aPC )
 {
   ADMUX  =_BV(REFS0)|aPC;  // Charge S/H cap from Analog0
@@ -161,8 +168,8 @@ void Compute(){
          currentFuse=cFuse;
          stepFuse=4;
       }
-     ADCVHIGH();
-     DBGLEDON();
+      ADCVHIGH();
+      DBGLEDON();
 
   } else{
       if (stepFuse>0){  
@@ -227,7 +234,7 @@ void MeasureSensor()
   
  //  delaySleepT2(1);
 //   delaySleepT2(1);
-  ADCVHIGH();
+//  ADCVHIGH();
   DBGLEDON();
    for (int8_t i=fpCount; i>=0; i--)  //41cycles ~ 40ms
   {

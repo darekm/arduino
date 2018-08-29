@@ -13,10 +13,10 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x240003  // My MAC
+#define MMAC 0x240005  // My MAC
 #define ServerMAC 0xA000  // Server  MAC
 #define MDEVICE 24     //Type of device
-#define MCHANNEL 2
+#define MCHANNEL 3
 
 
 /************************* Module specyfic functions **********************/
@@ -42,6 +42,7 @@ void PrepareData()
 
 void SendData()
 {
+  return;
       if (trx.CycleData()) {
      //   DBGPINHIGH();
         trx.Wakeup();

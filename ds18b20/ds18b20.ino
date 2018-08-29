@@ -11,9 +11,9 @@
 // Data wire is plugged into pin 2 on the Arduino
 #define ONE_WIRE_BUS 2
 #define MMAC 0x170000  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 7     //Type of device
-#define MCHANNEL 1
+#define ServerMAC 0xA0000  // Server  MAC
+#define MDEVICE 0x17     //Type of device
+#define MCHANNEL 3
 
 /************************* Module specyfic functions **********************/
 
@@ -40,21 +40,23 @@ void PrepareData()
 void SendData()
 {
       if (trx.CycleData()) {
-        trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
         DataDS18B20(frame);
         DBGINFO("SendData ");
+        trx.Wakeup();
         trx.SendData(frame);
         trx.Transmit();
       }
 }
 
-
+byte OrderData(uint16_t a){
+  DBGLEDON();
+  return 1;
+}  
 
 void ReceiveData()
 {
-  
       while (trx.GetData())
       {
         if (trx.Parse())
@@ -62,7 +64,6 @@ void ReceiveData()
           DBGINFO(" rxGET ");
         }
       }
-       DBGINFO("\r\n");
 }
 
 void PrintStatus()
@@ -83,7 +84,7 @@ void stageloop(byte stage)
   switch (stage)
   {
     case STARTBROADCAST: trx.Knock();      break;
-    case STOPBROADCAST:    PrepareData();    break;
+    case STOPBROADCAST:    trx.StopListenBroadcast();PrepareData();    break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
@@ -110,8 +111,11 @@ void stageloop(byte stage)
 void setup()
 {
   resetPin();
+    #ifdef DBGCLOCK
+
   pinMode(DBGCLOCK,OUTPUT);
   digitalWrite(DBGCLOCK ,HIGH);
+  #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   DBGPINHIGH();
@@ -123,16 +127,18 @@ void setup()
   SetupADC();
   wdt_enable(WDTO_8S);
   interrupts();
-  delay(300);
+  delay(200);
   IMMAC ad=SetupDS18B20();
    disableADCB();
 
   trx.myMAC=MMAC;
   trx.startMAC=0;
   trx.myMAC+=ad;
+  trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
-  trx.Init(buffer);
   trx.myDevice=MDEVICE;
+  trx.funOrder=&OrderData;
+  trx.Init(buffer);
 //  trx.timer.onStage=stageloop;
 //    pciSetup(9);
 #if DBGPIN>111
@@ -165,7 +171,6 @@ void setup()
     delay(200);
     DBGLEDON();
     delay(200);
-    DBGLEDOFF();
     reboot();
 
   }

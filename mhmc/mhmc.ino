@@ -12,9 +12,10 @@
 /******************************** Configuration *************************************/
 
 
-#define MMAC 0x230003  // My MAC
-#define ServerMAC 0xA000  // Server  MAC
-#define MDEVICE 23     //Type of device
+#define MMAC 0x230005  // My MAC
+#define ServerMAC 0xA0000  // Server  MAC
+#define MDEVICE 0x23     //Type of device
+#define MCHANNEL 1
 
 /************************* Module specyfic functions **********************/
 
@@ -27,32 +28,26 @@
 Transceiver trx;
 IMBuffer    buffer;
 
-#define pinLED 9
+
 void PrepareData()
 {
        if (trx.CycleData())
       {
-        digitalWrite(pinLED,HIGH);
-//  DBGPINHIGH();
-  PrepareMHMC();
-    digitalWrite(pinLED,LOW);
-//  DBGPINLOW();
-      }
-   
+        DBGLEDON();
+        PrepareMHMC();
+        DBGLEDOFF();
+      }   
 }  
 
 void SendData()
 {
       if (trx.CycleData()) {
-        DBGPINHIGH();
-        trx.Wakeup();
         static IMFrame frame;
         frame.Reset();
         DataMHMC(frame);
-        DBGPINLOW();
-        DBGINFO("SendData ");
+        trx.Wakeup();
         trx.SendData(frame);
-         trx.Transmit();
+        trx.Transmit();
        }
  }
 
@@ -67,7 +62,6 @@ void ReceiveData()
           DBGINFO(" rxGET ");
         }
       }
-     DBGINFO("\r\n");
 }
 
 
@@ -80,13 +74,13 @@ void stageloop(byte stage)
 //  }
   switch (stage)
   {
-    case STARTBROADCAST:  trx.ListenBroadcast();   PrepareData();  break;
-    case STOPBROADCAST:  trx.Knock();     break;
+    case STARTBROADCAST:  trx.Knock();    break;
+    case STOPBROADCAST:  trx.StopListenBroadcast();PrepareData();     break;
     case STARTDATA: SendData();  /*SendDataFlood();*/break;
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
-    case CRONHOUR : delaySleepT2(10000);break;
+  //  case CRONHOUR : delaySleepT2(1000);break;
     case IMTimer::IDDLESTAGE : {
 
        DBGINFO("***IDDLE DATA");
@@ -113,22 +107,20 @@ void setup()
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   pinMode(DBGPIN ,OUTPUT);
-  DBGPINHIGH();
-  DBGPINLOW();
-  wdt_disable();
   INITDBG();
   DBGINFO(F("*****start"));
-  ERRLEDINIT();   ERRLEDOFF();
   setupTimer2();
   power_timer0_enable();
-  SetupADC();
+  DBGLEDON();
   interrupts();
-  delay(1000);
+  delay(300);
+  DBGLEDOFF();
    wdt_enable(WDTO_8S);
 //   disableADCB();
 // SetupMHMC();
 
   trx.myMAC=MMAC;
+  trx.myChannel=MCHANNEL;
  
   trx.Init(buffer);
   trx.myDevice=MDEVICE;

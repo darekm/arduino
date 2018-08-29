@@ -36,17 +36,10 @@ void SetupMAX6675()
   pinMode(vccPin, OUTPUT); 
    digitalWrite(vccPin, LOW);
    thermo.restart();
- //scale.begin(A4, A5,128);
 }
 
 void PrepareMAX6675()
 {
- // SetupADC();
- //   power_adc_enable(); // ADC converter
- //   ACSR = 48;                        // disable A/D comparator
- //   ADCSRA = (1<<ADEN)+7;                     // ADPS2, ADPS1 and ADPS0 prescaler
-//    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
- //   DIDR1 = 0x00;       
   digitalWrite(thermoCS,HIGH);
   digitalWrite(vccPin, HIGH);
   digitalWrite(thermoCLK, HIGH);
@@ -67,7 +60,6 @@ void DataMAX6675(IMFrame &frame)
  
     ShutOffADC();
   }
- // pinMode(A4, INPUT);
    cpuVinCycle++;
   
    IMFrameData *data =frame.Data();
@@ -81,6 +73,8 @@ void DataMAX6675(IMFrame &frame)
  //  Vin=internalVcc();
    data->w[0]=cpuVin;
    data->w[1]=cpuTemp;
+     data->w[10]=0xA33A;
+
      digitalWrite(vccPin, LOW);
      digitalWrite(thermoCS,LOW);
      digitalWrite(thermoCLK,LOW);

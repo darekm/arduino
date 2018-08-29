@@ -171,7 +171,7 @@ bool computeHeartRate(uint16_t currHR){
 
 
 void interruptMax(){//interrupt function
-DBGPINHIGH();
+//DBGPINHIGH();
   
 //  pointer=2;
   IMTimer::doneMeasure();
@@ -218,19 +218,34 @@ void whatNext(){ //modes of working
 
 void SendDataAll()
 {
-        //DBGLEDON();
+//        DBGLEDON();
         static IMFrame frame;
         frame.Reset();
         IMFrameData *data =frame.Data();
-    for(byte i=0;i<15;i++){
-      frame.Body[i+7]=ValueStep[i];
+        uint16_t xl=sensor.dataContainer[0];
+        uint16_t xm;
+        data->w[1]=xl;
+    for(byte i=1;i<15;i++){
+//      frame.Body[i+7]=ValueStep[i];
+        xm=sensor.dataContainer[i]; 
+        int8_t tt=xl-xm;
+        frame.Body[i+7]=(uint8_t)tt;
+        xl=xm;
     }
-    int8_t xx,x2;
+    
   //  xx=sensor.dataContainer[2]-sensor.dataContainer[1];
  //   x2=sensor.dataContainer[3]-sensor.dataContainer[2];
     data->w[2]=heartRate;
 //           DBGLEDOFF();
+           DBGLEDON();
+  trx.Wakeup();
+          trx.SendData(frame);
          trx.SendData(frame);
+         trx.SendData(frame);
+          //
+         
+         
+          DBGLEDOFF();
 }
 
 void SetupMAX30100()
@@ -252,6 +267,7 @@ void SetupMAX30100()
 void computeMeasure(){
   //         DBGLEDON();
     for(int i=0;i<15;i++){
+  // DBGPINLOW();
       dataIndex++;
       stepIndex++;
       stepIndex%=StepSize;
@@ -263,36 +279,52 @@ void computeMeasure(){
       ValueStep[i]=(uint8_t)ss;
       int cross=crossStep(20);
       if ((cross==100)) {
-           DBGLEDON();
+//           DBGLEDON();
            computeHeartRate(dataIndex);  
-           DBGLEDOFF();
+//           DBGLEDOFF();
         }
      //   else
     //       DBGLEDOFF();
            
+//   DBGPINHIGH();
         
      // computeStep();
       
      // average= average*0.99+sensor.dataContainer[i]*0.01;
      
     }
+    
+    
       //    DBGLEDOFF();
      
-//    SendDataAll();
+    SendDataAll();
+//      DBGPINLOW();
+
 }
 
 
 void MeasureMAX30100()
 {
-     power_twi_enable(); 
- //DBGLEDON();
+  DBGPINHIGH();
+  //DBGPINLOW();
+     power_twi_enable();
+ //   DBGPINHIGH(); 
  sensor.clearInt();
+// DBGPINLOW();
+// DBGPINHIGH();
     sensor.readFullFIFO();
+//    sensor.clearInt();
+    sensor.clearFIFO();
+
+//    DBGPINHIGH();
+  //  DBGPINLOW();
+  //   DBGPINHIGH();
+
 //    SendDataAll();
-    computeMeasure();
-   // SendDataAll();
+    //computeMeasure();
+    SendDataAll();
     was=1;
- //   DBGLEDOFF();
+   //   DBGPINLOW();
     
 }    
 
@@ -313,9 +345,11 @@ void PrepareMAX30100()
          power_twi_enable(); 
  //DBGLEDON();
  if (was ==0) {
+    DBGLEDON();
     sensor.clearInt();
     sensor.readFullFIFO();
-    computeMeasure();
+   // computeMeasure();
+    DBGLEDOFF();
  }   
 // DBGLEDOFF();
  
@@ -324,7 +358,7 @@ void PrepareMAX30100()
 
 
 void DataMAX30100(IMFrame &frame)
-{   
+{  
   if (cpuVinCycle % 8==0){
     
     SetupADC();

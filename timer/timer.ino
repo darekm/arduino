@@ -100,28 +100,21 @@ void PrintStatus()
 
 void setup()
 {
-  for (byte i=0; i<20; i++) {    //make all pins inputs with pullups enabled
-        pinMode(i, INPUT_PULLUP);
-   }
-
+  resetPin();
   pinMode(DBGPIN,OUTPUT);
   pinMode(DBGCLOCK,OUTPUT);
-  wdt_disable();
   INITDBG();
  // digitalWrite(DBGPIN,HIGH);
-  DBGINFO("SETUP");
-
-  DBGINFO("_");
  // setupTimer2();
-  digitalWrite(DBGPIN,HIGH);
+ // digitalWrite(DBGPIN,HIGH);
   DBGINFO("TCCR2A_") ; DBGINFO(TCCR2A);
   DBGINFO("TCCR2B_") ; DBGINFO(TCCR2B);
   DBGINFO("TIMSK2_") ; DBGINFO(TIMSK2);
-  ERRLEDINIT();
-  ERRLEDOFF();
+  DBGLEDON();
   //  wdt_enable(WDTO_8S);
   disableADCB();
   power_timer0_disable();
+  power_spi_disable();
   DBGPINLOW();
    interrupts ();
   timer.Setup(STARTBROADCAST,BroadcastDelay);
@@ -165,10 +158,8 @@ void loop()
 //  PrintStatus();
 //  delay(300);
 //  DBGINFO("\r\n");
-  DBGINFO("\r\nLOOP");
-  DBGINFO(incTimer2());
-  DBGINFO(millisT2());
-    
+ DBGLEDON();
+DBGLEDOFF(); 
   byte xstage;
   do{
      DBGPINLOW();

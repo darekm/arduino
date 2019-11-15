@@ -22,7 +22,7 @@
 uint16_t Measure[85];
 uint16_t current;
 
-
+uint16_t xcount;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
@@ -115,13 +115,14 @@ void SetupACS720()
 
 void MeasureACS720()
 { 
-     //  ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
 //TWCR=0;
-  SetupADC();
+  SetupADC();//ADMUX after setupADC
+       ADMUX  =  (1<< REFS0) | (0<<REFS1)| (4);    // AVcc and select input port
 // power_adc_enable();
   ADCVHIGH();
    delaySleepT2(1);
    delaySleepT2(1);
+   xcount=0;
    for (int8_t i=80; i>=0; i--)  //41cycles ~ 40ms
   {
  //  DBGPINHIGH();
@@ -129,6 +130,7 @@ void MeasureACS720()
  //   DBGPINLOW();
    setSleepModeT2();
    delayT2();
+   xcount++;
   // delaySleepT2(1);
    }
   ADCVLOW();
@@ -145,7 +147,7 @@ void DataACS720(IMFrame &frame)
   long xSum=0;
   byte xLast =0;
   unsigned long xx=0;
-  adcLow=90000;
+  adcLow=60000;
   adcHigh=0;
   for (int8_t i=80; i>=0; i--)
   {
@@ -183,6 +185,7 @@ void DataACS720(IMFrame &frame)
    current++;
    xLast+=10;
 //   ShutOffADC();
+   data->w[8]=xcount;
    data->w[7]=xx;
    data->w[6]=xSum;
    data->w[5]=adcHigh;

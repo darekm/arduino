@@ -23,7 +23,7 @@
 
 #define MMAC 0x220032 // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
-#define MDEVICE 22     //Type of device
+#define MDEVICE 0x22     //Type of device
 #define MCHANNEL 1
 
 
@@ -155,6 +155,7 @@ void setup()
   trx.myMAC=MMAC;
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
+  trx.myDevice=MDEVICE;
          SetupACS720();
 //  trx.NoRadio=true;
   trx.Init(buf3);

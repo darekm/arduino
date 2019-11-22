@@ -32,8 +32,8 @@ uint16_t cpuVinCycle=1;
 
 uint16_t SetupSHT31()
 {
-   ShutOffADC(); 
-  power_usart0_disable();
+ //  ShutOffADC(); 
+ // power_usart0_disable();
 //  pinMode(ONE_WIRE_BUS,INPUT_PULLUP);
 power_twi_enable();//
 power_adc_disable();
@@ -41,10 +41,12 @@ power_timer1_disable();
 ACSR=0;
   // ADCSRA = 0;                        // disable A/D comparator
    DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
-  sensor.begin(SHT31_ADDR);
+   sensor.begin(SHT31_ADDR);
+     DBGLEDON();
+   delaySleepT2(20);
   
-  
-  return  sensor.readStatus();
+   return  sensor.readStatus();
+      DBGLEDON();
  
 }
 
@@ -52,7 +54,8 @@ void PrepareSHT31()
 {
   power_twi_enable();
   ACSR=0;
- // power_adc_enable();
+ DIDR0 = 0x00;                           // disable all A/D inputs (ADC0-ADC5)
+   // power_adc_enable();
   sensor.start();
 }  
 

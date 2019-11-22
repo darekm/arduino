@@ -7,9 +7,8 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define REQUIRESALARMS 0
 // Data wire is plugged into pin 2 on the Arduino
-#define MMAC 0x260005  // My MAC
+#define MMAC 0x260010  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x26     //Type of device
 #define MCHANNEL 1
@@ -117,10 +116,12 @@ void setup()
   INITDBG();
   setupTimer2();
   power_timer0_enable();
-  SetupADC();
-  wdt_enable(WDTO_8S);
+//  SetupADC();
+      DBGLEDON();
+    wdt_enable(WDTO_8S);
   interrupts();
-  delay(300);
+  delay(200);
+        DBGLEDOFF();
    disableADCB();
   uint16_t ad=SetupSHT31();
 
@@ -137,7 +138,7 @@ void setup()
   if (ad==0){
       for(int i=0;i<100000;i++){
         DBGPINHIGH();
-        delaySleepT2(10);
+        delaySleepT2(3);
         DBGPINLOW();
         delaySleepT2(1);
          
@@ -149,12 +150,16 @@ void setup()
 #if DBGLED>=1
   if (ad!=0xFFFF){
     DBGLEDON();
-    delaySleepT2(300);
+    delaySleepT2(200);
+    DBGLEDOFF();
+    delaySleepT2(30);
+    DBGLEDON();
+    delaySleepT2(60);
     DBGLEDOFF();
     DBGINFO(F("TEMPERARUEEE\r\n"));
    } else{
     DBGLEDON();
-    delay(200);
+    delay(20);
     DBGLEDOFF();
     delay(200);
     DBGLEDON();

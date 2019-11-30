@@ -8,10 +8,10 @@
 
 /******************************** Configuration *************************************/
 // Data wire is plugged into pin 2 on the Arduino
-#define MMAC 0x260010  // My MAC
+#define MMAC 0x260007  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x26     //Type of device
-#define MCHANNEL 1
+#define MCHANNEL 3
 
 /************************* Module specyfic functions **********************/
 
@@ -168,7 +168,7 @@ void setup()
     delay(200);
     DBGLEDON();
     delay(200);
-//    DBGLEDOFF();
+    DBGLEDOFF();
     reboot();
 
   }

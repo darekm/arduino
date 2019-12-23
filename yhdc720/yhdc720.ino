@@ -23,7 +23,7 @@
 
 #define MMAC 0x240037 // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
-#define MDEVICE 0x24     //Type of device
+#define MDEVICE 0x2B     //Type of device
 #define MCHANNEL 1
 
 
@@ -53,6 +53,7 @@ IMBuffer    buffer;
 
 
 #define pinLED 9
+int StepInc;
 
 void PrepareData(){
       if (trx.CycleData())
@@ -61,7 +62,22 @@ void PrepareData(){
       }
 }
 
+void StepData(void){
+  StepInc++;
+  if (StepInc>256 ){
+    StepInc=0;
+   // SwitchTime=millisTNow();
+//    DBGLEDON();
+//  LoopQtouch();
+ //   DBGLEDOFF();
+    IMTimer::doneMeasure();
+     // SWtoggle = ~SWtoggle;
+ //   digitalWrite(DBGCLOCK,HIGH);
+//    digitalWrite(DBGCLOCK,LOW);
+//    digitalWrite(5,SWtoggle);
+  } 
 
+}    
 
 
 void SendData()
@@ -69,6 +85,7 @@ void SendData()
       if (trx.CycleData())
       {
         trx.Wakeup();
+        DBGLEDON();
 //        SetupADC();
         static IMFrame frame;
         frame.Reset();
@@ -81,6 +98,7 @@ void SendData()
         
         trx.SendData(frame);
         trx.Transmit();
+        DBGLEDOFF();
        }
 }
 
@@ -144,12 +162,13 @@ void setup()
   INITDBG();
   setupTimer2();
   power_timer0_enable();
-  SetupADC();
   wdt_enable(WDTO_8S);
+  SetupADC();
  //  setupTimer2();
    interrupts ();
    delay(200);
    disableADCB();
+  wdt_enable(WDTO_8S);
   
  // trx.startMAC=MMAC;
   trx.myMAC=MMAC;
@@ -160,6 +179,7 @@ void setup()
 //  trx.NoRadio=true;
   trx.Init(buffer);
   trx.myDevice=MDEVICE;
+//  trx.setTimerFunction(&StepData);
   #if DBGLED>=1
     DBGLEDON();
     delaySleepT2(300);

@@ -1,14 +1,14 @@
 // 
 //    FILE:
-// VERSION: 0.1.00
-// PURPOSE: acs720 logger  for current
+// VERSION: 0.2.00
+// PURPOSE:  logger  for current transformer
 //
 //
 // HISTORY:
 //
 
-#ifndef imACS720_h
-#define imACS720_h
+#ifndef imYHDC720_h
+#define imYHDC720_h
 
 
 #include "imframe.h"
@@ -16,10 +16,13 @@
 #include "imatmega.h"
 
 
-#define pinACS 0
+#define pinACS 4
 //#define pinVAD A5
 
 uint16_t Measure[85];
+uint16_t MeasureSUM[10];
+uint16_t MeasureSQR[10];
+uint16_t MeasureCycle;
 uint16_t current;
 
 uint16_t xcount;
@@ -35,7 +38,10 @@ long adcHigh;
 #define pinACS 0
 #define ADCVHIGH() do{}while(0) ;//digitalWrite(DBGPIN,HIGH)
 #define ADCVLOW()  do{}while(0) ;//digitalWrite(DBGPIN,LOW)
-#define setupREF (1<< REFS0) | (0<<REFS1)| (pinACS)
+//#define ADCVHIGH() PORTC|=(B00100000);//digitalWrite(DBGPIN,HIGH)
+//#define ADCVLOW()  PORTC&=~(B00100000);//digitalWrite(DBGPIN,LOW)
+ 
+#define setupREF (1<< REFS0) | (1<<REFS1)| (pinACS)
 
 // disassembly
 // http://rcarduino.blogspot.com/2012/09/how-to-view-arduino-assembly.html
@@ -103,6 +109,8 @@ void SetupACS720()
 
 //  digitalWrite(pinACS,HIGH);
   pinMode(A0,INPUT);  //pinACS
+ pinMode(A4,INPUT);  //pinACS
+ //pinMode(A5,OUTPUT);  //pinACS
 //  pinMode(pinVAD,OUTPUT);
 //  digitalWrite(pinACS,HIGH);
 //  digitalWrite(pinVAD,HIGH);
@@ -121,6 +129,7 @@ void MeasureACS720()
        ADMUX  =  setupREF;    // AVcc and select input port
 // power_adc_enable();
   ADCVHIGH();
+  MeasureCycle++;
    delaySleepT2(1);
    delaySleepT2(1);
    xcount=0;
@@ -189,15 +198,17 @@ void DataACS720(IMFrame &frame)
    data->w[8]=xcount;
    data->w[7]=xx;
    data->w[6]=xSum;
+   data->w[8]=MeasureCycle;
    data->w[5]=adcHigh;
-   data->w[4]=adcLow;
+  // data->w[4]=adcLow;
+   data->w[4]=setupREF;
    data->w[3]=adcMedium;
   // data->w[4]=trx.dataw3;
   // data->w[3]=trx.Deviation();
    data->w[2]=sqrt32(xx);
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
-
+   MeasureCycle=0;
   if ((cpuVinCycle % 8)==0){
     SetupADC();
     cpuVin=internalVcc();

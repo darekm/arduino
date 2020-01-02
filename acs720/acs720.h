@@ -60,6 +60,8 @@ int rawAnalog( void )
 
  // Enable Noise Reduction Sleep Mode
  set_sleep_mode( SLEEP_MODE_ADC );
+ waitASSR();
+
  sleep_enable();
 
  // Any interrupt will wake the processor including the millis interrupt so we have to...

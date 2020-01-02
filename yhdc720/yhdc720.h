@@ -29,11 +29,13 @@ uint16_t xcount;
 uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
+uint16_t adcTime;
 volatile uint16_t adcReading;
 volatile boolean adcDone;
 long adcMedium;
 long adcLow;
 long adcHigh;
+long adcSum;
 
 #define pinACS 0
 #define ADCVHIGH() do{}while(0) ;//digitalWrite(DBGPIN,HIGH)
@@ -67,6 +69,8 @@ int rawAnalog( void )
 
  // Enable Noise Reduction Sleep Mode
  set_sleep_mode( SLEEP_MODE_ADC );
+  waitASSR();
+  
  sleep_enable();
 
  // Any interrupt will wake the processor including the millis interrupt so we have to...
@@ -109,7 +113,7 @@ void SetupACS720()
 
 //  digitalWrite(pinACS,HIGH);
   pinMode(A0,INPUT);  //pinACS
- pinMode(A4,INPUT);  //pinACS
+ //pinMode(A4,INPUT);  //pinACS
  //pinMode(A5,OUTPUT);  //pinACS
 //  pinMode(pinVAD,OUTPUT);
 //  digitalWrite(pinACS,HIGH);
@@ -124,29 +128,37 @@ void SetupACS720()
 
 void MeasureACS720()
 { 
-//TWCR=0;
+ //TWCR=0;
   SetupADC();//ADMUX after setupADC
        ADMUX  =  setupREF;    // AVcc and select input port
 // power_adc_enable();
   ADCVHIGH();
+  long xSum=0;
   MeasureCycle++;
+    delaySleepT2(1);
    delaySleepT2(1);
-   delaySleepT2(1);
+  t_Time xstart = millisTNow();
    xcount=0;
-   for (int8_t i=80; i>=0; i--)  //41cycles ~ 40ms
+ // syncTimer2(-1);
+    for (int8_t i=80; i>=0; i--)  //41cycles ~ 40ms
   {
  //  DBGPINHIGH();
    Measure[i]=rawAnalog();
  //   DBGPINLOW();
    setSleepModeT2();
+   xSum+=Measure[i];
+ //  syncTimer2(-1);
    delayT2();
    xcount++;
   // delaySleepT2(1);
    }
+  adcMedium=xSum/81;
   ADCVLOW();
+  adcTime=  millisTNow()-xstart;
+ 
     setSleepModeT2();
   ShutOffADC();
-  
+ // ShutDownADC();
   power_adc_disable();
 }
 
@@ -154,22 +166,22 @@ void MeasureACS720()
 void DataACS720(IMFrame &frame)
 {
 //   SetupADC();
-  long xSum=0;
+//  long xSum=0;
   byte xLast =0;
   unsigned long xx=0;
   adcLow=60000;
   adcHigh=0;
-  for (int8_t i=80; i>=0; i--)
-  {
-     xSum+=Measure[i];
+//  for (int8_t i=80; i>=0; i--)
+//  {
+//     xSum+=Measure[i];
 //     if(x>adcHigh) adcHigh=x;
 //     if (x<adcLow) adcLow=x;
    //   xSum+=x;
 //      long y=x-adcMedium;
 //         xx+=(y*y);
-      xLast++;
-   }
-  adcMedium=xSum/81;
+//      xLast++;
+ //  }
+//  adcMedium=xSum/81;
   
   for (int8_t i=80; i>=0; i--)
   {
@@ -179,7 +191,7 @@ void DataACS720(IMFrame &frame)
    //      xSum+=x;
       long y=x-adcMedium;
          xx+=(y*y);
-//      xLast=i;
+      xLast=i;
    }
  //  xx=xx ;
   // adcMedium=(adcMedium *9 +xSum/81)/10;
@@ -195,17 +207,22 @@ void DataACS720(IMFrame &frame)
    current++;
    xLast+=10;
 //   ShutOffADC();
-   data->w[8]=xcount;
+   data->w[9]=xcount;
    data->w[7]=xx;
-   data->w[6]=xSum;
+  // data->w[6]=xSum;
    data->w[8]=MeasureCycle;
-   data->w[5]=adcHigh;
+   data->w[8]=adcTime;
+   data->w[6]=adcHigh;
   // data->w[4]=adcLow;
    data->w[4]=setupREF;
    data->w[3]=adcMedium;
+   uint16_t xws=sqrt32(xx);
   // data->w[4]=trx.dataw3;
   // data->w[3]=trx.Deviation();
-   data->w[2]=sqrt32(xx);
+   data->w[2]=xws;
+   adcSum+=xws;
+   data->w[4]=adcSum ;
+   data->w[5]=adcSum >> 16; 
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
    MeasureCycle=0;

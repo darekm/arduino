@@ -1,6 +1,6 @@
 // 
 //    FILE:
-// VERSION: 0.1.00
+// VERSION: 0.9.00
 // PURPOSE: ds18B20 logger  for imwave
 //
 //
@@ -34,9 +34,9 @@ IMMAC SetupDS18B20()
 {
   pinMode(ONE_WIRE_BUS,INPUT_PULLUP);
   sensors.begin();
-  DBGINFO("devices:");
-  DBGINFO(sensors.getDeviceCount());
-  DBGINFO("=");
+ // DBGINFO("devices:");
+ // DBGINFO(sensors.getDeviceCount());
+ // DBGINFO("=");
   sensors.setWaitForConversion(false);
 //  sensors.getAddress(&dsAddress,1);
   sensors.getAddress(dsAddress, 0);
@@ -61,7 +61,7 @@ void PrepareDS18B20()
 
 void DataDS18B20(IMFrame &frame)
 {   
-  if (cpuVinCycle % 8==0){ 
+  if (cpuVinCycle % 28==0){ 
     SetupADC();
     cpuVin=internalVcc();
     cpuTemp=internalTemp();
@@ -80,7 +80,6 @@ void DataDS18B20(IMFrame &frame)
         DBGINFO(hh);
        data->w[2]=hh;
    data->w[6]=trx.Connected();
- //  Vin=internalVcc();
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
    data->w[10]=0xA33A;

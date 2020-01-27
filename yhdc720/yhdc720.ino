@@ -21,10 +21,10 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x240037 // My MAC
+#define MMAC 0x2B0018 // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x2B     //Type of device
-#define MCHANNEL 1
+#define MCHANNEL 2
 
 
 
@@ -135,8 +135,8 @@ void stageloop(byte stage)
     case LISTENDATA :DBGPINHIGH(); ReceiveData();DBGPINLOW();break;
     case LISTENBROADCAST : DBGPINHIGH();ReceiveData();DBGPINLOW();break;
 //    case MEASUREDATA : MeasureACS();break;
+  //  case CRONHOUR : adcSum=0;break;
     case IMTimer::IDDLESTAGE : {
-     DBGINFO("***IDLE DATA");
 
        ReceiveData();break;
      }

@@ -16,7 +16,7 @@
 #include "imatmega.h"
 
 
-#define pinACS 4
+//#define pinACS 4
 //#define pinVAD A5
 
 uint16_t Measure[85];
@@ -35,7 +35,7 @@ volatile boolean adcDone;
 long adcMedium;
 long adcLow;
 long adcHigh;
-long adcSum;
+uint32_t adcSum;
 
 #define pinACS 0
 #define ADCVHIGH() do{}while(0) ;//digitalWrite(DBGPIN,HIGH)
@@ -134,7 +134,7 @@ void MeasureACS720()
 // power_adc_enable();
   ADCVHIGH();
   long xSum=0;
-  MeasureCycle++;
+ // MeasureCycle++;
     delaySleepT2(1);
    delaySleepT2(1);
   t_Time xstart = millisTNow();
@@ -156,7 +156,7 @@ void MeasureACS720()
   ADCVLOW();
   adcTime=  millisTNow()-xstart;
  
-    setSleepModeT2();
+  setSleepModeT2();
   ShutOffADC();
  // ShutDownADC();
   power_adc_disable();
@@ -166,8 +166,7 @@ void MeasureACS720()
 void DataACS720(IMFrame &frame)
 {
 //   SetupADC();
-//  long xSum=0;
-  byte xLast =0;
+//  byte xLast =0;
   unsigned long xx=0;
   adcLow=60000;
   adcHigh=0;
@@ -181,36 +180,30 @@ void DataACS720(IMFrame &frame)
 //         xx+=(y*y);
 //      xLast++;
  //  }
-//  adcMedium=xSum/81;
   
   for (int8_t i=80; i>=0; i--)
   {
      long x=Measure[i];
-     if(x>adcHigh) adcHigh=x;
+     if (x>adcHigh) adcHigh=x;
      if (x<adcLow) adcLow=x;
    //      xSum+=x;
       long y=x-adcMedium;
          xx+=(y*y);
-      xLast=i;
+    //  xLast=i;
    }
- //  xx=xx ;
   // adcMedium=(adcMedium *9 +xSum/81)/10;
 
 
    IMFrameData *data =frame.Data();
 
 
-//        DBGINFO(ex);
-  //     data->w[2]=hh;
-  //  uint16_t Vin=internalVcc();
- //  data->w[0]=Vin;
    current++;
-   xLast+=10;
-//   ShutOffADC();
+  // xLast+=10;
+//   Shu0tOffADC();
    data->w[9]=xcount;
    data->w[7]=xx;
   // data->w[6]=xSum;
-   data->w[8]=MeasureCycle;
+  // data->w[8]=MeasureCycle;
    data->w[8]=adcTime;
    data->w[6]=adcHigh;
   // data->w[4]=adcLow;
@@ -226,8 +219,9 @@ void DataACS720(IMFrame &frame)
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
    MeasureCycle=0;
-  if ((cpuVinCycle % 8)==0){
+  if ((cpuVinCycle % 18)==0){
     SetupADC();
+    cpuVin=internalVcc();
     cpuVin=internalVcc();
     cpuTemp=internalTemp();
     cpuTemp=internalTemp();

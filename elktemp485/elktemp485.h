@@ -31,14 +31,21 @@ uint16_t cpuVinCycle=0;
 
 void SetupELKT()
 {
+  power_usart0_enable();
  // wire.begin(9600,SERIAL_8N2);//modbus
   wire.begin(38400,SERIAL_8N1);//ascii
 }
 
 void PrepareELKT()
 {
-  wire.write('/nTEMP0/n');
-  wire.flush();
+ // wire.write('ab');
+ // wire.write("\nTEMP0\n");
+  Serial.write("0uu");
+  Serial.flush();
+  Serial.write("123");
+  Serial.flush();
+  Serial.write("93211");
+  Serial.flush();
   //wire.listen();
 //   sensors.requestTemperatures();
 }  

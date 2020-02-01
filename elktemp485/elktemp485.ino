@@ -4,15 +4,15 @@
 #include <EEPROM.h>
 #include <SPI.h>
 #include "imdebug.h"
-#include "SoftwareSerial.h"
+//#include "SoftwareSerial.h"
 
 /******************************** Configuration *************************************/
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x460000  // My MAC
+#define MMAC 0x630001  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
-#define MDEVICE 0x46     //Type of device
+#define MDEVICE 0x63     //Type of device
 #define MCHANNEL 2
 
 /************************* Module specyfic functions **********************/
@@ -42,7 +42,6 @@ void SendData()
         static IMFrame frame;
         frame.Reset();
         DataELKT(frame);
-        DBGINFO("SendData ");
         trx.Wakeup();
         trx.SendData(frame);
         trx.Transmit();
@@ -50,7 +49,7 @@ void SendData()
 }
 
 byte OrderData(uint16_t a){
-  DBGLEDON();
+//  DBGLEDON();
   return 1;
 }  
 
@@ -81,10 +80,6 @@ void PrintStatus()
 
 void stageloop(byte stage)
 {
-//   if (stage== STARTBROADCAST){
-//    DBGINFO("stageloop=");  DBGINFO(millis());
-//    DBGINFO(":");  DBGINFO(stage);
-//  }
   switch (stage)
   {
     case STARTBROADCAST: trx.Knock();      break;
@@ -93,11 +88,7 @@ void stageloop(byte stage)
     case STOPDATA:   trx.StopListen();      break;
     case LISTENDATA : ReceiveData();break;
     case LISTENBROADCAST : ReceiveData();break;
-    case IMTimer::IDDLESTAGE : {
-
-       DBGINFO("***IDDLE DATA");
-       ReceiveData();break;
-     }
+    case IMTimer::IDDLESTAGE : {        ReceiveData();break; }
     case IMTimer::PERIOD : 
   //      ERRFLASH();
   //     PrintStatus();
@@ -105,7 +96,6 @@ void stageloop(byte stage)
     default:
     break;
   }
-//   DBGINFO("@@\r\n");
 }
 
 
@@ -115,55 +105,39 @@ void stageloop(byte stage)
 void setup()
 {
   resetPin();
-    #ifdef DBGCLOCK
-
-  pinMode(DBGCLOCK,OUTPUT);
-  digitalWrite(DBGCLOCK ,HIGH);
+  #ifdef DBGCLOCK
+    pinMode(DBGCLOCK,OUTPUT);
+    digitalWrite(DBGCLOCK ,HIGH);
   #endif
   pinMode(10,OUTPUT);
   digitalWrite(10,HIGH);
   DBGPINHIGH();
   DBGPINLOW();
   INITDBG();
-  DBGINFO(F("*****start"));
   setupTimer2();
   power_timer0_enable();
   SetupADC();
   wdt_enable(WDTO_8S);
   interrupts();
   delay(200);
+ //   SetupELKT();
+ //  disableADCB();
   SetupELKT();
-   disableADCB();
-
   trx.myMAC=MMAC;
-  trx.startMAC=0;
-  //trx.myMAC+=ad;
+  //trx.startMAC=0;
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.myDevice=MDEVICE;
   trx.funOrder=&OrderData;
   trx.Init(buffer);
 //  trx.timer.onStage=stageloop;
-//    pciSetup(9);
-#if DBGPIN>111
-  if (ad==0){
-      for(int i=0;i<100000;i++){
-        DBGPINHIGH();
-        delaySleepT2(10);
-        DBGPINLOW();
-        delaySleepT2(1);
-         
-      }
-      reboot();
-  }
- 
-#endif  
+
+
 #if DBGLED>=1
-  if (false){
+  if (true){
     DBGLEDON();
     delaySleepT2(300);
     DBGLEDOFF();
-    DBGINFO(F("TEMPERARUEEE\r\n"));
    } else{
     DBGLEDON();
     delay(200);
@@ -175,12 +149,13 @@ void setup()
     delay(200);
     DBGLEDON();
     delay(200);
-    reboot();
-
+    //reboot();
   }
 #endif
-  power_timer0_disable();
+ // power_timer0_disable();
   setupTimer2();
+    power_usart0_enable();
+
 }
 
 void loop()
@@ -194,6 +169,4 @@ void loop()
      stageloop(xstage);
    // DBGPINHIGH();
   }while( xstage!=IMTimer::PERIOD);
-
-
 }

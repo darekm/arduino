@@ -23,7 +23,7 @@
 //SoftwareSerial wire(wireRX,wireTX);
 
 
-HardwareSerial wire=Serial;
+//HardwareSerial wire=Serial;
 
 uint16_t cpuVin;
 uint16_t cpuTemp;
@@ -39,12 +39,26 @@ void SetupELKT()
 void PrepareELKT()
 {
  // wire.write('ab');
- // wire.write("\nTEMP0\n");
-  Serial.write("0uu");
-  Serial.flush();
-  Serial.write("123");
-  Serial.flush();
-  Serial.write("93211");
+ /* 
+ Serial.write(7);
+ Serial.flush(); 
+ Serial.write(4);
+ Serial.flush(); 
+ Serial.write(0);
+ Serial.flush();
+  Serial.write(0);
+ Serial.flush(); 
+ Serial.write(0);
+ Serial.flush(); 
+ Serial.write(1);
+ Serial.flush(); 
+ Serial.write(0x31);
+ Serial.flush(); 
+ Serial.write(0xAC);
+ Serial.flush(); 
+ */
+  //Serial.write("TEMPTEST05E\r");
+ 
   Serial.flush();
   //wire.listen();
 //   sensors.requestTemperatures();

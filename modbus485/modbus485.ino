@@ -10,7 +10,7 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x630001  // My MAC
+#define MMAC 0x630021  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x63     //Type of device
 #define MCHANNEL 2
@@ -41,7 +41,9 @@ void SendData()
       if (trx.CycleData()) {
         static IMFrame frame;
         frame.Reset();
+        DBGLEDON();
         DataModbus(frame);
+        DBGLEDOFF();
         trx.Wakeup();
         trx.SendData(frame);
         trx.Transmit();

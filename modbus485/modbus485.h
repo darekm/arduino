@@ -16,7 +16,7 @@
 #define IDD  0  
 
 #define TXEN 5
-#include <ModbusRtu.h>
+#include "modbuslib.h"
   // https://github.com/smarmengol/Modbus-Master-Slave-for-Arduino/blob/master/ModbusRtu.h#L1391
 
 
@@ -44,16 +44,22 @@ void SetupModbus()
   power_usart0_enable();
   pinMode(0,INPUT);
   pinMode(1,OUTPUT);
+  pinMode(TXEN,OUTPUT);
+ 
   //Serial.begin(9600,SERIAL_8N2);//modbus
 //  Serial.begin(38400,SERIAL_8N1);//ascii
  
 Serial.begin(9600);
-master.setTimeOut(200);
+master.setTimeOut(20);
 master.start();
 }
 
 
 void sendTelegram(){
+
+    master.poll();
+ digitalWrite( TXEN, HIGH );
+    digitalWrite( TXEN, LOW );
    telegram.u8id = 1; // slave address
     telegram.u8fct = 3; // function code (this one is registers read)
     telegram.u16RegAdd = 134; // start address in slave

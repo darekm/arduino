@@ -3,7 +3,7 @@ cd libraries
 mkdir imcore
 cd imcore
 mklink imatmega.cpp c:\git\imwave\Arduino\imatmega.cpp
-mklink imatmega.h c:\git\imwave\Arduino\imwave.h
+mklink imatmega.h c:\git\imwave\Arduino\imatmega.h
 mklink imeprom.cpp c:\git\imwave\Arduino\imeprom.cpp
 mklink imeprom.h c:\git\imwave\Arduino\imeprom.h
 mklink imdebug.h c:\git\imwave\Arduino\imdebug.h
@@ -13,6 +13,7 @@ mkdir imwave
 cd imwave
 mklink imbuffer.h c:\git\imwave\Arduino\imbuffer.h
 mklink imrouting.h c:\git\imwave\Arduino\imrouting.h
+mklink imrouting.cpp c:\git\imwave\Arduino\imrouting.cpp
 mklink imtimer.cpp c:\git\imwave\Arduino\imtimer.cpp
 mklink imtimer.h c:\git\imwave\Arduino\imtimer.h
 mklink imtrans.cpp c:\git\imwave\Arduino\imtrans.cpp

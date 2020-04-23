@@ -21,9 +21,9 @@
 
 uint16_t Measure[85];
 uint16_t MeasureSUM[10];
-uint16_t MeasureSQR[10];
+//uint16_t MeasureSQR[10];
 uint16_t MeasureCycle;
-uint16_t current;
+//uint16_t current;
 
 uint16_t xcount;
 uint16_t cpuVin;
@@ -44,7 +44,7 @@ uint16_t adcValue;
 //#define ADCVHIGH() PORTC|=(B00100000);//digitalWrite(DBGPIN,HIGH)
 //#define ADCVLOW()  PORTC&=~(B00100000);//digitalWrite(DBGPIN,LOW)
  
-#define setupREF (1<< REFS0) | (1<<REFS1)| (pinACS)
+#define setupREF (1<< REFS0) | (1<<REFS1)| (pinACS)    //internal 1.1V vReference
 
 // disassembly
 // http://rcarduino.blogspot.com/2012/09/how-to-view-arduino-assembly.html
@@ -121,7 +121,7 @@ void SetupACS720()
 //  digitalWrite(pinVAD,HIGH);
  // pinMode(pinACS,OUTPUT);
  // digitalWrite(pinACS,HIGH);
-  current=0;
+ // current=0;
       ADMUX  = setupREF;
 
 
@@ -165,8 +165,6 @@ void MeasureACS720()
 
 void ComputeACS720()
 {
-//   SetupADC();
-//  byte xLast =0;
   unsigned long xx=0;
   adcLow=60000;
   adcHigh=0;
@@ -204,12 +202,10 @@ void DataACS720(IMFrame &frame)
 
    IMFrameData *data =frame.Data();
 
-
-   current++;
-  // xLast+=10;
+//   current++;
 //   Shu0tOffADC();
    data->w[9]=xcount;
-   data->w[7]=xx;
+  // data->w[7]=xx;
   // data->w[6]=xSum;
   // data->w[8]=MeasureCycle;
    data->w[8]=adcTime;
@@ -217,17 +213,15 @@ void DataACS720(IMFrame &frame)
   // data->w[4]=adcLow;
    data->w[4]=setupREF;
    data->w[3]=adcMedium;
-   uint16_t xws=sqrt32(xx);
-  // data->w[4]=trx.dataw3;
-  // data->w[3]=trx.Deviation();
-   data->w[2]=xws;
-   adcSum+=xws;
+   //uint16_t xws=sqrt32(xx);
+   data->w[2]=adcValue;
+//   adcSum+=xws;
    data->w[4]=adcSum ;
    data->w[5]=adcSum >> 16; 
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
    MeasureCycle=0;
-  if ((cpuVinCycle % 18)==0){
+  if ((cpuVinCycle % 28)==0){
     SetupADC();
     cpuVin=internalVcc();
     cpuVin=internalVcc();
@@ -238,10 +232,6 @@ void DataACS720(IMFrame &frame)
     ShutOffADC();
     power_adc_disable();
   }
-
-
-  // data->w[0]=xLast;
-  // data->w[0]=analogRead(A4);
 }
 
 

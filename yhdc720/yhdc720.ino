@@ -56,9 +56,10 @@ IMBuffer    buffer;
 int StepInc;
 
 void PrepareData(){
-      if (trx.CycleData())
+     // if (trx.CycleData())
       {
         MeasureACS720();
+        ComputeACS720();
       }
 }
 
@@ -72,11 +73,7 @@ void StepData(void){
  //   DBGLEDOFF();
     IMTimer::doneMeasure();
      // SWtoggle = ~SWtoggle;
- //   digitalWrite(DBGCLOCK,HIGH);
-//    digitalWrite(DBGCLOCK,LOW);
-//    digitalWrite(5,SWtoggle);
   } 
-
 }    
 
 
@@ -89,12 +86,9 @@ void SendData()
 //        SetupADC();
         static IMFrame frame;
         frame.Reset();
-         IMFrameData *data =frame.Data();
+        IMFrameData *data =frame.Data();
         DataACS720(frame);
-   //     trx.setMeasure(TimeMeasure,TimeMeasure+1);
 
-   //     data->w[8]=0xA;
-        data->w[10]=0xA;
         
         trx.SendData(frame);
         trx.Transmit();

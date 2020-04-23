@@ -2,6 +2,7 @@
 #include <imframe.h>
 #include <imatmega.h>
 #include <avr/wdt.h>
+#include <avr/boot.h>
 #include <SPI.h>
 #include <EEPROM.h>
 // Data wire is plugged into pin 0 on the Arduino
@@ -21,10 +22,10 @@
 
 /******************************** Configuration *************************************/
 
-#define MMAC 0x2B0018 // My MAC
+#define MMAC 0x5B0000 // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x2B     //Type of device
-#define MCHANNEL 2
+#define MCHANNEL 3
 
 
 
@@ -143,7 +144,13 @@ void stageloop(byte stage)
   }
 }
 
-
+int getUniqueID(){
+  int a=0;
+  for (uint8_t i = 14; i < 15; i += 1) {
+        a=(a <<8) + boot_signature_byte_get(i);
+    }
+    return a;
+}
 
 
 
@@ -163,9 +170,10 @@ void setup()
    delay(200);
    disableADCB();
   wdt_enable(WDTO_8S);
+  IMMAC ad=getUniqueID();
   
  // trx.startMAC=MMAC;
-  trx.myMAC=MMAC;
+  trx.myMAC=MMAC+ad;
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.myDevice=MDEVICE;

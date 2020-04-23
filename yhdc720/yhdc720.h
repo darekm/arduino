@@ -36,6 +36,7 @@ long adcMedium;
 long adcLow;
 long adcHigh;
 uint32_t adcSum;
+uint16_t adcValue;
 
 #define pinACS 0
 #define ADCVHIGH() do{}while(0) ;//digitalWrite(DBGPIN,HIGH)
@@ -162,14 +163,31 @@ void MeasureACS720()
   power_adc_disable();
 }
 
-
-void DataACS720(IMFrame &frame)
+void ComputeACS720()
 {
 //   SetupADC();
 //  byte xLast =0;
   unsigned long xx=0;
   adcLow=60000;
   adcHigh=0;
+
+  for (int8_t i=80; i>=0; i--)
+  {
+     long x=Measure[i];
+     if (x>adcHigh) adcHigh=x;
+     if (x<adcLow) adcLow=x;
+   //      xSum+=x;
+      long y=x-adcMedium;
+         xx+=(y*y);
+    //  xLast=i;
+   }
+   adcValue=sqrt32(xx);
+   adcSum+=adcValue;  
+}
+
+void DataACS720(IMFrame &frame)
+{
+//   SetupADC();
 //  for (int8_t i=80; i>=0; i--)
 //  {
 //     xSum+=Measure[i];
@@ -181,16 +199,6 @@ void DataACS720(IMFrame &frame)
 //      xLast++;
  //  }
   
-  for (int8_t i=80; i>=0; i--)
-  {
-     long x=Measure[i];
-     if (x>adcHigh) adcHigh=x;
-     if (x<adcLow) adcLow=x;
-   //      xSum+=x;
-      long y=x-adcMedium;
-         xx+=(y*y);
-    //  xLast=i;
-   }
   // adcMedium=(adcMedium *9 +xSum/81)/10;
 
 

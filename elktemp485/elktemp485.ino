@@ -119,7 +119,7 @@ void setup()
   SetupADC();
   wdt_enable(WDTO_8S);
   interrupts();
-  delay(200);
+ 
  //   SetupELKT();
  //  disableADCB();
   SetupELKT();
@@ -128,7 +128,7 @@ void setup()
   trx.serverMAC=ServerMAC;
   trx.myChannel=MCHANNEL;
   trx.myDevice=MDEVICE;
-  trx.funOrder=&OrderData;
+//  trx.funOrder=&OrderData;
   trx.Init(buffer);
 //  trx.timer.onStage=stageloop;
 

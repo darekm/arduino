@@ -32,8 +32,10 @@ uint16_t cpuVinCycle=0;
 void SetupELKT()
 {
   power_usart0_enable();
- // wire.begin(9600,SERIAL_8N2);//modbus
-  wire.begin(38400,SERIAL_8N1);//ascii
+  pinMode(0,INPUT);
+  pinMode(1,OUTPUT);
+  //Serial.begin(9600,SERIAL_8N2);//modbus
+  Serial.begin(38400,SERIAL_8N1);//ascii
 }
 
 void PrepareELKT()
@@ -59,14 +61,14 @@ void PrepareELKT()
  */
   //Serial.write("TEMPTEST05E\r");
  
+  Serial.write("\rTEMP06i\r");
   Serial.flush();
   //wire.listen();
-//   sensors.requestTemperatures();
 }  
 
 
 void DataELKT(IMFrame &frame)
-{   
+{
   if (cpuVinCycle % 28==0){ 
     SetupADC();
     cpuVin=internalVcc();
@@ -84,8 +86,8 @@ void DataELKT(IMFrame &frame)
    data->w[0]=cpuVin;
    data->w[10]=0xA33A;
    for (int i=2;i<10;i++){
-    if (wire.available()>0) {
-      char inb=wire.read();
+    if (Serial.available()>0) {
+      char inb=Serial.read();
       data->w[i]=byte(inb);
     }
    }

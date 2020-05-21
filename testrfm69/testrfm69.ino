@@ -19,7 +19,7 @@
 #define MMAC 0x130020  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 3     //Type of device
-#define MCHANNEL 3
+#define MCHANNEL 1
 
 
 
@@ -66,7 +66,7 @@ void SendData()
 {
       if (trx.CycleData())
       {
-        DBGLEDON();
+    //    DBGLEDON();
         static IMFrame frame;
         frame.Reset();
          COUNTER++;
@@ -88,13 +88,16 @@ void SendData()
 
 void ReceiveData()
 {
-      while (trx.GetData())
+      DBGLEDON();
+        while (trx.GetData())
       {
         if (trx.Parse())
         {
       //    DBGINFO(" rxGET ");
         }
       }
+     DBGLEDOFF();
+         
 }
 
 
@@ -122,8 +125,7 @@ void stageloop(byte stage)
     break;
   }
 
-   DBGINFO("@@\r\n");
-
+ 
 }
 
 

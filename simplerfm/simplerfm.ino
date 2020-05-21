@@ -1,6 +1,6 @@
 
 #include <imframe.h>
-#include <imatmega.h>
+//#include <imatmega.h>
 
 
 
@@ -16,7 +16,7 @@
 #define MMAC 0x130020  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 3     //Type of device
-#define MCHANNEL 3
+#define MCHANNEL 2
 
 
 
@@ -85,12 +85,12 @@ void setup()
 {
    resetPin();
 
-  pinMode(10,OUTPUT);
-  digitalWrite(10,HIGH);
+  //pinMode(10,OUTPUT);
+  //digitalWrite(10,HIGH);
   
 
-  setupTimer2();
-   power_timer0_enable();
+  //setupTimer2();
+  // power_timer0_enable();
   DBGLEDOFF();
       buf.Init(MCHANNEL);
 //  trx.myDevice=MDEVICE;

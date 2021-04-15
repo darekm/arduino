@@ -5,7 +5,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x440019  // My MAC
+#define MMAC 0x440030  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x44     //Type of device
 #define MCHANNEL 2

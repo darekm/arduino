@@ -78,8 +78,7 @@ uint16_t rawAnalogOne( byte aPC )
   ADMUX  =_BV(REFS0)|aPC;  // Charge S/H cap from Analog0
  delayMicroseconds(5);
  ADCSRA |= _BV( ADIE );
- waitASSR();
-
+ 
  sleep_enable();
 
  do

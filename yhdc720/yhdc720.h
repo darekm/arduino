@@ -175,8 +175,8 @@ void ComputeACS720()
      if (x>adcHigh) adcHigh=x;
      if (x<adcLow) adcLow=x;
    //      xSum+=x;
-      long y=x-adcMedium;
-         xx+=(y*y);
+     // long y=x-adcMedium;
+         xx+=(x*x);//lodowiska#45  #
     //  xLast=i;
    }
    adcValue=sqrt32(xx);

@@ -12,7 +12,7 @@
 
 // Data wire is plugged into pin 2 on the Arduino
 
-#define MMAC 0x210001  // My MAC
+#define MMAC 0x210002  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x21     //Type of device
 #define MCHANNEL 1

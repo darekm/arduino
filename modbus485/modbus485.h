@@ -35,7 +35,7 @@ uint16_t cpuVin;
 uint16_t cpuTemp;
 uint16_t cpuVinCycle=0;
 
-
+uint16_t mData;
 uint16_t au16data[32];
 uint8_t u8state;
 
@@ -57,13 +57,13 @@ master.start();
 
 void sendTelegram(){
 
-    master.poll();
- digitalWrite( TXEN, HIGH );
-    digitalWrite( TXEN, LOW );
+   // master.poll();
+ //digitalWrite( TXEN, HIGH );
+  //  digitalWrite( TXEN, LOW );
    telegram.u8id = 1; // slave address
-    telegram.u8fct = 3; // function code (this one is registers read)
-    telegram.u16RegAdd = 134; // start address in slave
-    telegram.u16CoilsNo = 1; // number of elements (coils or registers) to read
+    telegram.u8fct = 4; // function code (this one is registers read)
+    telegram.u16RegAdd = 0x400E; // start address in slave
+    telegram.u16CoilsNo = 3; // number of elements (coils or registers) to read
     telegram.au16reg = au16data; // pointer to a memory array in the Arduino
 
     master.query( telegram ); // send query (only once)
@@ -93,7 +93,7 @@ void DataModbus(IMFrame &frame)
     ShutOffADC();
     power_adc_disable();
   }
-  master.poll();
+  uint8_t x=master.pollCheck();
    cpuVinCycle++;
   
    IMFrameData *data =frame.Data();
@@ -102,13 +102,26 @@ void DataModbus(IMFrame &frame)
    data->w[1]=cpuTemp;
    data->w[0]=cpuVin;
    data->w[10]=0xA33A;
-   for (int i=0;i<6;i++){
+   mData=au16data[0];
+   for (int i=0;i<3;i++){
   //  if (Serial.available()>0) {
   //    char inb=Serial.read();
   //    data->w[i]=byte(inb);
   //  }
       data->w[i+2]=au16data[i];
    }
+  if (x==0){
+             DBGLEDON();
+        DBGLEDOFF();
+  }
+  if (au16data[1]==91){
+             DBGLEDON();
+        DBGLEDOFF();
+  }
+  if (au16data[2]==0xffc6){
+             DBGLEDON();
+        DBGLEDOFF();
+  }
   
   data->w[7]=master.getState();
 }

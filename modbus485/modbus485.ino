@@ -30,9 +30,9 @@ void PrepareData()
 {
       if (trx.CycleData())
       {
-        DBGLEDON();
+//        DBGLEDON();
         PrepareModbus();
-        DBGLEDOFF();
+//        DBGLEDOFF();
       }
 }  
 
@@ -41,9 +41,9 @@ void SendData()
       if (trx.CycleData()) {
         static IMFrame frame;
         frame.Reset();
-        DBGLEDON();
+  //      DBGLEDON();
         DataModbus(frame);
-        DBGLEDOFF();
+   //     DBGLEDOFF();
         trx.Wakeup();
         trx.SendData(frame);
         trx.Transmit();

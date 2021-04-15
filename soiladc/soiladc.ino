@@ -6,7 +6,7 @@
 #include "imdebug.h"
 
 /******************************** Configuration *************************************/
-#define MMAC 0x450010  // My MAC
+#define MMAC 0x450009  // My MAC
 #define ServerMAC 0xA0000  // Server  MAC
 #define MDEVICE 0x45     //Type of device
 #define MCHANNEL 3
@@ -155,7 +155,7 @@ void setup()
   setupTimer2();
   power_timer0_enable();
   SetupADC();
-  wdt_enable(WDTO_8S);
+ // wdt_enable(WDTO_8S);
   interrupts();
   disableADCB();
 // ShutOffADC();
@@ -180,7 +180,7 @@ void setup()
 
 void loop()
 {
-  wdt_reset();
+ // wdt_reset();
   byte xstage;
   do{
      xstage=trx.timer.WaitStage();

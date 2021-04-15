@@ -64,12 +64,12 @@ void ww(){
 
 
 void DisableLSM(){
-DBGLEDOFF();
+//DBGLEDOFF();
   ww();     sensor.writeReg(LSM303::CTRL1, 0x00);//0 - PWR down
   ww();    sensor.writeReg(LSM303::CTRL7, 0x03);//magnetic power down
 enabledLSM=false;
-DBGLEDON();
-DBGLEDOFF();
+//DBGLEDON();
+//DBGLEDOFF();
 }
 
 void EnableLSM(){
@@ -79,14 +79,14 @@ void EnableLSM(){
   if (!enabledLSM){
  //   stepLSM=0;
    power_twi_enable();
- DBGLEDOFF();
- DBGLEDON();
+// DBGLEDOFF();
+// DBGLEDON();
  enabledLSM=true;
- DBGLEDOFF();
+// DBGLEDOFF();
     ww();      sensor.writeReg(LSM303::CTRL1, 0x47);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
   ww();    sensor.writeReg(LSM303::CTRL7, 0x00);//magnetic power up LOWPOWER  +filter
 power_twi_disable();
-      DBGLEDOFF();
+  //    DBGLEDOFF();
   }
 }
 
@@ -101,7 +101,7 @@ void CheckDisableLSM(){
 void CheckModeLSM(uint16_t aMode){
  uint8_t xCycle= aMode & 0xFF;
  maxLSM=0xF0;
- if (xCycle>=1){
+ if (xCycle>=0){
    maxLSM=1;
  }
 } 
@@ -183,6 +183,7 @@ void SetupLSM303()
   stepLSM=0;
   do{
     delaySleepT2(200);
+   DBGLEDON();
    DBGLEDOFF();
   power_twi_enable(); 
    power_adc_enable();
@@ -249,9 +250,18 @@ void ComputeMax(){
     if (sensor.a.x>tabXMax) tabXMax=sensor.a.x;
     if (sensor.a.y>tabYMax) tabYMax=sensor.a.y;
     if (sensor.a.z>tabZMax) tabZMax=sensor.a.z;
-    if (sensor.a.x<tabXMin) tabXMin=sensor.a.x;
-    if (sensor.a.y<tabYMin) tabYMin=sensor.a.y;
-    if (sensor.a.z<tabZMin) tabZMin=sensor.a.z;
+   // if (sensor.a.x<tabXMin) tabXMin=sensor.a.x;
+   // if (sensor.a.y<tabYMin) tabYMin=sensor.a.y;
+   // if (sensor.a.z<tabZMin) tabZMin=sensor.a.z;
+    if ((sensor.a.x==tabXMax) &&(sensor.a.y==tabYMax)){
+     //if(errorLSM>4) DBGLEDON();
+//      ++errorLSM;
+    }  
+}
+void ComputeMin(){
+    tabXMin=sensor.a.x;
+    tabYMin=sensor.a.y;
+    tabZMin=sensor.a.z;
 }
 
 
@@ -269,12 +279,12 @@ void ComputeMean(){
 
 void ReadLSM303(){
   power_twi_enable();
+DBGLEDOFF();
   byte ffx=sensor.readReg(LSM303::FIFO_SRC);
   byte ff=ffx & 0x1F;
  // byte ff=4;  
   for (int8_t i=ff ; i>=0; i--)
   {
-//DBGLEDON();
     if (sensor.readAcc()==6){
       
        DBGLEDON();
@@ -283,8 +293,8 @@ void ReadLSM303(){
    //    if (tabXMin==30000)
    //     ComputeMin();
    //    ComputeDist();
+       DBGLEDOFF();
     }
-//      DBGLEDOFF();
   }  
 
    sensor.readMag(); 
@@ -336,8 +346,8 @@ void PrepareLSM303()
 {
    if (digitalRead(intPin2)==HIGH){  // dataready PIN int2
 //     DBGLEDON();
+   ReadLSM303();
    }
-//ReadLSM303(); 
 //  DBGLEDOFF();
    
 //  while (digitalRead(intPin2)==HIGH)  {  // dataready PIN int2
@@ -368,15 +378,26 @@ void DataLSM303(IMFrame &frame)
    IMFrameData *data =frame.Data();
   
         // data->w[2]=hh;
-    data->w[3]=(uint16_t)tabXMax;
-    data->w[4]=(uint16_t)tabYMax;
-    data->w[5]=(uint16_t)tabZMax;
-    data->w[6]=(uint16_t)tabXMin;
-    data->w[7]=(uint16_t)tabYMin;
-    data->w[8]=(uint16_t)tabZMin;
-    data->w[9]=(uint16_t)tabMGX;
-    data->w[10]=(uint16_t)tabMGY;
-    data->w[11]=(uint16_t)tabMGZ;
+//    data->w[3]=(uint16_t)tabXMax;
+    data->w[3]=0xFFFF;
+//    data->w[4]=(uint16_t)tabYMax;
+    data->w[4]=(uint16_t)tabXMin;
+    data->w[5]=(uint16_t)tabYMin;
+    data->w[6]=(uint16_t)tabZMin;
+    data->w[7]=0xFFFF;
+//    data->w[7]=(uint16_t)tabYMin;
+    //data->w[8]=(uint16_t)tabXMin;
+        data->w[8]=(uint16_t)0xFFFF;
+//    data->w[9]=(uint16_t)tabYMin;
+//    data->w[9]=(uint16_t)tabXMin;
+      data->w[9]=(uint16_t)tabMGX;
+      data->w[10]=(uint16_t)tabMGY;
+      data->w[11]=(uint16_t)tabMGZ;
+    //data->w[10]=(uint16_t)tabZMin;
+    //data->w[10]=(uint16_t)tabYMin;
+    //data->w[11]=(uint16_t)tabZMin;
+//    data->w[11]=0xFFFF;
+//        data->w[11]=(uint16_t)255;
 //     data->w[11]=round((ddx-ddx0)*1000);
 //     ddx0=ddx;
   tabXMax=-30000;
@@ -399,3 +420,4 @@ void DataLSM303(IMFrame &frame)
 //
 // END OF FILE
 //
+

@@ -83,7 +83,7 @@ void EnableLSM(){
 // DBGLEDON();
  enabledLSM=true;
 // DBGLEDOFF();
-    ww();      sensor.writeReg(LSM303::CTRL1, 0x47);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
+    ww();      sensor.writeReg(LSM303::CTRL1, 0x67);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
   ww();    sensor.writeReg(LSM303::CTRL7, 0x00);//magnetic power up LOWPOWER  +filter
     ww();    sensor.writeReg(LSM303::OFFSET_X_L_M, 0x00);//magnetic offset
     ww();    sensor.writeReg(LSM303::OFFSET_Y_L_M, 0x00);//magnetic offset
@@ -173,7 +173,7 @@ void setupInertialPCB(){
 ww();    sensor.writeReg(LSM303::CTRL3, 0x04);//thr int1
 ww();    sensor.writeReg(LSM303::CTRL4, 0x01);//dataready int2 
 
-   ww();      sensor.writeReg(LSM303::CTRL1, 0x47);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
+   ww();      sensor.writeReg(LSM303::CTRL1, 0x67);//3=12.5Hz  4=25Hz  ** 7=xyz 1=x 4 =z
  
 }
 
@@ -256,12 +256,12 @@ void SetupLSM303()
 }
 
 void ComputeMax(){
-    if (sensor.m.x>tabXMax) tabXMax=sensor.a.x;
-    if (sensor.m.y>tabYMax) tabYMax=sensor.a.y;
-    if (sensor.m.z>tabZMax) tabZMax=sensor.a.z;
-    if (sensor.m.x<tabXMin) tabXMin=sensor.a.x;
-    if (sensor.m.y<tabYMin) tabYMin=sensor.a.y;
-    if (sensor.m.z<tabZMin) tabZMin=sensor.a.z;
+    if (sensor.m.x>tabXMax) tabXMax=sensor.m.x;
+    if (sensor.m.y>tabYMax) tabYMax=sensor.m.y;
+    if (sensor.m.z>tabZMax) tabZMax=sensor.m.z;
+    if (sensor.m.x<tabXMin) tabXMin=sensor.m.x;
+    if (sensor.m.y<tabYMin) tabYMin=sensor.m.y;
+    if (sensor.m.z<tabZMin) tabZMin=sensor.m.z;
     if ((sensor.m.x==tabXMax) &&(sensor.m.y==tabYMax)){
      if(errorLSM>4) DBGLEDON();
       ++errorLSM;
@@ -289,10 +289,11 @@ DBGLEDOFF();
   {
     if (sensor.readAcc()==6){
       
-   //    DBGLEDON();
+       DBGLEDON();
        ComputeMax();
-       if (tabXMin==30000)
-        ComputeMin();
+       if (tabXMin==30000){
+        //ComputeMin();
+       }
    //    ComputeDist();
    //    DBGLEDOFF();
     }
@@ -302,7 +303,7 @@ DBGLEDOFF();
    tabMGX=sensor.m.x;
    tabMGY=sensor.m.y;
    tabMGZ=sensor.m.z;
-//      DBGLEDOFF();
+      DBGLEDOFF();
    CheckDisableLSM();
    power_twi_disable();
 }
@@ -390,21 +391,21 @@ void DataLSM303(IMFrame &frame)
     //data->w[8]=(uint16_t)tabXMin;
         data->w[8]=(uint16_t)0xFFFF;
 //    data->w[9]=(uint16_t)tabYMin;
-//    data->w[9]=(uint16_t)tabXMin;
-      data->w[9]=(uint16_t)tabMGX;
-      data->w[10]=(uint16_t)tabMGY;
-      data->w[11]=(uint16_t)tabMGZ;
+    data->w[9]=(uint16_t)tabXMin;
+     // data->w[9]=(uint16_t)tabMGX;
+      //data->w[10]=(uint16_t)tabMGY;
+      //data->w[11]=(uint16_t)tabMGZ;
     //data->w[10]=(uint16_t)tabZMin;
-    //data->w[10]=(uint16_t)tabYMin;
-    //data->w[11]=(uint16_t)tabZMin;
+    data->w[10]=(uint16_t)tabYMin;
+    data->w[11]=(uint16_t)tabZMin;
 //    data->w[11]=0xFFFF;
 //        data->w[11]=(uint16_t)255;
 //     data->w[11]=round((ddx-ddx0)*1000);
 //     ddx0=ddx;
 
-  if (errorLSM>12)
-    reboot();
-   errorLSM=0;
+ // if (errorLSM>12)
+ //   reboot();
+ //  errorLSM=0;
       
    data->w[0]=cpuVin;
 //   data->w[1]=cpuTemp;

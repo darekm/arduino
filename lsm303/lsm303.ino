@@ -35,7 +35,7 @@ void PrepareData()
 {
   if (trx.CycleData())    {
        CheckModeLSM(trx.myMode);
-  //      EnableLSM();
+        EnableLSM();
      PrepareLSM303();
   }
 }  

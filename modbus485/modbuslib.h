@@ -192,6 +192,8 @@ public:
     boolean getTimeOutState(); //!<get communication watch-dog timer state
     int8_t query( modbus_t telegram ); //!<only for master
     int8_t poll(); //!<cyclic poll for master
+    int8_t pollRaw();
+    int8_t pollCheck(); //!<cyclic poll for master
     int8_t poll( uint16_t *regs, uint8_t u8size ); //!<cyclic poll for slave
     uint16_t getInCnt(); //!<number of incoming messages
     uint16_t getOutCnt(); //!<number of outcoming messages
@@ -550,10 +552,18 @@ int8_t Modbus::poll()
     }
     if ((unsigned long)(millis() -u32time) < (unsigned long)T35) return 0;
 
+    return pollRaw();
+
+}
+
+int8_t Modbus::pollRaw()
+{
+    
     // transfer Serial buffer frame to auBuffer
     u8lastRec = 0;
     int8_t i8state = getRxBuffer();
-    if (i8state < 6) //7 was incorrect for functions 1 and 2 the smallest frame could be 6 bytes long
+    sendTxBuffer();
+    if (i8state < 5) //7 was incorrect for functions 1 and 2 the smallest frame could be 6 bytes long
     {
         u8state = COM_IDLE;
         u16errCnt++;
@@ -593,6 +603,21 @@ int8_t Modbus::poll()
     u8state = COM_IDLE;
     return u8BufferSize;
 }
+
+
+int8_t Modbus::pollCheck()
+{
+    // check if there is any incoming frame
+    u8state = COM_IDLE;
+    uint8_t u8current;
+    u8current = port->available();
+
+ 
+    if (u8current == 0) return 0;
+
+    return pollRaw();   
+ }
+
 
 /**
  * @brief
@@ -833,7 +858,7 @@ uint8_t Modbus::validateRequest()
         u16errCnt ++;
         return EXC_FUNC_CODE;
     }
-
+    return 0;
     // check start address & nb range
     uint16_t u16regs = 0;
     uint8_t u8regs;
